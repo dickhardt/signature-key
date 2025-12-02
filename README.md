@@ -34,7 +34,7 @@ It supports **four schemes** representing a natural progression from pseudonymou
 
 **Label matching:** The label (e.g., "sig") must be identical across `Signature-Input`, `Signature`, and `Signature-Key` headers for the same signature.
 
-**Offline verification:** A verifier MAY operate in offline mode using pre-distributed, cached, or pinned keys rather than performing live key discovery.
+**Offline verification:** A verifier MAY pre-fetch, cache, or pin keys rather than performing key discovery as requests come in.
 
 Example:
 
