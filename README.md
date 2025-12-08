@@ -109,11 +109,11 @@ The resulting JWKS **MUST** contain a key whose `kid` matches the `kid` paramete
 
 ```text
 Signature-Key: sig=jwks;
-    id="https://agent.example/.well-known/jwks.json";
+    id="https://agent.example/crawler";
     kid="key-1"
 ```
 
-Verifier fetches `https://agent.example/.well-known/jwks.json` directly as a JWKS.
+Verifier fetches `https://agent.example/crawler` directly as a JWKS.
 
 #### JWKS via metadata
 
