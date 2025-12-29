@@ -60,15 +60,17 @@ Where:
 
 **Label Correlation:**
 
-Verifiers correlate signature labels across the Signature-Input, Signature, and Signature-Key headers. For each signature being verified, the verifier selects the corresponding dictionary member from Signature-Key.
+Labels are correlated by equality of label names across Signature-Input, Signature, and Signature-Key. Signature-Key is a dictionary keyed by label; Signature-Input and Signature are the sources of what signatures are present; Signature-Key provides keying material for those labels.
 
 Verifiers MUST:
-1. Parse Signature-Input and Signature per RFC 9421 and obtain the set of signature labels present
+1. Parse Signature-Input and Signature per RFC 9421 and obtain the set of signature labels present. The verifier determines which labels it is attempting to verify based on application context and RFC 9421 processing.
 2. Parse Signature-Key as a Structured Fields Dictionary
 3. For each label being verified, select the Signature-Key dictionary member with the same name
 4. If the corresponding dictionary member is missing, verification for that signature MUST fail
 
-Profiles MAY define stricter label selection and mismatch handling rules
+> **Note:** A verifier might choose to verify only a subset of labels present (e.g., the application-required signature); labels not verified can be ignored.
+
+Profiles MAY define stricter label selection and mismatch handling rules.
 
 **Example:**
 
@@ -82,7 +84,7 @@ Signature-Key: sig=(scheme=hwk kty="OKP" crv="Ed25519" x="JrQLj...")
 
 If a label appears in Signature or Signature-Input, and the verifier attempts to verify it, the corresponding member MUST exist in Signature-Key. If Signature-Key contains members for labels not being verified, verifiers MAY ignore them.
 
-Profiles may require exactly one label and reject extras.
+This section defines base correlation behavior; profiles MAY impose additional rejection conditions (e.g., exactly one label, no extra members).
 
 ## Profiles and Application Constraints
 
@@ -94,7 +96,7 @@ Signature-Key supports multiple signatures per RFC 9421 using a dictionary with 
 
 This document defines the base format and schemes only.
 
-> **Note:** AAuth is a profile that requires exactly one signature and exactly one Signature-Key dictionary member. In AAuth, Signature-Key is required to contain exactly one member and the member name is used as the authoritative label. AAuth also requires one label in Signature-Input and Signature and rejects mismatches.
+> **Note:** AAuth is a profile that requires exactly one signature and exactly one Signature-Key dictionary member. AAuth defines a single-signature profile and specifies stricter label selection and mismatch handling rules. AAuth uses Signature-Key's single dictionary member name as the expected label and requires the other signature headers to match it.
 
 **Multiple Signatures:**
 
@@ -106,7 +108,7 @@ Signature: sig1=:...:, sig2=:...:
 Signature-Key: sig1=(scheme=hwk ...), sig2=(scheme=jwt jwt="...")
 ```
 
-Profiles may require a single signature and reject multiple labels in Signature-Input/Signature or multiple members in Signature-Key. Such restrictions are profile-specific and not imposed by this document
+Profiles MAY require a single signature and define rejection behavior for multiple labels in Signature-Input/Signature or multiple members in Signature-Key. Those restrictions are profile-specific and not imposed by this document.
 
 ## Header Web Key (hwk)
 
