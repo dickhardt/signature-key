@@ -45,32 +45,52 @@ The Signature-Key header works in conjunction with the Signature-Input and Signa
 
 # The Signature-Key Header Field
 
-The Signature-Key header field provides the public key or key reference needed to verify an HTTP Message Signature. The header uses structured field syntax [@!RFC8941] with a label matching the corresponding signature.
+The Signature-Key header field provides the public key or key reference needed to verify an HTTP Message Signature. The header is a Structured Field Dictionary [@!RFC8941] keyed by signature label, where each member describes how to obtain the verification key for the corresponding signature.
 
 **Format:**
 
 ```
-Signature-Key: <label>=<scheme>; <parameters>
+Signature-Key: <label>=(scheme=<token> <parameters>...)
 ```
 
 Where:
-- `<label>` matches the label in Signature-Input and Signature headers
-- `<scheme>` is one of: hwk, jwks, x509, jwt
-- `<parameters>` vary by scheme
+- `<label>` (dictionary key) matches the label in Signature-Input and Signature headers
+- `scheme` (parameter) is one of: hwk, jwks, x509, jwt
+- `<parameters>` vary by scheme and are included in the inner list
+
+**Label Discovery:**
+
+Verifiers MUST:
+1. Discover the signature label from the Signature-Input and Signature headers
+2. Select the matching dictionary member from Signature-Key using that label
+3. Extract the scheme parameter to determine the key distribution method
 
 **Example:**
 
 ```
 Signature-Input: sig=("@method" "@path"); created=1732210000
 Signature: sig=:MEQCIA5...
-Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
+Signature-Key: sig=(scheme=hwk kty="OKP" crv="Ed25519" x="JrQLj...")
 ```
+
+**Multiple Signatures:**
+
+The dictionary format supports multiple signatures per message. Each signature has its own dictionary member keyed by its unique label:
+
+```
+Signature-Input: sig1=(...), sig2=(...)
+Signature: sig1=:...:, sig2=:...:
+Signature-Key: sig1=(scheme=hwk ...), sig2=(scheme=jwt jwt="...")
+```
+
+Note: Application protocols may restrict the number of signatures. For example, AAuth (RFC XXXX) requires exactly one signature per request.
 
 ## Header Web Key (hwk)
 
 The hwk scheme provides a self-contained public key inline in the header, enabling pseudonymous verification without key discovery.
 
 **Parameters:**
+- `scheme` (REQUIRED) - Must be "hwk"
 - `kty` (REQUIRED) - Key type: "OKP", "EC", or "RSA"
 - `crv` (REQUIRED for OKP/EC) - Curve name
 - Key material (REQUIRED):
@@ -80,10 +100,8 @@ The hwk scheme provides a self-contained public key inline in the header, enabli
 **Example:**
 
 ```
-Signature-Key: sig=hwk;
-    kty="OKP";
-    crv="Ed25519";
-    x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+Signature-Key: sig=(scheme=hwk kty="OKP" crv="Ed25519"
+    x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs")
 ```
 
 **Constraints:**
@@ -97,14 +115,24 @@ Signature-Key: sig=hwk;
 
 ## JWKS Discovery (jwks)
 
-The jwks scheme identifies the signer and enables key discovery via HTTPS URLs.
+The jwks scheme identifies the signer and enables key discovery via HTTPS URLs. It supports two modes: direct JWKS URL or identifier-based discovery with optional metadata.
 
 **Parameters:**
-- `id` (REQUIRED) - Signer identifier (HTTPS URL)
+- `scheme` (REQUIRED) - Must be "jwks"
 - `kid` (REQUIRED) - Key identifier
+
+**Mode 1: Direct JWKS URL**
+- `jwks` (REQUIRED) - Direct HTTPS URL to JWKS document
+
+**Mode 2: Identifier + Metadata**
+- `id` (REQUIRED) - Signer identifier (HTTPS URL)
 - `well-known` (OPTIONAL) - Metadata document name under `/.well-known/`
 
-**Discovery procedure:**
+**Discovery procedure (Mode 1 - Direct JWKS):**
+1. Fetch JWKS from the `jwks` URL
+2. Find key with matching `kid`
+
+**Discovery procedure (Mode 2 - Identifier + Metadata):**
 
 If `well-known` parameter is present:
 1. Fetch `{id}/.well-known/{well-known}`
@@ -117,21 +145,29 @@ If `well-known` parameter is absent:
 1. Fetch `{id}` directly as JWKS
 2. Find key with matching `kid`
 
-**Example (direct JWKS):**
+**Example (direct JWKS URL):**
 
 ```
-Signature-Key: sig=jwks;
-    id="https://agent.example/crawler";
-    kid="key-1"
+Signature-Key: sig=(scheme=jwks
+    jwks="https://agent.example/jwks.json"
+    kid="key-1")
 ```
 
-**Example (with metadata):**
+**Example (identifier - direct fetch):**
 
 ```
-Signature-Key: sig=jwks;
-    id="https://agent.example";
-    well-known="agent-server";
-    kid="key-1"
+Signature-Key: sig=(scheme=jwks
+    id="https://agent.example/crawler"
+    kid="key-1")
+```
+
+**Example (identifier with metadata):**
+
+```
+Signature-Key: sig=(scheme=jwks
+    id="https://agent.example"
+    well-known="aauth-agent"
+    kid="key-1")
 ```
 
 **Use cases:**
@@ -144,6 +180,7 @@ Signature-Key: sig=jwks;
 The x509 scheme provides certificate-based verification using PKI trust chains.
 
 **Parameters:**
+- `scheme` (REQUIRED) - Must be "x509"
 - `x5u` (REQUIRED) - URL to X.509 certificate chain (PEM format, [@!RFC7517] Section 4.6)
 - `x5t` (REQUIRED) - Certificate thumbprint: BASE64URL(SHA256(DER(leaf_cert)))
 
@@ -161,9 +198,9 @@ The x509 scheme provides certificate-based verification using PKI trust chains.
 **Example:**
 
 ```
-Signature-Key: sig=x509;
-    x5u="https://agent.example/.well-known/cert.pem";
-    x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM"
+Signature-Key: sig=(scheme=x509
+    x5u="https://agent.example/.well-known/cert.pem"
+    x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM")
 ```
 
 **Use cases:**
@@ -177,6 +214,7 @@ Signature-Key: sig=x509;
 The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirmation) claim [@!RFC7800], enabling delegation and horizontal scale.
 
 **Parameters:**
+- `scheme` (REQUIRED) - Must be "jwt"
 - `jwt` (REQUIRED) - Compact-serialized JWT
 
 **JWT requirements:**
@@ -193,7 +231,7 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 **Example:**
 
 ```
-Signature-Key: sig=jwt; jwt="eyJhbGciOiJFUzI1NiI..."
+Signature-Key: sig=(scheme=jwt jwt="eyJhbGciOiJFUzI1NiI...")
 ```
 
 **JWT payload example:**
