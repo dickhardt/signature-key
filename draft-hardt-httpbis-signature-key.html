@@ -23,10 +23,10 @@
     google-i18n-address 3.1.1
     intervaltree 3.1.0
     Jinja2 3.1.6
-    lxml 5.3.1
-    platformdirs 4.5.0
+    lxml 6.0.2
+    platformdirs 4.5.1
     pycountry 24.6.1
-    PyYAML 6.0.2
+    PyYAML 6.0.3
     requests 2.32.5
     wcwidth 0.2.14
 -->
@@ -1051,7 +1051,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hardt</td>
-<td class="center">Expires 18 June 2026</td>
+<td class="center">Expires 2 July 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1064,12 +1064,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-hardt-httpbis-signature-key-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-12-15" class="published">15 December 2025</time>
+<time datetime="2025-12-29" class="published">29 December 2025</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-06-18">18 June 2026</time></dd>
+<dd class="expires"><time datetime="2026-07-02">2 July 2026</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1103,7 +1103,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 18 June 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 2 July 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1233,25 +1233,40 @@ svg :is([fill="white"], [fill^="#fff"]) {
       <h2 id="name-the-signature-key-header-fi">
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-the-signature-key-header-fi" class="section-name selfRef">The Signature-Key Header Field</a>
       </h2>
-<p id="section-2-1">The Signature-Key header field provides the public key or key reference needed to verify an HTTP Message Signature. The header uses structured field syntax <span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span> with a label matching the corresponding signature.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-1">The Signature-Key header field provides the public key or key reference needed to verify an HTTP Message Signature. The header is a Structured Field Dictionary <span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span> keyed by signature label, where each member describes how to obtain the verification key for the corresponding signature.<a href="#section-2-1" class="pilcrow">¶</a></p>
 <p id="section-2-2"><strong>Format:</strong><a href="#section-2-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2-3">
-<pre>Signature-Key: &lt;label&gt;=&lt;scheme&gt;; &lt;parameters&gt;
+<pre>Signature-Key: &lt;label&gt;=(scheme=&lt;token&gt; &lt;parameters&gt;...)
 
 </pre><a href="#section-2-3" class="pilcrow">¶</a>
 </div>
 <p id="section-2-4">Where:
-- <code>&lt;label&gt;</code> matches the label in Signature-Input and Signature headers
-- <code>&lt;scheme&gt;</code> is one of: hwk, jwks, x509, jwt
-- <code>&lt;parameters&gt;</code> vary by scheme<a href="#section-2-4" class="pilcrow">¶</a></p>
-<p id="section-2-5"><strong>Example:</strong><a href="#section-2-5" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-2-6">
+- <code>&lt;label&gt;</code> (dictionary key) matches the label in Signature-Input and Signature headers
+- <code>scheme</code> (parameter) is one of: hwk, jwks, x509, jwt
+- <code>&lt;parameters&gt;</code> vary by scheme and are included in the inner list<a href="#section-2-4" class="pilcrow">¶</a></p>
+<p id="section-2-5"><strong>Label Discovery:</strong><a href="#section-2-5" class="pilcrow">¶</a></p>
+<p id="section-2-6">Verifiers MUST:
+1. Discover the signature label from the Signature-Input and Signature headers
+2. Select the matching dictionary member from Signature-Key using that label
+3. Extract the scheme parameter to determine the key distribution method<a href="#section-2-6" class="pilcrow">¶</a></p>
+<p id="section-2-7"><strong>Example:</strong><a href="#section-2-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2-8">
 <pre>Signature-Input: sig=("@method" "@path"); created=1732210000
 Signature: sig=:MEQCIA5...
-Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
+Signature-Key: sig=(scheme=hwk kty="OKP" crv="Ed25519" x="JrQLj...")
 
-</pre><a href="#section-2-6" class="pilcrow">¶</a>
+</pre><a href="#section-2-8" class="pilcrow">¶</a>
 </div>
+<p id="section-2-9"><strong>Multiple Signatures:</strong><a href="#section-2-9" class="pilcrow">¶</a></p>
+<p id="section-2-10">The dictionary format supports multiple signatures per message. Each signature has its own dictionary member keyed by its unique label:<a href="#section-2-10" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2-11">
+<pre>Signature-Input: sig1=(...), sig2=(...)
+Signature: sig1=:...:, sig2=:...:
+Signature-Key: sig1=(scheme=hwk ...), sig2=(scheme=jwt jwt="...")
+
+</pre><a href="#section-2-11" class="pilcrow">¶</a>
+</div>
+<p id="section-2-12">Note: Application protocols may restrict the number of signatures. For example, AAuth (RFC XXXX) requires exactly one signature per request.<a href="#section-2-12" class="pilcrow">¶</a></p>
 <div id="header-web-key-hwk">
 <section id="section-2.1">
         <h3 id="name-header-web-key-hwk">
@@ -1259,6 +1274,7 @@ Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
         </h3>
 <p id="section-2.1-1">The hwk scheme provides a self-contained public key inline in the header, enabling pseudonymous verification without key discovery.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
 <p id="section-2.1-2"><strong>Parameters:</strong>
+- <code>scheme</code> (REQUIRED) - Must be "hwk"
 - <code>kty</code> (REQUIRED) - Key type: "OKP", "EC", or "RSA"
 - <code>crv</code> (REQUIRED for OKP/EC) - Curve name
 - Key material (REQUIRED):
@@ -1266,10 +1282,8 @@ Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
   - RSA: <code>n</code> and <code>e</code><a href="#section-2.1-2" class="pilcrow">¶</a></p>
 <p id="section-2.1-3"><strong>Example:</strong><a href="#section-2.1-3" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2.1-4">
-<pre>Signature-Key: sig=hwk;
-    kty="OKP";
-    crv="Ed25519";
-    x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+<pre>Signature-Key: sig=(scheme=hwk kty="OKP" crv="Ed25519"
+    x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs")
 
 </pre><a href="#section-2.1-4" class="pilcrow">¶</a>
 </div>
@@ -1287,42 +1301,57 @@ Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
         <h3 id="name-jwks-discovery-jwks">
 <a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-jwks-discovery-jwks" class="section-name selfRef">JWKS Discovery (jwks)</a>
         </h3>
-<p id="section-2.2-1">The jwks scheme identifies the signer and enables key discovery via HTTPS URLs.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
+<p id="section-2.2-1">The jwks scheme identifies the signer and enables key discovery via HTTPS URLs. It supports two modes: direct JWKS URL or identifier-based discovery with optional metadata.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
 <p id="section-2.2-2"><strong>Parameters:</strong>
+- <code>scheme</code> (REQUIRED) - Must be "jwks"
+- <code>kid</code> (REQUIRED) - Key identifier<a href="#section-2.2-2" class="pilcrow">¶</a></p>
+<p id="section-2.2-3"><strong>Mode 1: Direct JWKS URL</strong>
+- <code>jwks</code> (REQUIRED) - Direct HTTPS URL to JWKS document<a href="#section-2.2-3" class="pilcrow">¶</a></p>
+<p id="section-2.2-4"><strong>Mode 2: Identifier + Metadata</strong>
 - <code>id</code> (REQUIRED) - Signer identifier (HTTPS URL)
-- <code>kid</code> (REQUIRED) - Key identifier
-- <code>well-known</code> (OPTIONAL) - Metadata document name under <code>/.well-known/</code><a href="#section-2.2-2" class="pilcrow">¶</a></p>
-<p id="section-2.2-3"><strong>Discovery procedure:</strong><a href="#section-2.2-3" class="pilcrow">¶</a></p>
-<p id="section-2.2-4">If <code>well-known</code> parameter is present:
+- <code>well-known</code> (OPTIONAL) - Metadata document name under <code>/.well-known/</code><a href="#section-2.2-4" class="pilcrow">¶</a></p>
+<p id="section-2.2-5"><strong>Discovery procedure (Mode 1 - Direct JWKS):</strong>
+1. Fetch JWKS from the <code>jwks</code> URL
+2. Find key with matching <code>kid</code><a href="#section-2.2-5" class="pilcrow">¶</a></p>
+<p id="section-2.2-6"><strong>Discovery procedure (Mode 2 - Identifier + Metadata):</strong><a href="#section-2.2-6" class="pilcrow">¶</a></p>
+<p id="section-2.2-7">If <code>well-known</code> parameter is present:
 1. Fetch <code>{id}/.well-known/{well-known}</code>
 2. Parse as JSON metadata
 3. Extract <code>jwks_uri</code> property
 4. Fetch JWKS from <code>jwks_uri</code>
-5. Find key with matching <code>kid</code><a href="#section-2.2-4" class="pilcrow">¶</a></p>
-<p id="section-2.2-5">If <code>well-known</code> parameter is absent:
+5. Find key with matching <code>kid</code><a href="#section-2.2-7" class="pilcrow">¶</a></p>
+<p id="section-2.2-8">If <code>well-known</code> parameter is absent:
 1. Fetch <code>{id}</code> directly as JWKS
-2. Find key with matching <code>kid</code><a href="#section-2.2-5" class="pilcrow">¶</a></p>
-<p id="section-2.2-6"><strong>Example (direct JWKS):</strong><a href="#section-2.2-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-2.2-7">
-<pre>Signature-Key: sig=jwks;
-    id="https://agent.example/crawler";
-    kid="key-1"
+2. Find key with matching <code>kid</code><a href="#section-2.2-8" class="pilcrow">¶</a></p>
+<p id="section-2.2-9"><strong>Example (direct JWKS URL):</strong><a href="#section-2.2-9" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.2-10">
+<pre>Signature-Key: sig=(scheme=jwks
+    jwks="https://agent.example/jwks.json"
+    kid="key-1")
 
-</pre><a href="#section-2.2-7" class="pilcrow">¶</a>
+</pre><a href="#section-2.2-10" class="pilcrow">¶</a>
 </div>
-<p id="section-2.2-8"><strong>Example (with metadata):</strong><a href="#section-2.2-8" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-2.2-9">
-<pre>Signature-Key: sig=jwks;
-    id="https://agent.example";
-    well-known="agent-server";
-    kid="key-1"
+<p id="section-2.2-11"><strong>Example (identifier - direct fetch):</strong><a href="#section-2.2-11" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.2-12">
+<pre>Signature-Key: sig=(scheme=jwks
+    id="https://agent.example/crawler"
+    kid="key-1")
 
-</pre><a href="#section-2.2-9" class="pilcrow">¶</a>
+</pre><a href="#section-2.2-12" class="pilcrow">¶</a>
 </div>
-<p id="section-2.2-10"><strong>Use cases:</strong>
+<p id="section-2.2-13"><strong>Example (identifier with metadata):</strong><a href="#section-2.2-13" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.2-14">
+<pre>Signature-Key: sig=(scheme=jwks
+    id="https://agent.example"
+    well-known="aauth-agent"
+    kid="key-1")
+
+</pre><a href="#section-2.2-14" class="pilcrow">¶</a>
+</div>
+<p id="section-2.2-15"><strong>Use cases:</strong>
 - Identified services with stable HTTPS identity
 - Search engine crawlers and monitoring services
-- Services requiring explicit entity identification<a href="#section-2.2-10" class="pilcrow">¶</a></p>
+- Services requiring explicit entity identification<a href="#section-2.2-15" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="x-509-certificates-x509">
@@ -1332,6 +1361,7 @@ Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
         </h3>
 <p id="section-2.3-1">The x509 scheme provides certificate-based verification using PKI trust chains.<a href="#section-2.3-1" class="pilcrow">¶</a></p>
 <p id="section-2.3-2"><strong>Parameters:</strong>
+- <code>scheme</code> (REQUIRED) - Must be "x509"
 - <code>x5u</code> (REQUIRED) - URL to X.509 certificate chain (PEM format, <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span> Section 4.6)
 - <code>x5t</code> (REQUIRED) - Certificate thumbprint: BASE64URL(SHA256(DER(leaf_cert)))<a href="#section-2.3-2" class="pilcrow">¶</a></p>
 <p id="section-2.3-3"><strong>Verification procedure:</strong><a href="#section-2.3-3" class="pilcrow">¶</a></p>
@@ -1355,9 +1385,9 @@ Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
         </ol>
 <p id="section-2.3-5"><strong>Example:</strong><a href="#section-2.3-5" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2.3-6">
-<pre>Signature-Key: sig=x509;
-    x5u="https://agent.example/.well-known/cert.pem";
-    x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM"
+<pre>Signature-Key: sig=(scheme=x509
+    x5u="https://agent.example/.well-known/cert.pem"
+    x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM")
 
 </pre><a href="#section-2.3-6" class="pilcrow">¶</a>
 </div>
@@ -1375,6 +1405,7 @@ Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
         </h3>
 <p id="section-2.4-1">The jwt scheme embeds a public key inside a signed JWT using the <code>cnf</code> (confirmation) claim <span>[<a href="#RFC7800" class="cite xref">RFC7800</a>]</span>, enabling delegation and horizontal scale.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
 <p id="section-2.4-2"><strong>Parameters:</strong>
+- <code>scheme</code> (REQUIRED) - Must be "jwt"
 - <code>jwt</code> (REQUIRED) - Compact-serialized JWT<a href="#section-2.4-2" class="pilcrow">¶</a></p>
 <p id="section-2.4-3"><strong>JWT requirements:</strong>
 - MUST contain <code>cnf.jwk</code> claim with embedded JWK
@@ -1392,7 +1423,7 @@ Signature-Key: sig=hwk; kty="OKP"; crv="Ed25519"; x="JrQLj..."
         </ol>
 <p id="section-2.4-6"><strong>Example:</strong><a href="#section-2.4-6" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2.4-7">
-<pre>Signature-Key: sig=jwt; jwt="eyJhbGciOiJFUzI1NiI..."
+<pre>Signature-Key: sig=(scheme=jwt jwt="eyJhbGciOiJFUzI1NiI...")
 
 </pre><a href="#section-2.4-7" class="pilcrow">¶</a>
 </div>
