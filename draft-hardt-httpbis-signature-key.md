@@ -58,12 +58,17 @@ Where:
 - `scheme` (parameter) is one of: hwk, jwks, x509, jwt
 - `<parameters>` vary by scheme and are included in the inner list
 
-**Label Discovery:**
+**Label Correlation:**
+
+Verifiers correlate signature labels across the Signature-Input, Signature, and Signature-Key headers. For each signature being verified, the verifier selects the corresponding dictionary member from Signature-Key.
 
 Verifiers MUST:
-1. Discover the signature label from the Signature-Input and Signature headers
-2. Select the matching dictionary member from Signature-Key using that label
-3. Extract the scheme parameter to determine the key distribution method
+1. Parse Signature-Input and Signature per RFC 9421 and obtain the set of signature labels present
+2. Parse Signature-Key as a Structured Fields Dictionary
+3. For each label being verified, select the Signature-Key dictionary member with the same name
+4. If the corresponding dictionary member is missing, verification for that signature MUST fail
+
+Profiles MAY define stricter label selection and mismatch handling rules
 
 **Example:**
 
@@ -72,6 +77,24 @@ Signature-Input: sig=("@method" "@path"); created=1732210000
 Signature: sig=:MEQCIA5...
 Signature-Key: sig=(scheme=hwk kty="OKP" crv="Ed25519" x="JrQLj...")
 ```
+
+## Label Consistency
+
+If a label appears in Signature or Signature-Input, and the verifier attempts to verify it, the corresponding member MUST exist in Signature-Key. If Signature-Key contains members for labels not being verified, verifiers MAY ignore them.
+
+Profiles may require exactly one label and reject extras.
+
+## Profiles and Application Constraints
+
+Signature-Key supports multiple signatures per RFC 9421 using a dictionary with multiple members. Application protocols (profiles) MAY constrain:
+
+- Number of signatures
+- Label constraints
+- Verification rejection conditions
+
+This document defines the base format and schemes only.
+
+> **Note:** AAuth is a profile that requires exactly one signature and exactly one Signature-Key dictionary member. In AAuth, Signature-Key is required to contain exactly one member and the member name is used as the authoritative label. AAuth also requires one label in Signature-Input and Signature and rejects mismatches.
 
 **Multiple Signatures:**
 
@@ -83,7 +106,7 @@ Signature: sig1=:...:, sig2=:...:
 Signature-Key: sig1=(scheme=hwk ...), sig2=(scheme=jwt jwt="...")
 ```
 
-Note: Application protocols may restrict the number of signatures. For example, AAuth (RFC XXXX) requires exactly one signature per request.
+Profiles may require a single signature and reject multiple labels in Signature-Input/Signature or multiple members in Signature-Key. Such restrictions are profile-specific and not imposed by this document
 
 ## Header Web Key (hwk)
 
@@ -127,6 +150,8 @@ The jwks scheme identifies the signer and enables key discovery via HTTPS URLs. 
 **Mode 2: Identifier + Metadata**
 - `id` (REQUIRED) - Signer identifier (HTTPS URL)
 - `well-known` (OPTIONAL) - Metadata document name under `/.well-known/`
+
+The `jwks` and `id` parameters MUST NOT both be present within a single inner list.
 
 **Discovery procedure (Mode 1 - Direct JWKS):**
 1. Fetch JWKS from the `jwks` URL
