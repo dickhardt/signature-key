@@ -57,7 +57,9 @@ The header supports four schemes, each designed for different trust models and o
 3. **X.509 (x509)** - Certificate-based verification with PKI trust chains
 4. **JWT (jwt)** - Delegated keys embedded in signed JWTs for horizontal scale
 
-The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material. The scheme registry defined in this document allows future extensions for additional key distribution mechanisms.
+Additional schemes may be defined through the IANA registry established by this document.
+
+The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.
 
 # The Signature-Key Header Field
 
