@@ -12,7 +12,7 @@ name = "Internet-Draft"
 value = "draft-hardt-httpbis-signature-key-latest"
 stream = "IETF"
 
-date = 2025-12-15T00:00:00Z
+date = 2026-01-05T00:00:00Z
 
 [[author]]
 initials = "D."
@@ -20,13 +20,19 @@ surname = "Hardt"
 fullname = "Dick Hardt"
 organization = "Hellō"
   [author.address]
-  email = "dick.hardt@hello.coop"
+  email = "dick.hardt@gmail.com"
 
 %%%
 
 .# Abstract
 
 This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. The header supports four key distribution schemes: pseudonymous inline keys (hwk), identified signers with JWKS discovery (jwks), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving anonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
+
+.# Discussion Venues
+
+*Note: This section is to be removed before publishing as an RFC.*
+
+Source for this draft and an issue tracker can be found at https://github.com/dickhardt/signature-key.
 
 {mainmatter}
 
