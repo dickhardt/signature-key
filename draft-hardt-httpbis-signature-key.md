@@ -111,7 +111,7 @@ The dictionary format supports multiple signatures per message. Each signature h
 ```
 Signature-Input: sig1=(...), sig2=(...)
 Signature: sig1=:...:, sig2=:...:
-Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
+Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
 ```
 
 ## Profiles
@@ -161,6 +161,8 @@ The jwks_uri scheme identifies the signer and enables key discovery via a metada
 - `well-known` (REQUIRED) - Metadata document name under `/.well-known/`
 
 - `kid` (REQUIRED) - Key identifier
+
+> **Note:** The `well-known` parameter may be shortened to `wk` once the semantics are stable.
 
 **Discovery procedure:**
 
