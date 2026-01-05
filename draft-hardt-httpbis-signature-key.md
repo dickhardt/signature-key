@@ -100,27 +100,11 @@ Verifiers MUST:
 
 > **Note:** A verifier might choose to verify only a subset of labels present (e.g., the application-required signature); labels not verified can be ignored.
 
-Profiles MAY define stricter label selection and mismatch handling rules.
-
 ## Label Consistency
 
 If a label appears in Signature or Signature-Input, and the verifier attempts to verify it, the corresponding member MUST exist in Signature-Key. If Signature-Key contains members for labels not being verified, verifiers MAY ignore them.
 
-This section defines base correlation behavior; profiles MAY impose additional rejection conditions (e.g., exactly one label, no extra members).
-
-## Profiles and Application Constraints
-
-Signature-Key supports multiple signatures per RFC 9421 using a dictionary with multiple members. Application protocols (profiles) MAY constrain:
-
-- Number of signatures
-- Label constraints
-- Verification rejection conditions
-
-This document defines the base format and schemes only.
-
-> **Note:** AAuth is a profile that requires exactly one signature and exactly one Signature-Key dictionary member. AAuth defines a single-signature profile and specifies stricter label selection and mismatch handling rules. AAuth uses Signature-Key's single dictionary member name as the expected label and requires the other signature headers to match it.
-
-**Multiple Signatures:**
+## Multiple Signatures
 
 The dictionary format supports multiple signatures per message. Each signature has its own dictionary member keyed by its unique label:
 
@@ -130,7 +114,9 @@ Signature: sig1=:...:, sig2=:...:
 Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
 ```
 
-Profiles MAY require a single signature and define rejection behavior for multiple labels in Signature-Input/Signature or multiple members in Signature-Key. Those restrictions are profile-specific and not imposed by this document.
+## Profiles
+
+This document defines the base format and schemes. Application protocols (profiles) MAY impose additional constraints such as requiring a single signature, specific label names, or stricter rejection conditions.
 
 ## Header Web Key (hwk)
 
