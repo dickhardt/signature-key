@@ -67,11 +67,12 @@ Table of Contents
    1.  Introduction
    2.  The Signature-Key Header Field
      2.1.  Label Consistency
-     2.2.  Profiles and Application Constraints
-     2.3.  Header Web Key (hwk)
-     2.4.  JWKS Discovery (jwks)
-     2.5.  X.509 Certificates (x509)
-     2.6.  JWT Confirmation Key (jwt)
+     2.2.  Multiple Signatures
+     2.3.  Profiles
+     2.4.  Header Web Key (hwk)
+     2.5.  JWKS Discovery (jwks)
+     2.6.  X.509 Certificates (x509)
+     2.7.  JWT Confirmation Key (jwt)
    3.  Security Considerations
      3.1.  Key Validation
      3.2.  Caching and Performance
@@ -175,9 +176,6 @@ Table of Contents
    |  present (e.g., the application-required signature); labels not
    |  verified can be ignored.
 
-   Profiles MAY define stricter label selection and mismatch handling
-   rules.
-
 2.1.  Label Consistency
 
    If a label appears in Signature or Signature-Input, and the verifier
@@ -185,30 +183,7 @@ Table of Contents
    Signature-Key. If Signature-Key contains members for labels not being
    verified, verifiers MAY ignore them.
 
-   This section defines base correlation behavior; profiles MAY impose
-   additional rejection conditions (e.g., exactly one label, no extra
-   members).
-
-2.2.  Profiles and Application Constraints
-
-   Signature-Key supports multiple signatures per RFC 9421 using a
-   dictionary with multiple members.  Application protocols (profiles)
-   MAY constrain:
-
-   *  Number of signatures
-   *  Label constraints
-   *  Verification rejection conditions
-
-   This document defines the base format and schemes only.
-
-   |  *Note:* AAuth is a profile that requires exactly one signature and
-   |  exactly one Signature-Key dictionary member.  AAuth defines a
-   |  single-signature profile and specifies stricter label selection
-   |  and mismatch handling rules.  AAuth uses Signature-Key's single
-   |  dictionary member name as the expected label and requires the
-   |  other signature headers to match it.
-
-   *Multiple Signatures:*
+2.2.  Multiple Signatures
 
    The dictionary format supports multiple signatures per message.  Each
    signature has its own dictionary member keyed by its unique label:
@@ -217,12 +192,14 @@ Table of Contents
    Signature: sig1=:...:, sig2=:...:
    Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
 
-   Profiles MAY require a single signature and define rejection behavior
-   for multiple labels in Signature-Input/Signature or multiple members
-   in Signature-Key. Those restrictions are profile-specific and not
-   imposed by this document.
+2.3.  Profiles
 
-2.3.  Header Web Key (hwk)
+   This document defines the base format and schemes.  Application
+   protocols (profiles) MAY impose additional constraints such as
+   requiring a single signature, specific label names, or stricter
+   rejection conditions.
+
+2.4.  Header Web Key (hwk)
 
    The hwk scheme provides a self-contained public key inline in the
    header, enabling pseudonymous verification without key discovery.
@@ -242,7 +219,7 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC
    disclosure - Experimental or temporary access without registration -
    Rate limiting and reputation building on a per-key basis
 
-2.4.  JWKS Discovery (jwks)
+2.5.  JWKS Discovery (jwks)
 
    The jwks scheme identifies the signer and enables key discovery via
    HTTPS URLs.  It supports two modes: direct JWKS URL or identifier-
@@ -287,7 +264,7 @@ Signature-Key: sig=jwks;id="https://agent.example";well-known="aauth-agent";kid=
    Search engine crawlers and monitoring services - Services requiring
    explicit entity identification
 
-2.5.  X.509 Certificates (x509)
+2.6.  X.509 Certificates (x509)
 
    The x509 scheme provides certificate-based verification using PKI
    trust chains.
@@ -316,7 +293,7 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    requiring certificate revocation checking - Regulated industries
    requiring certificate-based authentication
 
-2.6.  JWT Confirmation Key (jwt)
+2.7.  JWT Confirmation Key (jwt)
 
    The jwt scheme embeds a public key inside a signed JWT using the cnf
    (confirmation) claim [RFC7800], enabling delegation and horizontal
