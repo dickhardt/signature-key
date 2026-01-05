@@ -83,22 +83,32 @@ Table of Contents
      4.3.  JWT Contents
    5.  IANA Considerations
      5.1.  HTTP Field Name Registration
+     5.2.  Signature-Key Scheme Registry
+       5.2.1.  Registration Procedure
+       5.2.2.  Initial Registry Contents
+       5.2.3.  Registration Template
    6.  Normative References
    Appendix A.  Acknowledgments
    Authors' Addresses
 
 1.  Introduction
 
-   HTTP Message Signatures [RFC9421] defines a mechanism for creating
-   and verifying signatures over HTTP messages.  However, RFC 9421 does
-   not specify how verifiers obtain the public keys needed to verify
-   signatures.  This creates an interoperability gap where different
-   implementations must define custom key distribution mechanisms.
+   HTTP Message Signatures [RFC9421] provides a powerful mechanism for
+   creating and verifying digital signatures over HTTP messages.  To
+   verify a signature, the verifier needs the signer's public key.
+   While RFC 9421 defines signature creation and verification
+   procedures, it intentionally leaves key distribution to application
+   protocols, recognizing that different deployments have different
+   trust requirements.
 
-   This document defines the Signature-Key HTTP header field to address
-   this gap.  The header provides four standardized schemes for key
-   distribution, each suited to different trust models and operational
-   requirements:
+   This document defines the Signature-Key HTTP header field to
+   standardize key distribution for HTTP Message Signatures.  The header
+   enables signers to provide their public key or a reference to it
+   directly in the HTTP message, allowing verifiers to obtain keying
+   material without prior coordination.
+
+   The header supports four schemes, each designed for different trust
+   models and operational requirements:
 
    1.  *Header Web Key (hwk)* - Self-contained public keys for
        pseudonymous verification
@@ -110,7 +120,9 @@ Table of Contents
 
    The Signature-Key header works in conjunction with the Signature-
    Input and Signature headers defined in RFC 9421, using matching
-   labels to correlate signature metadata with keying material.
+   labels to correlate signature metadata with keying material.  The
+   scheme registry defined in this document allows future extensions for
+   additional key distribution mechanisms.
 
 2.  The Signature-Key Header Field
 
@@ -448,6 +460,43 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
 
    Specification document(s): [this document]
 
+5.2.  Signature-Key Scheme Registry
+
+   This document establishes the "HTTP Signature-Key Scheme" registry.
+   This registry allows for the definition of additional key
+   distribution schemes beyond those defined in this document.
+
+5.2.1.  Registration Procedure
+
+   New scheme registrations require Specification Required per
+   [RFC8126].
+
+5.2.2.  Initial Registry Contents
+
+     +========+====================================+=================+
+     | Scheme | Description                        | Reference       |
+     +========+====================================+=================+
+     | hwk    | Header Web Key - inline public key | [this document] |
+     +--------+------------------------------------+-----------------+
+     | jwks   | JWKS Discovery - key reference via | [this document] |
+     |        | HTTPS                              |                 |
+     +--------+------------------------------------+-----------------+
+     | x509   | X.509 Certificate - PKI            | [this document] |
+     |        | certificate chain                  |                 |
+     +--------+------------------------------------+-----------------+
+     | jwt    | JWT Confirmation Key - delegated   | [this document] |
+     |        | key in JWT                         |                 |
+     +--------+------------------------------------+-----------------+
+
+                                  Table 1
+
+5.2.3.  Registration Template
+
+   Scheme Name:  The token value used in the Signature-Key header
+   Description:  A brief description of the scheme
+   Specification:  Reference to the specification defining the scheme
+   Parameters:  List of parameters defined for this scheme
+
 6.  Normative References
 
    [RFC7517]  Jones, M., "JSON Web Key (JWK)", RFC 7517,
@@ -458,6 +507,11 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
               Possession Key Semantics for JSON Web Tokens (JWTs)",
               RFC 7800, DOI 10.17487/RFC7800, April 2016,
               <https://www.rfc-editor.org/info/rfc7800>.
+
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, DOI 10.17487/RFC8126, June 2017,
+              <https://www.rfc-editor.org/info/rfc8126>.
 
    [RFC8941]  Nottingham, M. and P. Kamp, "Structured Field Values for
               HTTP", RFC 8941, DOI 10.17487/RFC8941, February 2021,
