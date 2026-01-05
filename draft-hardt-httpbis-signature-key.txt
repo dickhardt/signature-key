@@ -194,10 +194,10 @@ Table of Contents
 
 2.3.  Profiles
 
-   This document defines the base format and schemes.  Application
-   protocols (profiles) MAY impose additional constraints such as
-   requiring a single signature, specific label names, or stricter
-   rejection conditions.
+   Profiles MAY require a single signature and define rejection behavior
+   for multiple labels in Signature-Input/Signature or multiple members
+   in Signature-Key. Those restrictions are profile-specific and not
+   imposed by this document.
 
 2.4.  Header Web Key (hwk)
 
