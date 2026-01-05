@@ -1346,43 +1346,83 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";wel
 <a href="#section-2.4" class="section-number selfRef">2.4. </a><a href="#name-header-web-key-hwk" class="section-name selfRef">Header Web Key (hwk)</a>
         </h3>
 <p id="section-2.4-1">The hwk scheme provides a self-contained public key inline in the header, enabling pseudonymous verification without key discovery.<a href="#section-2.4-1" class="pilcrow">¶</a></p>
-<p id="section-2.4-2"><strong>Parameters:</strong><a href="#section-2.4-2" class="pilcrow">¶</a></p>
+<p id="section-2.4-2"><strong>Parameters by key type:</strong><a href="#section-2.4-2" class="pilcrow">¶</a></p>
+<p id="section-2.4-3">OKP (Octet Key Pair):<a href="#section-2.4-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2.4-3.1">
-            <p id="section-2.4-3.1.1"><code>kty</code> (REQUIRED) - Key type: "OKP", "EC", or "RSA"<a href="#section-2.4-3.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2.4-4.1">
+            <p id="section-2.4-4.1.1"><code>kty</code> (REQUIRED) - "OKP"<a href="#section-2.4-4.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.4-3.2">
-            <p id="section-2.4-3.2.1"><code>crv</code> (REQUIRED for OKP/EC) - Curve name<a href="#section-2.4-3.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.4-4.2">
+            <p id="section-2.4-4.2.1"><code>crv</code> (REQUIRED) - Curve name (e.g., "Ed25519")<a href="#section-2.4-4.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.4-3.3">
-            <p id="section-2.4-3.3.1">Key material (REQUIRED): OKP/EC: <code>x</code> (and <code>y</code> for EC); RSA: <code>n</code> and <code>e</code><a href="#section-2.4-3.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.4-4.3">
+            <p id="section-2.4-4.3.1"><code>x</code> (REQUIRED) - Public key value<a href="#section-2.4-4.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-2.4-4"><strong>Example:</strong><a href="#section-2.4-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-2.4-5">
+<p id="section-2.4-5">EC (Elliptic Curve):<a href="#section-2.4-5" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-2.4-6.1">
+            <p id="section-2.4-6.1.1"><code>kty</code> (REQUIRED) - "EC"<a href="#section-2.4-6.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.4-6.2">
+            <p id="section-2.4-6.2.1"><code>crv</code> (REQUIRED) - Curve name (e.g., "P-256", "P-384")<a href="#section-2.4-6.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.4-6.3">
+            <p id="section-2.4-6.3.1"><code>x</code> (REQUIRED) - X coordinate<a href="#section-2.4-6.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.4-6.4">
+            <p id="section-2.4-6.4.1"><code>y</code> (REQUIRED) - Y coordinate<a href="#section-2.4-6.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-2.4-7">RSA:<a href="#section-2.4-7" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-2.4-8.1">
+            <p id="section-2.4-8.1.1"><code>kty</code> (REQUIRED) - "RSA"<a href="#section-2.4-8.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.4-8.2">
+            <p id="section-2.4-8.2.1"><code>n</code> (REQUIRED) - Modulus<a href="#section-2.4-8.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.4-8.3">
+            <p id="section-2.4-8.3.1"><code>e</code> (REQUIRED) - Exponent<a href="#section-2.4-8.3.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-2.4-9"><strong>Example (Ed25519):</strong><a href="#section-2.4-9" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.4-10">
 <pre>Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
 
-</pre><a href="#section-2.4-5" class="pilcrow">¶</a>
+</pre><a href="#section-2.4-10" class="pilcrow">¶</a>
 </div>
-<p id="section-2.4-6"><strong>Constraints:</strong><a href="#section-2.4-6" class="pilcrow">¶</a></p>
+<p id="section-2.4-11"><strong>Example (P-256):</strong><a href="#section-2.4-11" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.4-12">
+<pre>Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU";y="x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0"
+
+</pre><a href="#section-2.4-12" class="pilcrow">¶</a>
+</div>
+<p id="section-2.4-13"><strong>Example (RSA):</strong><a href="#section-2.4-13" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.4-14">
+<pre>Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB"
+
+</pre><a href="#section-2.4-14" class="pilcrow">¶</a>
+</div>
+<p id="section-2.4-15"><strong>Constraints:</strong><a href="#section-2.4-15" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2.4-7.1">
-            <p id="section-2.4-7.1.1">The <code>alg</code> parameter MUST NOT be present (algorithm is specified in Signature-Input)<a href="#section-2.4-7.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2.4-16.1">
+            <p id="section-2.4-16.1.1">The <code>alg</code> parameter MUST NOT be present (algorithm is specified in Signature-Input)<a href="#section-2.4-16.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.4-7.2">
-            <p id="section-2.4-7.2.1">The <code>kid</code> parameter SHOULD NOT be used<a href="#section-2.4-7.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.4-16.2">
+            <p id="section-2.4-16.2.1">The <code>kid</code> parameter SHOULD NOT be used<a href="#section-2.4-16.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-2.4-8"><strong>Use cases:</strong><a href="#section-2.4-8" class="pilcrow">¶</a></p>
+<p id="section-2.4-17"><strong>Use cases:</strong><a href="#section-2.4-17" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2.4-9.1">
-            <p id="section-2.4-9.1.1">Privacy-preserving agents that avoid identity disclosure<a href="#section-2.4-9.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2.4-18.1">
+            <p id="section-2.4-18.1.1">Privacy-preserving agents that avoid identity disclosure<a href="#section-2.4-18.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.4-9.2">
-            <p id="section-2.4-9.2.1">Experimental or temporary access without registration<a href="#section-2.4-9.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.4-18.2">
+            <p id="section-2.4-18.2.1">Experimental or temporary access without registration<a href="#section-2.4-18.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.4-9.3">
-            <p id="section-2.4-9.3.1">Rate limiting and reputation building on a per-key basis<a href="#section-2.4-9.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.4-18.3">
+            <p id="section-2.4-18.3.1">Rate limiting and reputation building on a per-key basis<a href="#section-2.4-18.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
