@@ -1326,7 +1326,7 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
 <div class="alignLeft art-text artwork" id="section-2.2-2">
 <pre>Signature-Input: sig1=(...), sig2=(...)
 Signature: sig1=:...:, sig2=:...:
-Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
+Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
 
 </pre><a href="#section-2.2-2" class="pilcrow">¶</a>
 </div>
@@ -1405,40 +1405,43 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwks_uri;id="https://example.com
             <p id="section-2.5-3.3.1"><code>kid</code> (REQUIRED) - Key identifier<a href="#section-2.5-3.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-2.5-4"><strong>Discovery procedure:</strong><a href="#section-2.5-4" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-2.5-5">
-<li id="section-2.5-5.1">
-            <p id="section-2.5-5.1.1">Fetch <code>{id}/.well-known/{well-known}</code><a href="#section-2.5-5.1.1" class="pilcrow">¶</a></p>
+<blockquote id="section-2.5-4">
+          <p id="section-2.5-4.1"><strong>Note:</strong> The <code>well-known</code> parameter may be shortened to <code>wk</code> once the semantics are stable.<a href="#section-2.5-4.1" class="pilcrow">¶</a></p>
+</blockquote>
+<p id="section-2.5-5"><strong>Discovery procedure:</strong><a href="#section-2.5-5" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-2.5-6">
+<li id="section-2.5-6.1">
+            <p id="section-2.5-6.1.1">Fetch <code>{id}/.well-known/{well-known}</code><a href="#section-2.5-6.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-2.5-5.2">
-            <p id="section-2.5-5.2.1">Parse as JSON metadata<a href="#section-2.5-5.2.1" class="pilcrow">¶</a></p>
+          <li id="section-2.5-6.2">
+            <p id="section-2.5-6.2.1">Parse as JSON metadata<a href="#section-2.5-6.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-2.5-5.3">
-            <p id="section-2.5-5.3.1">Extract <code>jwks_uri</code> property<a href="#section-2.5-5.3.1" class="pilcrow">¶</a></p>
+          <li id="section-2.5-6.3">
+            <p id="section-2.5-6.3.1">Extract <code>jwks_uri</code> property<a href="#section-2.5-6.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-2.5-5.4">
-            <p id="section-2.5-5.4.1">Fetch JWKS from <code>jwks_uri</code><a href="#section-2.5-5.4.1" class="pilcrow">¶</a></p>
+          <li id="section-2.5-6.4">
+            <p id="section-2.5-6.4.1">Fetch JWKS from <code>jwks_uri</code><a href="#section-2.5-6.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-2.5-5.5">
-            <p id="section-2.5-5.5.1">Find key with matching <code>kid</code><a href="#section-2.5-5.5.1" class="pilcrow">¶</a></p>
+          <li id="section-2.5-6.5">
+            <p id="section-2.5-6.5.1">Find key with matching <code>kid</code><a href="#section-2.5-6.5.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
-<p id="section-2.5-6"><strong>Example:</strong><a href="#section-2.5-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-2.5-7">
+<p id="section-2.5-7"><strong>Example:</strong><a href="#section-2.5-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.5-8">
 <pre>Signature-Key: sig=jwks_uri;id="https://agent.example";well-known="aauth-agent";kid="key-1"
 
-</pre><a href="#section-2.5-7" class="pilcrow">¶</a>
+</pre><a href="#section-2.5-8" class="pilcrow">¶</a>
 </div>
-<p id="section-2.5-8"><strong>Use cases:</strong><a href="#section-2.5-8" class="pilcrow">¶</a></p>
+<p id="section-2.5-9"><strong>Use cases:</strong><a href="#section-2.5-9" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2.5-9.1">
-            <p id="section-2.5-9.1.1">Identified services with stable HTTPS identity<a href="#section-2.5-9.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2.5-10.1">
+            <p id="section-2.5-10.1.1">Identified services with stable HTTPS identity<a href="#section-2.5-10.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.5-9.2">
-            <p id="section-2.5-9.2.1">Search engine crawlers and monitoring services<a href="#section-2.5-9.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.5-10.2">
+            <p id="section-2.5-10.2.1">Search engine crawlers and monitoring services<a href="#section-2.5-10.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.5-9.3">
-            <p id="section-2.5-9.3.1">Services requiring explicit entity identification<a href="#section-2.5-9.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.5-10.3">
+            <p id="section-2.5-10.3.1">Services requiring explicit entity identification<a href="#section-2.5-10.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>

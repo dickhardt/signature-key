@@ -191,7 +191,7 @@ Table of Contents
 
 Signature-Input: sig1=(...), sig2=(...)
 Signature: sig1=:...:, sig2=:...:
-Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
+Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
 
 2.3.  Profiles
 
@@ -244,6 +244,9 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC
    *  well-known (REQUIRED) - Metadata document name under /.well-known/
 
    *  kid (REQUIRED) - Key identifier
+
+   |  *Note:* The well-known parameter may be shortened to wk once the
+   |  semantics are stable.
 
    *Discovery procedure:*
 
