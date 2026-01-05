@@ -4,8 +4,9 @@
 
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
-Intended status: Standards Track                          5 January 2026
-Expires: 9 July 2026
+Intended status: Standards Track                              T. Meunier
+Expires: 9 July 2026                                          Cloudflare
+                                                          5 January 2026
 
 
                        HTTP Signature-Key Header
@@ -84,7 +85,7 @@ Table of Contents
      5.1.  HTTP Field Name Registration
    6.  Normative References
    Appendix A.  Acknowledgments
-   Author's Address
+   Authors' Addresses
 
 1.  Introduction
 
@@ -470,8 +471,13 @@ Appendix A.  Acknowledgments
    The author would like to thank reviewers for their feedback on this
    specification.
 
-Author's Address
+Authors' Addresses
 
    Dick Hardt
    Hellō
    Email: dick.hardt@gmail.com
+
+
+   Thibault Meunier
+   Cloudflare
+   Email: ot-ietf@thibault.uk
