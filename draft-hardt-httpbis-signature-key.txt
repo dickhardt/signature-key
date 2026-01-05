@@ -121,12 +121,12 @@ Table of Contents
 
    *Format:*
 
-   Signature-Key: <label>=(scheme=<token> <parameters>...)
+   Signature-Key: <label>=<scheme>;<parameters>...
 
    Where: - <label> (dictionary key) matches the label in Signature-
-   Input and Signature headers - scheme (parameter) is one of: hwk,
-   jwks, x509, jwt - <parameters> vary by scheme and are included in the
-   inner list
+   Input and Signature headers - <scheme> (item value) is one of: hwk,
+   jwks, x509, jwt - <parameters> are semicolon-separated key-value
+   pairs that vary by scheme
 
    *Label Correlation:*
 
@@ -156,7 +156,7 @@ Table of Contents
 
    Signature-Input: sig=("@method" "@path"); created=1732210000
    Signature: sig=:MEQCIA5...
-   Signature-Key: sig=(scheme=hwk kty="OKP" crv="Ed25519" x="JrQLj...")
+   Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
 
 2.1.  Label Consistency
 
@@ -195,7 +195,7 @@ Table of Contents
 
    Signature-Input: sig1=(...), sig2=(...)
    Signature: sig1=:...:, sig2=:...:
-   Signature-Key: sig1=(scheme=hwk ...), sig2=(scheme=jwt jwt="...")
+   Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
 
    Profiles MAY require a single signature and define rejection behavior
    for multiple labels in Signature-Input/Signature or multiple members
@@ -207,15 +207,13 @@ Table of Contents
    The hwk scheme provides a self-contained public key inline in the
    header, enabling pseudonymous verification without key discovery.
 
-   *Parameters:* - scheme (REQUIRED) - Must be "hwk" - kty (REQUIRED) -
-   Key type: "OKP", "EC", or "RSA" - crv (REQUIRED for OKP/EC) - Curve
-   name - Key material (REQUIRED): - OKP/EC: x (and y for EC) - RSA: n
-   and e
+   *Parameters:* - kty (REQUIRED) - Key type: "OKP", "EC", or "RSA" -
+   crv (REQUIRED for OKP/EC) - Curve name - Key material (REQUIRED): -
+   OKP/EC: x (and y for EC) - RSA: n and e
 
    *Example:*
 
-   Signature-Key: sig=(scheme=hwk kty="OKP" crv="Ed25519"
-       x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs")
+Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
 
    *Constraints:* - The alg parameter MUST NOT be present (algorithm is
    specified in Signature-Input) - The kid parameter SHOULD NOT be used
@@ -230,8 +228,7 @@ Table of Contents
    HTTPS URLs.  It supports two modes: direct JWKS URL or identifier-
    based discovery with optional metadata.
 
-   *Parameters:* - scheme (REQUIRED) - Must be "jwks" - kid (REQUIRED) -
-   Key identifier
+   *Parameters:* - kid (REQUIRED) - Key identifier
 
    *Mode 1: Direct JWKS URL* - jwks (REQUIRED) - Direct HTTPS URL to
    JWKS document
@@ -240,8 +237,7 @@ Table of Contents
    (HTTPS URL) - well-known (OPTIONAL) - Metadata document name under
    /.well-known/
 
-   The jwks and id parameters MUST NOT both be present within a single
-   inner list.
+   The jwks and id parameters MUST NOT both be present.
 
    *Discovery procedure (Mode 1 - Direct JWKS):* 1.  Fetch JWKS from the
    jwks URL 2.  Find key with matching kid
@@ -257,22 +253,15 @@ Table of Contents
 
    *Example (direct JWKS URL):*
 
-   Signature-Key: sig=(scheme=jwks
-       jwks="https://agent.example/jwks.json"
-       kid="key-1")
+Signature-Key: sig=jwks;jwks="https://agent.example/jwks.json";kid="key-1"
 
    *Example (identifier - direct fetch):*
 
-   Signature-Key: sig=(scheme=jwks
-       id="https://agent.example/crawler"
-       kid="key-1")
+  Signature-Key: sig=jwks;id="https://agent.example/crawler";kid="key-1"
 
    *Example (identifier with metadata):*
 
-   Signature-Key: sig=(scheme=jwks
-       id="https://agent.example"
-       well-known="aauth-agent"
-       kid="key-1")
+Signature-Key: sig=jwks;id="https://agent.example";well-known="aauth-agent";kid="key-1"
 
    *Use cases:* - Identified services with stable HTTPS identity -
    Search engine crawlers and monitoring services - Services requiring
@@ -283,10 +272,9 @@ Table of Contents
    The x509 scheme provides certificate-based verification using PKI
    trust chains.
 
-   *Parameters:* - scheme (REQUIRED) - Must be "x509" - x5u (REQUIRED) -
-   URL to X.509 certificate chain (PEM format, [RFC7517] Section 4.6) -
-   x5t (REQUIRED) - Certificate thumbprint:
-   BASE64URL(SHA256(DER(leaf_cert)))
+   *Parameters:* - x5u (REQUIRED) - URL to X.509 certificate chain (PEM
+   format, [RFC7517] Section 4.6) - x5t (REQUIRED) - Certificate
+   thumbprint: BASE64URL(SHA256(DER(leaf_cert)))
 
    *Verification procedure:*
 
@@ -301,9 +289,7 @@ Table of Contents
 
    *Example:*
 
-   Signature-Key: sig=(scheme=x509
-       x5u="https://agent.example/.well-known/cert.pem"
-       x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM")
+Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM"
 
    *Use cases:* - Enterprise environments with PKI infrastructure -
    Integration with existing certificate management systems - Scenarios
@@ -316,8 +302,7 @@ Table of Contents
    (confirmation) claim [RFC7800], enabling delegation and horizontal
    scale.
 
-   *Parameters:* - scheme (REQUIRED) - Must be "jwt" - jwt (REQUIRED) -
-   Compact-serialized JWT
+   *Parameters:* - jwt (REQUIRED) - Compact-serialized JWT
 
    *JWT requirements:* - MUST contain cnf.jwk claim with embedded JWK -
    SHOULD contain standard claims: iss, sub, exp, iat
@@ -331,7 +316,7 @@ Table of Contents
 
    *Example:*
 
-   Signature-Key: sig=(scheme=jwt jwt="eyJhbGciOiJFUzI1NiI...")
+   Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
 
    *JWT payload example:*
 
