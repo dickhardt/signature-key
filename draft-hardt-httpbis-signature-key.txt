@@ -142,6 +142,12 @@ Table of Contents
    jwks, x509, jwt - <parameters> are semicolon-separated key-value
    pairs that vary by scheme
 
+   *Example:*
+
+   Signature-Input: sig=("@method" "@path"); created=1732210000
+   Signature: sig=:MEQCIA5...
+   Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
+
    *Label Correlation:*
 
    Labels are correlated by equality of label names across Signature-
@@ -171,12 +177,6 @@ Table of Contents
 
    Profiles MAY define stricter label selection and mismatch handling
    rules.
-
-   *Example:*
-
-   Signature-Input: sig=("@method" "@path"); created=1732210000
-   Signature: sig=:MEQCIA5...
-   Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
 
 2.1.  Label Consistency
 
