@@ -34,7 +34,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. The header supports four key distribution schemes: pseudonymous inline keys (hwk), identified signers with JWKS discovery (jwks), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving anonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
+This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Four initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS discovery (jwks), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving anonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
 
 .# Discussion Venues
 
