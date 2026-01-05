@@ -122,18 +122,50 @@ Profiles MAY require a single signature and define rejection behavior for multip
 
 The hwk scheme provides a self-contained public key inline in the header, enabling pseudonymous verification without key discovery.
 
-**Parameters:**
+**Parameters by key type:**
 
-- `kty` (REQUIRED) - Key type: "OKP", "EC", or "RSA"
+OKP (Octet Key Pair):
 
-- `crv` (REQUIRED for OKP/EC) - Curve name
+- `kty` (REQUIRED) - "OKP"
 
-- Key material (REQUIRED): OKP/EC: `x` (and `y` for EC); RSA: `n` and `e`
+- `crv` (REQUIRED) - Curve name (e.g., "Ed25519")
 
-**Example:**
+- `x` (REQUIRED) - Public key value
+
+EC (Elliptic Curve):
+
+- `kty` (REQUIRED) - "EC"
+
+- `crv` (REQUIRED) - Curve name (e.g., "P-256", "P-384")
+
+- `x` (REQUIRED) - X coordinate
+
+- `y` (REQUIRED) - Y coordinate
+
+RSA:
+
+- `kty` (REQUIRED) - "RSA"
+
+- `n` (REQUIRED) - Modulus
+
+- `e` (REQUIRED) - Exponent
+
+**Example (Ed25519):**
 
 ```
 Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+```
+
+**Example (P-256):**
+
+```
+Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU";y="x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0"
+```
+
+**Example (RSA):**
+
+```
+Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB"
 ```
 
 **Constraints:**
