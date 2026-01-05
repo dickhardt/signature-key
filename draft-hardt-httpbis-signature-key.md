@@ -46,16 +46,18 @@ Source for this draft and an issue tracker can be found at https://github.com/di
 
 # Introduction
 
-HTTP Message Signatures [@!RFC9421] defines a mechanism for creating and verifying signatures over HTTP messages. However, RFC 9421 does not specify how verifiers obtain the public keys needed to verify signatures. This creates an interoperability gap where different implementations must define custom key distribution mechanisms.
+HTTP Message Signatures [@!RFC9421] provides a powerful mechanism for creating and verifying digital signatures over HTTP messages. To verify a signature, the verifier needs the signer's public key. While RFC 9421 defines signature creation and verification procedures, it intentionally leaves key distribution to application protocols, recognizing that different deployments have different trust requirements.
 
-This document defines the Signature-Key HTTP header field to address this gap. The header provides four standardized schemes for key distribution, each suited to different trust models and operational requirements:
+This document defines the Signature-Key HTTP header field to standardize key distribution for HTTP Message Signatures. The header enables signers to provide their public key or a reference to it directly in the HTTP message, allowing verifiers to obtain keying material without prior coordination.
+
+The header supports four schemes, each designed for different trust models and operational requirements:
 
 1. **Header Web Key (hwk)** - Self-contained public keys for pseudonymous verification
 2. **JWKS (jwks)** - Identified signers with key discovery via HTTPS
 3. **X.509 (x509)** - Certificate-based verification with PKI trust chains
 4. **JWT (jwt)** - Delegated keys embedded in signed JWTs for horizontal scale
 
-The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.
+The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material. The scheme registry defined in this document allows future extensions for additional key distribution mechanisms.
 
 # The Signature-Key Header Field
 
@@ -369,6 +371,37 @@ Status: standard
 Author/Change controller: IETF
 
 Specification document(s): [this document]
+
+## Signature-Key Scheme Registry
+
+This document establishes the "HTTP Signature-Key Scheme" registry. This registry allows for the definition of additional key distribution schemes beyond those defined in this document.
+
+### Registration Procedure
+
+New scheme registrations require Specification Required per [@!RFC8126].
+
+### Initial Registry Contents
+
+| Scheme | Description | Reference |
+|--------|-------------|-----------|
+| hwk | Header Web Key - inline public key | [this document] |
+| jwks | JWKS Discovery - key reference via HTTPS | [this document] |
+| x509 | X.509 Certificate - PKI certificate chain | [this document] |
+| jwt | JWT Confirmation Key - delegated key in JWT | [this document] |
+
+### Registration Template
+
+Scheme Name:
+: The token value used in the Signature-Key header
+
+Description:
+: A brief description of the scheme
+
+Specification:
+: Reference to the specification defining the scheme
+
+Parameters:
+: List of parameters defined for this scheme
 
 {backmatter}
 
