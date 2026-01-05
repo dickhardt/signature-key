@@ -18,10 +18,10 @@ Abstract
    distributing public keys used to verify HTTP Message Signatures as
    defined in RFC 9421.  Four initial key distribution schemes are
    defined: pseudonymous inline keys (hwk), identified signers with JWKS
-   discovery (jwks), X.509 certificate chains (x509), and JWT-based
-   delegation (jwt).  These schemes enable flexible trust models ranging
-   from privacy-preserving anonymous verification to PKI-based identity
-   chains and horizontally-scalable delegated authentication.
+   URI discovery (jwks_uri), X.509 certificate chains (x509), and JWT-
+   based delegation (jwt).  These schemes enable flexible trust models
+   ranging from privacy-preserving anonymous verification to PKI-based
+   identity chains and horizontally-scalable delegated authentication.
 
 Discussion Venues
 
@@ -70,7 +70,7 @@ Table of Contents
      2.2.  Multiple Signatures
      2.3.  Profiles
      2.4.  Header Web Key (hwk)
-     2.5.  JWKS Discovery (jwks)
+     2.5.  JWKS URI Discovery (jwks_uri)
      2.6.  X.509 Certificates (x509)
      2.7.  JWT Confirmation Key (jwt)
    3.  Security Considerations
@@ -113,7 +113,8 @@ Table of Contents
 
    1.  *Header Web Key (hwk)* - Self-contained public keys for
        pseudonymous verification
-   2.  *JWKS (jwks)* - Identified signers with key discovery via HTTPS
+   2.  *JWKS URI (jwks_uri)* - Identified signers with key discovery via
+       metadata
    3.  *X.509 (x509)* - Certificate-based verification with PKI trust
        chains
    4.  *JWT (jwt)* - Delegated keys embedded in signed JWTs for
@@ -140,7 +141,7 @@ Table of Contents
 
    Where: - <label> (dictionary key) matches the label in Signature-
    Input and Signature headers - <scheme> (item value) is one of: hwk,
-   jwks, x509, jwt - <parameters> are semicolon-separated key-value
+   jwks_uri, x509, jwt - <parameters> are semicolon-separated key-value
    pairs that vary by scheme
 
    *Example:*
@@ -188,9 +189,9 @@ Table of Contents
    The dictionary format supports multiple signatures per message.  Each
    signature has its own dictionary member keyed by its unique label:
 
-   Signature-Input: sig1=(...), sig2=(...)
-   Signature: sig1=:...:, sig2=:...:
-   Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
+Signature-Input: sig1=(...), sig2=(...)
+Signature: sig1=:...:, sig2=:...:
+Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
 
 2.3.  Profiles
 
@@ -231,37 +232,20 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC
 
    *  Rate limiting and reputation building on a per-key basis
 
-2.5.  JWKS Discovery (jwks)
+2.5.  JWKS URI Discovery (jwks_uri)
 
-   The jwks scheme identifies the signer and enables key discovery via
-   HTTPS URLs.  It supports two modes: direct JWKS URL or identifier-
-   based discovery with optional metadata.
+   The jwks_uri scheme identifies the signer and enables key discovery
+   via a metadata document containing a jwks_uri property.
 
    *Parameters:*
 
-   *  kid (REQUIRED) - Key identifier
-
-   *Mode 1: Direct JWKS URL*
-
-   *  jwks (REQUIRED) - Direct HTTPS URL to JWKS document
-
-   *Mode 2: Identifier + Metadata*
-
    *  id (REQUIRED) - Signer identifier (HTTPS URL)
 
-   *  well-known (OPTIONAL) - Metadata document name under /.well-known/
+   *  well-known (REQUIRED) - Metadata document name under /.well-known/
 
-   The jwks and id parameters MUST NOT both be present.
+   *  kid (REQUIRED) - Key identifier
 
-   *Discovery procedure (Mode 1 - Direct JWKS):*
-
-   1.  Fetch JWKS from the jwks URL
-
-   2.  Find key with matching kid
-
-   *Discovery procedure (Mode 2 - Identifier + Metadata):*
-
-   If well-known parameter is present:
+   *Discovery procedure:*
 
    1.  Fetch {id}/.well-known/{well-known}
 
@@ -273,23 +257,9 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC
 
    5.  Find key with matching kid
 
-   If well-known parameter is absent:
+   *Example:*
 
-   1.  Fetch {id} directly as JWKS
-
-   2.  Find key with matching kid
-
-   *Example (direct JWKS URL):*
-
-Signature-Key: sig=jwks;jwks="https://agent.example/jwks.json";kid="key-1"
-
-   *Example (identifier - direct fetch):*
-
-  Signature-Key: sig=jwks;id="https://agent.example/crawler";kid="key-1"
-
-   *Example (identifier with metadata):*
-
-Signature-Key: sig=jwks;id="https://agent.example";well-known="aauth-agent";kid="key-1"
+Signature-Key: sig=jwks_uri;id="https://agent.example";well-known="aauth-agent";kid="key-1"
 
    *Use cases:*
 
@@ -405,7 +375,7 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
 
    *  *hwk*: Validate JWK structure and key parameters
 
-   *  *jwks*: Verify HTTPS transport and validate fetched JWKS
+   *  *jwks_uri*: Verify HTTPS transport and validate fetched JWKS
 
    *  *x509*: Validate complete certificate chain, check revocation
       status
@@ -417,7 +387,8 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    Verifiers MAY cache keys to improve performance but MUST implement
    appropriate cache expiration:
 
-   *  *jwks*: Respect cache-control headers, implement reasonable TTLs
+   *  *jwks_uri*: Respect cache-control headers, implement reasonable
+      TTLs
 
    *  *x509*: Cache by x5t, invalidate on certificate expiry
 
@@ -431,8 +402,9 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    *hwk*: No identity verification - suitable only for scenarios where
    pseudonymous access is acceptable.
 
-   *jwks*: Relies on HTTPS security - vulnerable to DNS/CA compromise.
-   Verifiers should implement certificate pinning where appropriate.
+   *jwks_uri*: Relies on HTTPS security - vulnerable to DNS/CA
+   compromise.  Verifiers should implement certificate pinning where
+   appropriate.
 
    *x509*: Requires robust certificate validation including revocation
    checking.  Verifiers MUST NOT skip certificate chain validation.
@@ -468,14 +440,15 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    *  Verifiers should not log or retain hwk keys beyond operational
       necessity
 
-   The jwks, x509, and jwt schemes all reveal signer identity.
+   The jwks_uri, x509, and jwt schemes all reveal signer identity.
    Protocols using these schemes should inform signers that their
    identity will be disclosed to verifiers.
 
 4.2.  Key Discovery Tracking
 
-   The jwks and x509 schemes require verifiers to fetch resources from
-   signer-controlled URLs.  This creates potential tracking vectors:
+   The jwks_uri and x509 schemes require verifiers to fetch resources
+   from signer-controlled URLs.  This creates potential tracking
+   vectors:
 
    *  Signers can observe when and from where keys are fetched
 
@@ -527,20 +500,20 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
 
 5.2.2.  Initial Registry Contents
 
-     +========+====================================+=================+
-     | Scheme | Description                        | Reference       |
-     +========+====================================+=================+
-     | hwk    | Header Web Key - inline public key | [this document] |
-     +--------+------------------------------------+-----------------+
-     | jwks   | JWKS Discovery - key reference via | [this document] |
-     |        | HTTPS                              |                 |
-     +--------+------------------------------------+-----------------+
-     | x509   | X.509 Certificate - PKI            | [this document] |
-     |        | certificate chain                  |                 |
-     +--------+------------------------------------+-----------------+
-     | jwt    | JWT Confirmation Key - delegated   | [this document] |
-     |        | key in JWT                         |                 |
-     +--------+------------------------------------+-----------------+
+    +==========+====================================+=================+
+    | Scheme   | Description                        | Reference       |
+    +==========+====================================+=================+
+    | hwk      | Header Web Key - inline public key | [this document] |
+    +----------+------------------------------------+-----------------+
+    | jwks_uri | JWKS URI Discovery - key discovery | [this document] |
+    |          | via metadata                       |                 |
+    +----------+------------------------------------+-----------------+
+    | x509     | X.509 Certificate - PKI            | [this document] |
+    |          | certificate chain                  |                 |
+    +----------+------------------------------------+-----------------+
+    | jwt      | JWT Confirmation Key - delegated   | [this document] |
+    |          | key in JWT                         |                 |
+    +----------+------------------------------------+-----------------+
 
                                   Table 1
 

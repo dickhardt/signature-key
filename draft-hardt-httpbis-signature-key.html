@@ -8,7 +8,7 @@
 <meta content="Dick Hardt" name="author">
 <meta content="Thibault Meunier" name="author">
 <meta content="
-       This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Four initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS discovery (jwks), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving anonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication. 
+       This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Four initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS URI discovery (jwks_uri), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving anonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication. 
     " name="description">
 <meta content="xml2rfc 3.31.0" name="generator">
 <meta content="http" name="keyword">
@@ -1087,7 +1087,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <h1 id="title">HTTP Signature-Key Header</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Four initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS discovery (jwks), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving anonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Four initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS URI discovery (jwks_uri), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving anonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1163,7 +1163,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
                 <p id="section-toc.1-1.2.2.4.1"><a href="#section-2.4" class="auto internal xref">2.4</a>.  <a href="#name-header-web-key-hwk" class="internal xref">Header Web Key (hwk)</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.5">
-                <p id="section-toc.1-1.2.2.5.1"><a href="#section-2.5" class="auto internal xref">2.5</a>.  <a href="#name-jwks-discovery-jwks" class="internal xref">JWKS Discovery (jwks)</a></p>
+                <p id="section-toc.1-1.2.2.5.1"><a href="#section-2.5" class="auto internal xref">2.5</a>.  <a href="#name-jwks-uri-discovery-jwks_uri" class="internal xref">JWKS URI Discovery (jwks_uri)</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.6">
                 <p id="section-toc.1-1.2.2.6.1"><a href="#section-2.6" class="auto internal xref">2.6</a>.  <a href="#name-x509-certificates-x509" class="internal xref">X.509 Certificates (x509)</a></p>
@@ -1252,7 +1252,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
           <strong>Header Web Key (hwk)</strong> - Self-contained public keys for pseudonymous verification<a href="#section-1-4.1" class="pilcrow">¶</a>
 </li>
         <li id="section-1-4.2">
-          <strong>JWKS (jwks)</strong> - Identified signers with key discovery via HTTPS<a href="#section-1-4.2" class="pilcrow">¶</a>
+          <strong>JWKS URI (jwks_uri)</strong> - Identified signers with key discovery via metadata<a href="#section-1-4.2" class="pilcrow">¶</a>
 </li>
         <li id="section-1-4.3">
           <strong>X.509 (x509)</strong> - Certificate-based verification with PKI trust chains<a href="#section-1-4.3" class="pilcrow">¶</a>
@@ -1279,7 +1279,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 </div>
 <p id="section-2-4">Where:
 - <code>&lt;label&gt;</code> (dictionary key) matches the label in Signature-Input and Signature headers
-- <code>&lt;scheme&gt;</code> (item value) is one of: hwk, jwks, x509, jwt
+- <code>&lt;scheme&gt;</code> (item value) is one of: hwk, jwks_uri, x509, jwt
 - <code>&lt;parameters&gt;</code> are semicolon-separated key-value pairs that vary by scheme<a href="#section-2-4" class="pilcrow">¶</a></p>
 <p id="section-2-5"><strong>Example:</strong><a href="#section-2-5" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-2-6">
@@ -1326,7 +1326,7 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
 <div class="alignLeft art-text artwork" id="section-2.2-2">
 <pre>Signature-Input: sig1=(...), sig2=(...)
 Signature: sig1=:...:, sig2=:...:
-Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
+Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
 
 </pre><a href="#section-2.2-2" class="pilcrow">¶</a>
 </div>
@@ -1387,99 +1387,58 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
         </ul>
 </section>
 </div>
-<div id="jwks-discovery-jwks">
+<div id="jwks-uri-discovery-jwks-uri">
 <section id="section-2.5">
-        <h3 id="name-jwks-discovery-jwks">
-<a href="#section-2.5" class="section-number selfRef">2.5. </a><a href="#name-jwks-discovery-jwks" class="section-name selfRef">JWKS Discovery (jwks)</a>
+        <h3 id="name-jwks-uri-discovery-jwks_uri">
+<a href="#section-2.5" class="section-number selfRef">2.5. </a><a href="#name-jwks-uri-discovery-jwks_uri" class="section-name selfRef">JWKS URI Discovery (jwks_uri)</a>
         </h3>
-<p id="section-2.5-1">The jwks scheme identifies the signer and enables key discovery via HTTPS URLs. It supports two modes: direct JWKS URL or identifier-based discovery with optional metadata.<a href="#section-2.5-1" class="pilcrow">¶</a></p>
+<p id="section-2.5-1">The jwks_uri scheme identifies the signer and enables key discovery via a metadata document containing a <code>jwks_uri</code> property.<a href="#section-2.5-1" class="pilcrow">¶</a></p>
 <p id="section-2.5-2"><strong>Parameters:</strong><a href="#section-2.5-2" class="pilcrow">¶</a></p>
-<ul class="compact">
-<li class="compact" id="section-2.5-3.1">
-            <code>kid</code> (REQUIRED) - Key identifier<a href="#section-2.5-3.1" class="pilcrow">¶</a>
-</li>
-        </ul>
-<p id="section-2.5-4"><strong>Mode 1: Direct JWKS URL</strong><a href="#section-2.5-4" class="pilcrow">¶</a></p>
-<ul class="compact">
-<li class="compact" id="section-2.5-5.1">
-            <code>jwks</code> (REQUIRED) - Direct HTTPS URL to JWKS document<a href="#section-2.5-5.1" class="pilcrow">¶</a>
-</li>
-        </ul>
-<p id="section-2.5-6"><strong>Mode 2: Identifier + Metadata</strong><a href="#section-2.5-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2.5-7.1">
-            <p id="section-2.5-7.1.1"><code>id</code> (REQUIRED) - Signer identifier (HTTPS URL)<a href="#section-2.5-7.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2.5-3.1">
+            <p id="section-2.5-3.1.1"><code>id</code> (REQUIRED) - Signer identifier (HTTPS URL)<a href="#section-2.5-3.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.5-7.2">
-            <p id="section-2.5-7.2.1"><code>well-known</code> (OPTIONAL) - Metadata document name under <code>/.well-known/</code><a href="#section-2.5-7.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.5-3.2">
+            <p id="section-2.5-3.2.1"><code>well-known</code> (REQUIRED) - Metadata document name under <code>/.well-known/</code><a href="#section-2.5-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-2.5-3.3">
+            <p id="section-2.5-3.3.1"><code>kid</code> (REQUIRED) - Key identifier<a href="#section-2.5-3.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-2.5-8">The <code>jwks</code> and <code>id</code> parameters MUST NOT both be present.<a href="#section-2.5-8" class="pilcrow">¶</a></p>
-<p id="section-2.5-9"><strong>Discovery procedure (Mode 1 - Direct JWKS):</strong><a href="#section-2.5-9" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-2.5-10">
-<li id="section-2.5-10.1">
-            <p id="section-2.5-10.1.1">Fetch JWKS from the <code>jwks</code> URL<a href="#section-2.5-10.1.1" class="pilcrow">¶</a></p>
+<p id="section-2.5-4"><strong>Discovery procedure:</strong><a href="#section-2.5-4" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-2.5-5">
+<li id="section-2.5-5.1">
+            <p id="section-2.5-5.1.1">Fetch <code>{id}/.well-known/{well-known}</code><a href="#section-2.5-5.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-2.5-10.2">
-            <p id="section-2.5-10.2.1">Find key with matching <code>kid</code><a href="#section-2.5-10.2.1" class="pilcrow">¶</a></p>
+          <li id="section-2.5-5.2">
+            <p id="section-2.5-5.2.1">Parse as JSON metadata<a href="#section-2.5-5.2.1" class="pilcrow">¶</a></p>
 </li>
-        </ol>
-<p id="section-2.5-11"><strong>Discovery procedure (Mode 2 - Identifier + Metadata):</strong><a href="#section-2.5-11" class="pilcrow">¶</a></p>
-<p id="section-2.5-12">If <code>well-known</code> parameter is present:<a href="#section-2.5-12" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-2.5-13">
-<li id="section-2.5-13.1">
-            <p id="section-2.5-13.1.1">Fetch <code>{id}/.well-known/{well-known}</code><a href="#section-2.5-13.1.1" class="pilcrow">¶</a></p>
+          <li id="section-2.5-5.3">
+            <p id="section-2.5-5.3.1">Extract <code>jwks_uri</code> property<a href="#section-2.5-5.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-2.5-13.2">
-            <p id="section-2.5-13.2.1">Parse as JSON metadata<a href="#section-2.5-13.2.1" class="pilcrow">¶</a></p>
+          <li id="section-2.5-5.4">
+            <p id="section-2.5-5.4.1">Fetch JWKS from <code>jwks_uri</code><a href="#section-2.5-5.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-2.5-13.3">
-            <p id="section-2.5-13.3.1">Extract <code>jwks_uri</code> property<a href="#section-2.5-13.3.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-2.5-13.4">
-            <p id="section-2.5-13.4.1">Fetch JWKS from <code>jwks_uri</code><a href="#section-2.5-13.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-2.5-13.5">
-            <p id="section-2.5-13.5.1">Find key with matching <code>kid</code><a href="#section-2.5-13.5.1" class="pilcrow">¶</a></p>
+          <li id="section-2.5-5.5">
+            <p id="section-2.5-5.5.1">Find key with matching <code>kid</code><a href="#section-2.5-5.5.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
-<p id="section-2.5-14">If <code>well-known</code> parameter is absent:<a href="#section-2.5-14" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-2.5-15">
-<li id="section-2.5-15.1">
-            <p id="section-2.5-15.1.1">Fetch <code>{id}</code> directly as JWKS<a href="#section-2.5-15.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-2.5-15.2">
-            <p id="section-2.5-15.2.1">Find key with matching <code>kid</code><a href="#section-2.5-15.2.1" class="pilcrow">¶</a></p>
-</li>
-        </ol>
-<p id="section-2.5-16"><strong>Example (direct JWKS URL):</strong><a href="#section-2.5-16" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-2.5-17">
-<pre>Signature-Key: sig=jwks;jwks="https://agent.example/jwks.json";kid="key-1"
+<p id="section-2.5-6"><strong>Example:</strong><a href="#section-2.5-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-2.5-7">
+<pre>Signature-Key: sig=jwks_uri;id="https://agent.example";well-known="aauth-agent";kid="key-1"
 
-</pre><a href="#section-2.5-17" class="pilcrow">¶</a>
+</pre><a href="#section-2.5-7" class="pilcrow">¶</a>
 </div>
-<p id="section-2.5-18"><strong>Example (identifier - direct fetch):</strong><a href="#section-2.5-18" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-2.5-19">
-<pre>Signature-Key: sig=jwks;id="https://agent.example/crawler";kid="key-1"
-
-</pre><a href="#section-2.5-19" class="pilcrow">¶</a>
-</div>
-<p id="section-2.5-20"><strong>Example (identifier with metadata):</strong><a href="#section-2.5-20" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-2.5-21">
-<pre>Signature-Key: sig=jwks;id="https://agent.example";well-known="aauth-agent";kid="key-1"
-
-</pre><a href="#section-2.5-21" class="pilcrow">¶</a>
-</div>
-<p id="section-2.5-22"><strong>Use cases:</strong><a href="#section-2.5-22" class="pilcrow">¶</a></p>
+<p id="section-2.5-8"><strong>Use cases:</strong><a href="#section-2.5-8" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-2.5-23.1">
-            <p id="section-2.5-23.1.1">Identified services with stable HTTPS identity<a href="#section-2.5-23.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-2.5-9.1">
+            <p id="section-2.5-9.1.1">Identified services with stable HTTPS identity<a href="#section-2.5-9.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.5-23.2">
-            <p id="section-2.5-23.2.1">Search engine crawlers and monitoring services<a href="#section-2.5-23.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.5-9.2">
+            <p id="section-2.5-9.2.1">Search engine crawlers and monitoring services<a href="#section-2.5-9.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-2.5-23.3">
-            <p id="section-2.5-23.3.1">Services requiring explicit entity identification<a href="#section-2.5-23.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-2.5-9.3">
+            <p id="section-2.5-9.3.1">Services requiring explicit entity identification<a href="#section-2.5-9.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -1640,7 +1599,7 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
             <p id="section-3.1-2.1.1"><strong>hwk</strong>: Validate JWK structure and key parameters<a href="#section-3.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.1-2.2">
-            <p id="section-3.1-2.2.1"><strong>jwks</strong>: Verify HTTPS transport and validate fetched JWKS<a href="#section-3.1-2.2.1" class="pilcrow">¶</a></p>
+            <p id="section-3.1-2.2.1"><strong>jwks_uri</strong>: Verify HTTPS transport and validate fetched JWKS<a href="#section-3.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.1-2.3">
             <p id="section-3.1-2.3.1"><strong>x509</strong>: Validate complete certificate chain, check revocation status<a href="#section-3.1-2.3.1" class="pilcrow">¶</a></p>
@@ -1659,7 +1618,7 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
 <p id="section-3.2-1">Verifiers MAY cache keys to improve performance but MUST implement appropriate cache expiration:<a href="#section-3.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3.2-2.1">
-            <p id="section-3.2-2.1.1"><strong>jwks</strong>: Respect cache-control headers, implement reasonable TTLs<a href="#section-3.2-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-3.2-2.1.1"><strong>jwks_uri</strong>: Respect cache-control headers, implement reasonable TTLs<a href="#section-3.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.2-2.2">
             <p id="section-3.2-2.2.1"><strong>x509</strong>: Cache by <code>x5t</code>, invalidate on certificate expiry<a href="#section-3.2-2.2.1" class="pilcrow">¶</a></p>
@@ -1677,7 +1636,7 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
 <a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-scheme-specific-risks" class="section-name selfRef">Scheme-Specific Risks</a>
         </h3>
 <p id="section-3.3-1"><strong>hwk</strong>: No identity verification - suitable only for scenarios where pseudonymous access is acceptable.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
-<p id="section-3.3-2"><strong>jwks</strong>: Relies on HTTPS security - vulnerable to DNS/CA compromise. Verifiers should implement certificate pinning where appropriate.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-2"><strong>jwks_uri</strong>: Relies on HTTPS security - vulnerable to DNS/CA compromise. Verifiers should implement certificate pinning where appropriate.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
 <p id="section-3.3-3"><strong>x509</strong>: Requires robust certificate validation including revocation checking. Verifiers MUST NOT skip certificate chain validation.<a href="#section-3.3-3" class="pilcrow">¶</a></p>
 <p id="section-3.3-4"><strong>jwt</strong>: Delegation trust depends on JWT issuer verification. Verifiers MUST validate JWT signatures and claims before trusting embedded keys.<a href="#section-3.3-4" class="pilcrow">¶</a></p>
 </section>
@@ -1725,7 +1684,7 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
             <p id="section-4.1-2.3.1">Verifiers should not log or retain hwk keys beyond operational necessity<a href="#section-4.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.1-3">The jwks, x509, and jwt schemes all reveal signer identity. Protocols using these schemes should inform signers that their identity will be disclosed to verifiers.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">The jwks_uri, x509, and jwt schemes all reveal signer identity. Protocols using these schemes should inform signers that their identity will be disclosed to verifiers.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="key-discovery-tracking">
@@ -1733,7 +1692,7 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
         <h3 id="name-key-discovery-tracking">
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-key-discovery-tracking" class="section-name selfRef">Key Discovery Tracking</a>
         </h3>
-<p id="section-4.2-1">The jwks and x509 schemes require verifiers to fetch resources from signer-controlled URLs. This creates potential tracking vectors:<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-1">The jwks_uri and x509 schemes require verifiers to fetch resources from signer-controlled URLs. This creates potential tracking vectors:<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.2-2.1">
             <p id="section-4.2-2.1.1">Signers can observe when and from where keys are fetched<a href="#section-4.2-2.1.1" class="pilcrow">¶</a></p>
@@ -1821,8 +1780,8 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
                 <td class="text-left" rowspan="1" colspan="1">[this document]</td>
               </tr>
               <tr>
-                <td class="text-left" rowspan="1" colspan="1">jwks</td>
-                <td class="text-left" rowspan="1" colspan="1">JWKS Discovery - key reference via HTTPS</td>
+                <td class="text-left" rowspan="1" colspan="1">jwks_uri</td>
+                <td class="text-left" rowspan="1" colspan="1">JWKS URI Discovery - key discovery via metadata</td>
                 <td class="text-left" rowspan="1" colspan="1">[this document]</td>
               </tr>
               <tr>
