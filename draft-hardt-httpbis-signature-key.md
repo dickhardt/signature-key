@@ -133,7 +133,7 @@ OKP (Octet Key Pair):
 - `x` (REQUIRED) - Public key value
 
 ```
-Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P..."
 ```
 
 EC (Elliptic Curve):
@@ -147,7 +147,7 @@ EC (Elliptic Curve):
 - `y` (REQUIRED) - Y coordinate
 
 ```
-Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU";y="x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0"
+Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D...";y="x_FEzRu..."
 ```
 
 RSA:
