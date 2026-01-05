@@ -116,7 +116,7 @@ Signature-Key: sig1=hwk;kty="OKP";x="...", sig2=jwt;jwt="eyJ..."
 
 ## Profiles
 
-This document defines the base format and schemes. Application protocols (profiles) MAY impose additional constraints such as requiring a single signature, specific label names, or stricter rejection conditions.
+Profiles MAY require a single signature and define rejection behavior for multiple labels in Signature-Input/Signature or multiple members in Signature-Key. Those restrictions are profile-specific and not imposed by this document.
 
 ## Header Web Key (hwk)
 
