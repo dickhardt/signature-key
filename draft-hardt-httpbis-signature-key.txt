@@ -204,20 +204,32 @@ Table of Contents
    The hwk scheme provides a self-contained public key inline in the
    header, enabling pseudonymous verification without key discovery.
 
-   *Parameters:* - kty (REQUIRED) - Key type: "OKP", "EC", or "RSA" -
-   crv (REQUIRED for OKP/EC) - Curve name - Key material (REQUIRED): -
-   OKP/EC: x (and y for EC) - RSA: n and e
+   *Parameters:*
+
+   *  kty (REQUIRED) - Key type: "OKP", "EC", or "RSA"
+
+   *  crv (REQUIRED for OKP/EC) - Curve name
+
+   *  Key material (REQUIRED): OKP/EC: x (and y for EC); RSA: n and e
 
    *Example:*
 
 Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
 
-   *Constraints:* - The alg parameter MUST NOT be present (algorithm is
-   specified in Signature-Input) - The kid parameter SHOULD NOT be used
+   *Constraints:*
 
-   *Use cases:* - Privacy-preserving agents that avoid identity
-   disclosure - Experimental or temporary access without registration -
-   Rate limiting and reputation building on a per-key basis
+   *  The alg parameter MUST NOT be present (algorithm is specified in
+      Signature-Input)
+
+   *  The kid parameter SHOULD NOT be used
+
+   *Use cases:*
+
+   *  Privacy-preserving agents that avoid identity disclosure
+
+   *  Experimental or temporary access without registration
+
+   *  Rate limiting and reputation building on a per-key basis
 
 2.5.  JWKS Discovery (jwks)
 
@@ -225,28 +237,47 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P_89iXES9-vFgrIy29clF9CC
    HTTPS URLs.  It supports two modes: direct JWKS URL or identifier-
    based discovery with optional metadata.
 
-   *Parameters:* - kid (REQUIRED) - Key identifier
+   *Parameters:*
 
-   *Mode 1: Direct JWKS URL* - jwks (REQUIRED) - Direct HTTPS URL to
-   JWKS document
+   *  kid (REQUIRED) - Key identifier
 
-   *Mode 2: Identifier + Metadata* - id (REQUIRED) - Signer identifier
-   (HTTPS URL) - well-known (OPTIONAL) - Metadata document name under
-   /.well-known/
+   *Mode 1: Direct JWKS URL*
+
+   *  jwks (REQUIRED) - Direct HTTPS URL to JWKS document
+
+   *Mode 2: Identifier + Metadata*
+
+   *  id (REQUIRED) - Signer identifier (HTTPS URL)
+
+   *  well-known (OPTIONAL) - Metadata document name under /.well-known/
 
    The jwks and id parameters MUST NOT both be present.
 
-   *Discovery procedure (Mode 1 - Direct JWKS):* 1.  Fetch JWKS from the
-   jwks URL 2.  Find key with matching kid
+   *Discovery procedure (Mode 1 - Direct JWKS):*
+
+   1.  Fetch JWKS from the jwks URL
+
+   2.  Find key with matching kid
 
    *Discovery procedure (Mode 2 - Identifier + Metadata):*
 
-   If well-known parameter is present: 1.  Fetch {id}/.well-known/{well-
-   known} 2.  Parse as JSON metadata 3.  Extract jwks_uri property 4.
-   Fetch JWKS from jwks_uri 5.  Find key with matching kid
+   If well-known parameter is present:
 
-   If well-known parameter is absent: 1.  Fetch {id} directly as JWKS 2.
-   Find key with matching kid
+   1.  Fetch {id}/.well-known/{well-known}
+
+   2.  Parse as JSON metadata
+
+   3.  Extract jwks_uri property
+
+   4.  Fetch JWKS from jwks_uri
+
+   5.  Find key with matching kid
+
+   If well-known parameter is absent:
+
+   1.  Fetch {id} directly as JWKS
+
+   2.  Find key with matching kid
 
    *Example (direct JWKS URL):*
 
@@ -260,38 +291,58 @@ Signature-Key: sig=jwks;jwks="https://agent.example/jwks.json";kid="key-1"
 
 Signature-Key: sig=jwks;id="https://agent.example";well-known="aauth-agent";kid="key-1"
 
-   *Use cases:* - Identified services with stable HTTPS identity -
-   Search engine crawlers and monitoring services - Services requiring
-   explicit entity identification
+   *Use cases:*
+
+   *  Identified services with stable HTTPS identity
+
+   *  Search engine crawlers and monitoring services
+
+   *  Services requiring explicit entity identification
 
 2.6.  X.509 Certificates (x509)
 
    The x509 scheme provides certificate-based verification using PKI
    trust chains.
 
-   *Parameters:* - x5u (REQUIRED) - URL to X.509 certificate chain (PEM
-   format, [RFC7517] Section 4.6) - x5t (REQUIRED) - Certificate
-   thumbprint: BASE64URL(SHA256(DER(leaf_cert)))
+   *Parameters:*
+
+   *  x5u (REQUIRED) - URL to X.509 certificate chain (PEM format,
+      [RFC7517] Section 4.6)
+
+   *  x5t (REQUIRED) - Certificate thumbprint:
+      BASE64URL(SHA256(DER(leaf_cert)))
 
    *Verification procedure:*
 
    1.  Check cache for certificate with matching x5t
+
    2.  If not cached or expired, fetch PEM from x5u
+
    3.  Validate certificate chain to trusted root CA
+
    4.  Check certificate validity and revocation status
+
    5.  Verify x5t matches leaf certificate
+
    6.  Extract public key from end-entity certificate
+
    7.  Verify signature using extracted key
+
    8.  Cache certificate indexed by x5t
 
    *Example:*
 
 Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM"
 
-   *Use cases:* - Enterprise environments with PKI infrastructure -
-   Integration with existing certificate management systems - Scenarios
-   requiring certificate revocation checking - Regulated industries
-   requiring certificate-based authentication
+   *Use cases:*
+
+   *  Enterprise environments with PKI infrastructure
+
+   *  Integration with existing certificate management systems
+
+   *  Scenarios requiring certificate revocation checking
+
+   *  Regulated industries requiring certificate-based authentication
 
 2.7.  JWT Confirmation Key (jwt)
 
@@ -299,16 +350,24 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    (confirmation) claim [RFC7800], enabling delegation and horizontal
    scale.
 
-   *Parameters:* - jwt (REQUIRED) - Compact-serialized JWT
+   *Parameters:*
 
-   *JWT requirements:* - MUST contain cnf.jwk claim with embedded JWK -
-   SHOULD contain standard claims: iss, sub, exp, iat
+   *  jwt (REQUIRED) - Compact-serialized JWT
+
+   *JWT requirements:*
+
+   *  MUST contain cnf.jwk claim with embedded JWK
+
+   *  SHOULD contain standard claims: iss, sub, exp, iat
 
    *Verification procedure:*
 
    1.  Validate JWT signature using issuer's public key
+
    2.  Verify standard claims per policy (iss, exp, etc.)
+
    3.  Extract JWK from cnf.jwk
+
    4.  Verify HTTP Message Signature using extracted key
 
    *Example:*
@@ -330,9 +389,13 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
      }
    }
 
-   *Use cases:* - Distributed services with ephemeral instance keys -
-   Delegation scenarios where instances act on behalf of an authority -
-   Short-lived credentials for horizontal scaling
+   *Use cases:*
+
+   *  Distributed services with ephemeral instance keys
+
+   *  Delegation scenarios where instances act on behalf of an authority
+
+   *  Short-lived credentials for horizontal scaling
 
 3.  Security Considerations
 
@@ -341,9 +404,12 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    Verifiers MUST validate all cryptographic material before use:
 
    *  *hwk*: Validate JWK structure and key parameters
+
    *  *jwks*: Verify HTTPS transport and validate fetched JWKS
+
    *  *x509*: Validate complete certificate chain, check revocation
       status
+
    *  *jwt*: Verify JWT signature and validate embedded JWK
 
 3.2.  Caching and Performance
@@ -352,7 +418,9 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    appropriate cache expiration:
 
    *  *jwks*: Respect cache-control headers, implement reasonable TTLs
+
    *  *x509*: Cache by x5t, invalidate on certificate expiry
+
    *  *jwt*: Cache embedded keys until JWT expiration
 
    Verifiers SHOULD implement cache limits to prevent resource
@@ -379,7 +447,9 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    signature algorithm.  Verifiers MUST:
 
    *  Validate algorithm against policy (reject weak algorithms)
+
    *  Ensure key type matches algorithm requirements
+
    *  Reject algorithm/key mismatches
 
 4.  Privacy Considerations
@@ -391,8 +461,10 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
 
    *  hwk provides no identity linkage across requests (unless keys are
       reused)
+
    *  Key reuse enables tracking but may be necessary for reputation/
       rate-limiting
+
    *  Verifiers should not log or retain hwk keys beyond operational
       necessity
 
@@ -406,7 +478,9 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    signer-controlled URLs.  This creates potential tracking vectors:
 
    *  Signers can observe when and from where keys are fetched
+
    *  Verifiers should cache keys to minimize fetches
+
    *  Verifiers may wish to use shared caching infrastructure to reduce
       fingerprinting
 
@@ -416,7 +490,9 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    Verifiers should:
 
    *  Only process claims necessary for verification
+
    *  Not log or retain unnecessary JWT claims
+
    *  Be aware that JWT contents are visible to network observers unless
       using TLS
 
