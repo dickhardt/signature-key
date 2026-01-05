@@ -77,9 +77,13 @@ Where:
 Labels are correlated by equality of label names across Signature-Input, Signature, and Signature-Key. Signature-Key is a dictionary keyed by label; Signature-Input and Signature are the sources of what signatures are present; Signature-Key provides keying material for those labels.
 
 Verifiers MUST:
+
 1. Parse Signature-Input and Signature per RFC 9421 and obtain the set of signature labels present. The verifier determines which labels it is attempting to verify based on application context and RFC 9421 processing.
+
 2. Parse Signature-Key as a Structured Fields Dictionary
+
 3. For each label being verified, select the Signature-Key dictionary member with the same name
+
 4. If the corresponding dictionary member is missing, verification for that signature MUST fail
 
 > **Note:** A verifier might choose to verify only a subset of labels present (e.g., the application-required signature); labels not verified can be ignored.
