@@ -76,6 +76,14 @@ Where:
 - `<scheme>` (item value) is one of: hwk, jwks, x509, jwt
 - `<parameters>` are semicolon-separated key-value pairs that vary by scheme
 
+**Example:**
+
+```
+Signature-Input: sig=("@method" "@path"); created=1732210000
+Signature: sig=:MEQCIA5...
+Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
+```
+
 **Label Correlation:**
 
 Labels are correlated by equality of label names across Signature-Input, Signature, and Signature-Key. Signature-Key is a dictionary keyed by label; Signature-Input and Signature are the sources of what signatures are present; Signature-Key provides keying material for those labels.
@@ -93,14 +101,6 @@ Verifiers MUST:
 > **Note:** A verifier might choose to verify only a subset of labels present (e.g., the application-required signature); labels not verified can be ignored.
 
 Profiles MAY define stricter label selection and mismatch handling rules.
-
-**Example:**
-
-```
-Signature-Input: sig=("@method" "@path"); created=1732210000
-Signature: sig=:MEQCIA5...
-Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
-```
 
 ## Label Consistency
 
