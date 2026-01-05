@@ -22,6 +22,14 @@ organization = "Hellō"
   [author.address]
   email = "dick.hardt@gmail.com"
 
+[[author]]
+initials = "T."
+surname = "Meunier"
+fullname = "Thibault Meunier"
+organization = "Cloudflare"
+  [author.address]
+  email = "ot-ietf@thibault.uk"
+
 %%%
 
 .# Abstract
