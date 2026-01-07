@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 9 July 2026                                          Cloudflare
-                                                          5 January 2026
+Expires: 11 July 2026                                         Cloudflare
+                                                          7 January 2026
 
 
                        HTTP Signature-Key Header
@@ -20,8 +20,9 @@ Abstract
    defined: pseudonymous inline keys (hwk), identified signers with JWKS
    URI discovery (jwks_uri), X.509 certificate chains (x509), and JWT-
    based delegation (jwt).  These schemes enable flexible trust models
-   ranging from privacy-preserving anonymous verification to PKI-based
-   identity chains and horizontally-scalable delegated authentication.
+   ranging from privacy-preserving pseudonymous verification to PKI-
+   based identity chains and horizontally-scalable delegated
+   authentication.
 
 Discussion Venues
 
@@ -46,7 +47,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 9 July 2026.
+   This Internet-Draft will expire on 11 July 2026.
 
 Copyright Notice
 
@@ -68,16 +69,16 @@ Table of Contents
    2.  The Signature-Key Header Field
      2.1.  Label Consistency
      2.2.  Multiple Signatures
-     2.3.  Profiles
-     2.4.  Header Web Key (hwk)
-     2.5.  JWKS URI Discovery (jwks_uri)
-     2.6.  X.509 Certificates (x509)
-     2.7.  JWT Confirmation Key (jwt)
+     2.3.  Header Web Key (hwk)
+     2.4.  JWKS URI Discovery (jwks_uri)
+     2.5.  X.509 Certificates (x509)
+     2.6.  JWT Confirmation Key (jwt)
    3.  Security Considerations
      3.1.  Key Validation
      3.2.  Caching and Performance
      3.3.  Scheme-Specific Risks
      3.4.  Algorithm Selection
+     3.5.  Signature-Key Integrity
    4.  Privacy Considerations
      4.1.  Pseudonymity vs. Identity
      4.2.  Key Discovery Tracking
@@ -146,9 +147,9 @@ Table of Contents
 
    *Example:*
 
-   Signature-Input: sig=("@method" "@path"); created=1732210000
-   Signature: sig=:MEQCIA5...
-   Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
+Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
+Signature: sig=:MEQCIA5...
+Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
 
    *Label Correlation:*
 
@@ -189,18 +190,21 @@ Table of Contents
    The dictionary format supports multiple signatures per message.  Each
    signature has its own dictionary member keyed by its unique label:
 
-Signature-Input: sig1=(...), sig2=(...)
+Signature-Input: sig1=(... "signature-key"), sig2=(... "signature-key")
 Signature: sig1=:...:, sig2=:...:
 Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
 
-2.3.  Profiles
+   Most deployments SHOULD use a single signature.  When multiple
+   signatures are required, the complete Signature-Key header
+   (containing all keys) MUST be populated before any signature is
+   created, and each signature MUST cover signature-key.  This ensures
+   all signatures protect the integrity of all key material.  See
+   Signature-Key Integrity (#signature-key-integrity) in Security
+   Considerations.  Alternative key distribution mechanisms outside this
+   specification may be used for scenarios requiring independent
+   signature addition.
 
-   Profiles MAY require a single signature and define rejection behavior
-   for multiple labels in Signature-Input/Signature or multiple members
-   in Signature-Key. Those restrictions are profile-specific and not
-   imposed by this document.
-
-2.4.  Header Web Key (hwk)
+2.3.  Header Web Key (hwk)
 
    The hwk scheme provides a self-contained public key inline in the
    header, enabling pseudonymous verification without key discovery.
@@ -254,7 +258,7 @@ Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D...";y="x_FEzRu..."
 
    *  Rate limiting and reputation building on a per-key basis
 
-2.5.  JWKS URI Discovery (jwks_uri)
+2.4.  JWKS URI Discovery (jwks_uri)
 
    The jwks_uri scheme identifies the signer and enables key discovery
    via a metadata document containing a jwks_uri property.
@@ -294,7 +298,7 @@ Signature-Key: sig=jwks_uri;id="https://agent.example";well-known="aauth-agent";
 
    *  Services requiring explicit entity identification
 
-2.6.  X.509 Certificates (x509)
+2.5.  X.509 Certificates (x509)
 
    The x509 scheme provides certificate-based verification using PKI
    trust chains.
@@ -339,7 +343,7 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
 
    *  Regulated industries requiring certificate-based authentication
 
-2.7.  JWT Confirmation Key (jwt)
+2.6.  JWT Confirmation Key (jwt)
 
    The jwt scheme embeds a public key inside a signed JWT using the cnf
    (confirmation) claim [RFC7800], enabling delegation and horizontal
@@ -355,15 +359,17 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
 
    *  SHOULD contain standard claims: iss, sub, exp, iat
 
+   |  *Note:* The mechanism by which the JWT is obtained is out of scope
+   |  of this specification.
+
    *Verification procedure:*
 
-   1.  Validate JWT signature using issuer's public key
+   1.  Validate the JWT: verify signature using issuer's public key and
+       verify claims per policy (iss, exp, etc.)
 
-   2.  Verify standard claims per policy (iss, exp, etc.)
+   2.  Extract JWK from cnf.jwk
 
-   3.  Extract JWK from cnf.jwk
-
-   4.  Verify HTTP Message Signature using extracted key
+   3.  Verify HTTP Message Signature using extracted key
 
    *Example:*
 
@@ -448,6 +454,27 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
    *  Ensure key type matches algorithm requirements
 
    *  Reject algorithm/key mismatches
+
+3.5.  Signature-Key Integrity
+
+   The Signature-Key header SHOULD be included as a covered component in
+   Signature-Input:
+
+Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
+
+   If signature-key is not covered, an attacker can modify the header
+   without invalidating the signature.  Attacks include:
+
+   *Scheme substitution*: An attacker extracts the public key from an
+   hwk scheme and republishes it via jwks_uri under their own identity,
+   causing verifiers to attribute the request to the attacker.
+
+   *Identity substitution*: An attacker modifies the id parameter in a
+   jwks_uri scheme to point to their own metadata endpoint that returns
+   the same public key, impersonating a different signer.
+
+   Verifiers SHOULD reject requests where signature-key is not a covered
+   component.
 
 4.  Privacy Considerations
 
