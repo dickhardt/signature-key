@@ -12,7 +12,7 @@ name = "Internet-Draft"
 value = "draft-hardt-httpbis-signature-key-latest"
 stream = "IETF"
 
-date = 2026-01-05T00:00:00Z
+date = 2026-01-07T00:00:00Z
 
 [[author]]
 initials = "D."
