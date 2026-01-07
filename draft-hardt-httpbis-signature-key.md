@@ -34,7 +34,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Four initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS URI discovery (jwks_uri), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving anonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
+This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Four initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS URI discovery (jwks_uri), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving pseudonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
 
 .# Discussion Venues
 
@@ -79,7 +79,7 @@ Where:
 **Example:**
 
 ```
-Signature-Input: sig=("@method" "@path"); created=1732210000
+Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
 Signature: sig=:MEQCIA5...
 Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
 ```
@@ -109,14 +109,12 @@ If a label appears in Signature or Signature-Input, and the verifier attempts to
 The dictionary format supports multiple signatures per message. Each signature has its own dictionary member keyed by its unique label:
 
 ```
-Signature-Input: sig1=(...), sig2=(...)
+Signature-Input: sig1=(... "signature-key"), sig2=(... "signature-key")
 Signature: sig1=:...:, sig2=:...:
 Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
 ```
 
-## Profiles
-
-Profiles MAY require a single signature and define rejection behavior for multiple labels in Signature-Input/Signature or multiple members in Signature-Key. Those restrictions are profile-specific and not imposed by this document.
+Most deployments SHOULD use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See [Signature-Key Integrity](#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
 
 ## Header Web Key (hwk)
 
@@ -274,15 +272,15 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 - SHOULD contain standard claims: `iss`, `sub`, `exp`, `iat`
 
+> **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
+
 **Verification procedure:**
 
-1. Validate JWT signature using issuer's public key
+1. Validate the JWT: verify signature using issuer's public key and verify claims per policy (`iss`, `exp`, etc.)
 
-2. Verify standard claims per policy (`iss`, `exp`, etc.)
+2. Extract JWK from `cnf.jwk`
 
-3. Extract JWK from `cnf.jwk`
-
-4. Verify HTTP Message Signature using extracted key
+3. Verify HTTP Message Signature using extracted key
 
 **Example:**
 
@@ -360,6 +358,22 @@ The `alg` parameter in Signature-Input (RFC 9421) determines the signature algor
 - Ensure key type matches algorithm requirements
 
 - Reject algorithm/key mismatches
+
+## Signature-Key Integrity
+
+The Signature-Key header SHOULD be included as a covered component in Signature-Input:
+
+```
+Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
+```
+
+If `signature-key` is not covered, an attacker can modify the header without invalidating the signature. Attacks include:
+
+**Scheme substitution**: An attacker extracts the public key from an `hwk` scheme and republishes it via `jwks_uri` under their own identity, causing verifiers to attribute the request to the attacker.
+
+**Identity substitution**: An attacker modifies the `id` parameter in a `jwks_uri` scheme to point to their own metadata endpoint that returns the same public key, impersonating a different signer.
+
+Verifiers SHOULD reject requests where `signature-key` is not a covered component.
 
 # Privacy Considerations
 
