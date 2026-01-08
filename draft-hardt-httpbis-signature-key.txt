@@ -3,7 +3,7 @@
 
 
 HTTP                                                            D. Hardt
-Internet-Draft                                                     Hellō
+Internet-Draft                                                     Hello
 Intended status: Standards Track                              T. Meunier
 Expires: 12 July 2026                                         Cloudflare
                                                           8 January 2026
@@ -616,7 +616,7 @@ Appendix A.  Acknowledgments
 Authors' Addresses
 
    Dick Hardt
-   Hellō
+   Hello
    Email: dick.hardt@gmail.com
 
 
