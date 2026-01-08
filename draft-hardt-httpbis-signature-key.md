@@ -18,7 +18,7 @@ date = 2026-01-07T00:00:00Z
 initials = "D."
 surname = "Hardt"
 fullname = "Dick Hardt"
-organization = "Hello"
+organization = "Hellō"
   [author.address]
   email = "dick.hardt@gmail.com"
 
