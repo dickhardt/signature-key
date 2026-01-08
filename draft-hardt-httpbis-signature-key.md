@@ -73,8 +73,10 @@ Signature-Key: <label>=<scheme>;<parameters>...
 
 Where:
 - `<label>` (dictionary key) matches the label in Signature-Input and Signature headers
-- `<scheme>` (item value) is one of: hwk, jwks_uri, x509, jwt
-- `<parameters>` are semicolon-separated key-value pairs that vary by scheme
+- `<scheme>` (token) identifies the key distribution scheme
+- `<parameters>` are semicolon-separated key-value pairs where values are strings that vary by scheme
+
+Multiple keys are comma-separated per the dictionary format. See [@!RFC8941] for definitions of dictionary, token, and string.
 
 **Example:**
 
