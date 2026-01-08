@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 11 July 2026                                         Cloudflare
-                                                          7 January 2026
+Expires: 12 July 2026                                         Cloudflare
+                                                          8 January 2026
 
 
                        HTTP Signature-Key Header
@@ -47,7 +47,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 July 2026.
+   This Internet-Draft will expire on 12 July 2026.
 
 Copyright Notice
 
@@ -141,9 +141,12 @@ Table of Contents
    Signature-Key: <label>=<scheme>;<parameters>...
 
    Where: - <label> (dictionary key) matches the label in Signature-
-   Input and Signature headers - <scheme> (item value) is one of: hwk,
-   jwks_uri, x509, jwt - <parameters> are semicolon-separated key-value
-   pairs that vary by scheme
+   Input and Signature headers - <scheme> (token) identifies the key
+   distribution scheme - <parameters> are semicolon-separated key-value
+   pairs where values are strings that vary by scheme
+
+   Multiple keys are comma-separated per the dictionary format.  See
+   [RFC8941] for definitions of dictionary, token, and string.
 
    *Example:*
 
