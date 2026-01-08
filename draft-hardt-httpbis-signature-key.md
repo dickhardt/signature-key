@@ -168,6 +168,8 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB"
 
 - The `kid` parameter SHOULD NOT be used
 
+> **Design Note:** The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per [@!RFC7517], while structured field byte sequences use base64 encoding per [@!RFC8941]. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.
+
 **Use cases:**
 
 - Privacy-preserving agents that avoid identity disclosure
