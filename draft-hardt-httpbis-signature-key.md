@@ -12,7 +12,7 @@ name = "Internet-Draft"
 value = "draft-hardt-httpbis-signature-key-latest"
 stream = "IETF"
 
-date = 2026-01-07T00:00:00Z
+date = 2026-03-02T00:00:00Z
 
 [[author]]
 initials = "D."
@@ -74,9 +74,9 @@ Signature-Key: <label>=<scheme>;<parameters>...
 Where:
 - `<label>` (dictionary key) matches the label in Signature-Input and Signature headers
 - `<scheme>` (token) identifies the key distribution scheme
-- `<parameters>` are semicolon-separated key-value pairs where values are strings that vary by scheme
+- `<parameters>` are semicolon-separated key-value pairs whose values are structured field strings or byte sequences, varying by scheme
 
-Multiple keys are comma-separated per the dictionary format. See [@!RFC8941] for definitions of dictionary, token, and string.
+Multiple keys are comma-separated per the dictionary format. See [@!RFC8941] for definitions of dictionary, token, string, and byte sequence.
 
 **Example:**
 
@@ -120,17 +120,17 @@ Most deployments SHOULD use a single signature. When multiple signatures are req
 
 ## Header Web Key (hwk)
 
-The hwk scheme provides a self-contained public key inline in the header, enabling pseudonymous verification without key discovery.
+The hwk scheme provides a self-contained public key inline in the header, enabling pseudonymous verification without key discovery. The parameter names and values correspond directly to the JWK parameters defined in [@!RFC7517].
 
 **Parameters by key type:**
 
 OKP (Octet Key Pair):
 
-- `kty` (REQUIRED) - "OKP"
+- `kty` (REQUIRED, String) - "OKP"
 
-- `crv` (REQUIRED) - Curve name (e.g., "Ed25519")
+- `crv` (REQUIRED, String) - Curve name (e.g., "Ed25519")
 
-- `x` (REQUIRED) - Public key value
+- `x` (REQUIRED, String) - Public key value
 
 ```
 Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P..."
@@ -138,13 +138,13 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P..."
 
 EC (Elliptic Curve):
 
-- `kty` (REQUIRED) - "EC"
+- `kty` (REQUIRED, String) - "EC"
 
-- `crv` (REQUIRED) - Curve name (e.g., "P-256", "P-384")
+- `crv` (REQUIRED, String) - Curve name (e.g., "P-256", "P-384")
 
-- `x` (REQUIRED) - X coordinate
+- `x` (REQUIRED, String) - X coordinate
 
-- `y` (REQUIRED) - Y coordinate
+- `y` (REQUIRED, String) - Y coordinate
 
 ```
 Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D...";y="x_FEzRu..."
@@ -152,11 +152,11 @@ Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D...";y="x_FEzRu..."
 
 RSA:
 
-- `kty` (REQUIRED) - "RSA"
+- `kty` (REQUIRED, String) - "RSA"
 
-- `n` (REQUIRED) - Modulus
+- `n` (REQUIRED, String) - Modulus
 
-- `e` (REQUIRED) - Exponent
+- `e` (REQUIRED, String) - Exponent
 
 ```
 Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB"
@@ -184,11 +184,11 @@ The jwks_uri scheme identifies the signer and enables key discovery via a metada
 
 **Parameters:**
 
-- `id` (REQUIRED) - Signer identifier (HTTPS URL)
+- `id` (REQUIRED, String) - Signer identifier (HTTPS URL)
 
-- `well-known` (REQUIRED) - Metadata document name under `/.well-known/`
+- `well-known` (REQUIRED, String) - Metadata document name under `/.well-known/`
 
-- `kid` (REQUIRED) - Key identifier
+- `kid` (REQUIRED, String) - Key identifier
 
 > **Note:** The `well-known` parameter may be shortened to `wk` once the semantics are stable.
 
@@ -224,9 +224,9 @@ The x509 scheme provides certificate-based verification using PKI trust chains.
 
 **Parameters:**
 
-- `x5u` (REQUIRED) - URL to X.509 certificate chain (PEM format, [@!RFC7517] Section 4.6)
+- `x5u` (REQUIRED, String) - URL to X.509 certificate chain (PEM format, [@!RFC7517] Section 4.6)
 
-- `x5t` (REQUIRED) - Certificate thumbprint: BASE64URL(SHA256(DER(leaf_cert)))
+- `x5t` (REQUIRED, Byte Sequence) - Certificate thumbprint: SHA-256 hash of DER-encoded leaf certificate
 
 **Verification procedure:**
 
@@ -249,7 +249,7 @@ The x509 scheme provides certificate-based verification using PKI trust chains.
 **Example:**
 
 ```
-Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM"
+Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t=:bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM=:
 ```
 
 **Use cases:**
@@ -268,7 +268,7 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 **Parameters:**
 
-- `jwt` (REQUIRED) - Compact-serialized JWT
+- `jwt` (REQUIRED, String) - Compact-serialized JWT
 
 **JWT requirements:**
 
