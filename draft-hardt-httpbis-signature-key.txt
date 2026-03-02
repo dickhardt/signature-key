@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 12 July 2026                                         Cloudflare
-                                                          8 January 2026
+Expires: 3 September 2026                                     Cloudflare
+                                                            2 March 2026
 
 
                        HTTP Signature-Key Header
@@ -47,7 +47,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 July 2026.
+   This Internet-Draft will expire on 3 September 2026.
 
 Copyright Notice
 
@@ -143,10 +143,12 @@ Table of Contents
    Where: - <label> (dictionary key) matches the label in Signature-
    Input and Signature headers - <scheme> (token) identifies the key
    distribution scheme - <parameters> are semicolon-separated key-value
-   pairs where values are strings that vary by scheme
+   pairs whose values are structured field strings or byte sequences,
+   varying by scheme
 
    Multiple keys are comma-separated per the dictionary format.  See
-   [RFC8941] for definitions of dictionary, token, and string.
+   [RFC8941] for definitions of dictionary, token, string, and byte
+   sequence.
 
    *Example:*
 
@@ -211,38 +213,40 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";wel
 
    The hwk scheme provides a self-contained public key inline in the
    header, enabling pseudonymous verification without key discovery.
+   The parameter names and values correspond directly to the JWK
+   parameters defined in [RFC7517].
 
    *Parameters by key type:*
 
    OKP (Octet Key Pair):
 
-   *  kty (REQUIRED) - "OKP"
+   *  kty (REQUIRED, String) - "OKP"
 
-   *  crv (REQUIRED) - Curve name (e.g., "Ed25519")
+   *  crv (REQUIRED, String) - Curve name (e.g., "Ed25519")
 
-   *  x (REQUIRED) - Public key value
+   *  x (REQUIRED, String) - Public key value
 
    Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P..."
 
    EC (Elliptic Curve):
 
-   *  kty (REQUIRED) - "EC"
+   *  kty (REQUIRED, String) - "EC"
 
-   *  crv (REQUIRED) - Curve name (e.g., "P-256", "P-384")
+   *  crv (REQUIRED, String) - Curve name (e.g., "P-256", "P-384")
 
-   *  x (REQUIRED) - X coordinate
+   *  x (REQUIRED, String) - X coordinate
 
-   *  y (REQUIRED) - Y coordinate
+   *  y (REQUIRED, String) - Y coordinate
 
 Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D...";y="x_FEzRu..."
 
    RSA:
 
-   *  kty (REQUIRED) - "RSA"
+   *  kty (REQUIRED, String) - "RSA"
 
-   *  n (REQUIRED) - Modulus
+   *  n (REQUIRED, String) - Modulus
 
-   *  e (REQUIRED) - Exponent
+   *  e (REQUIRED, String) - Exponent
 
    Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB"
 
@@ -252,6 +256,13 @@ Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D...";y="x_FEzRu..."
       Signature-Input)
 
    *  The kid parameter SHOULD NOT be used
+
+   |  *Design Note:* The hwk parameters use structured field strings
+   |  rather than byte sequences.  JWK key values are base64url-encoded
+   |  per [RFC7517], while structured field byte sequences use base64
+   |  encoding per [RFC8941].  Using strings allows implementations to
+   |  pass JWK values directly without converting between base64url and
+   |  base64, avoiding a potential source of encoding bugs.
 
    *Use cases:*
 
@@ -268,11 +279,12 @@ Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D...";y="x_FEzRu..."
 
    *Parameters:*
 
-   *  id (REQUIRED) - Signer identifier (HTTPS URL)
+   *  id (REQUIRED, String) - Signer identifier (HTTPS URL)
 
-   *  well-known (REQUIRED) - Metadata document name under /.well-known/
+   *  well-known (REQUIRED, String) - Metadata document name under
+      /.well-known/
 
-   *  kid (REQUIRED) - Key identifier
+   *  kid (REQUIRED, String) - Key identifier
 
    |  *Note:* The well-known parameter may be shortened to wk once the
    |  semantics are stable.
@@ -308,11 +320,11 @@ Signature-Key: sig=jwks_uri;id="https://agent.example";well-known="aauth-agent";
 
    *Parameters:*
 
-   *  x5u (REQUIRED) - URL to X.509 certificate chain (PEM format,
-      [RFC7517] Section 4.6)
+   *  x5u (REQUIRED, String) - URL to X.509 certificate chain (PEM
+      format, [RFC7517] Section 4.6)
 
-   *  x5t (REQUIRED) - Certificate thumbprint:
-      BASE64URL(SHA256(DER(leaf_cert)))
+   *  x5t (REQUIRED, Byte Sequence) - Certificate thumbprint: SHA-256
+      hash of DER-encoded leaf certificate
 
    *Verification procedure:*
 
@@ -334,7 +346,7 @@ Signature-Key: sig=jwks_uri;id="https://agent.example";well-known="aauth-agent";
 
    *Example:*
 
-Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM"
+Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t=:bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM=:
 
    *Use cases:*
 
@@ -354,7 +366,7 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t="bW
 
    *Parameters:*
 
-   *  jwt (REQUIRED) - Compact-serialized JWT
+   *  jwt (REQUIRED, String) - Compact-serialized JWT
 
    *JWT requirements:*
 
