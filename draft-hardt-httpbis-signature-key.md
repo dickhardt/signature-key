@@ -462,6 +462,20 @@ Parameters:
 
 {backmatter}
 
+# Design Rationale
+
+## Why jwks_uri Instead of Inline JWKS?
+
+The `jwks_uri` and `jwt` schemes reference a `jwks_uri` property in the `.well-known` metadata document rather than embedding the JWKS directly in the metadata. This separation of concerns is deliberate:
+
+1. **Independent key rotation**: Keys can be rotated by updating the JWKS endpoint without modifying the `.well-known` metadata document. This decouples key lifecycle management from configuration management, allowing operations teams to rotate keys on their own schedule without redeploying metadata.
+
+2. **Independent management**: The `.well-known` metadata document and the JWKS can be hosted, managed, and secured by different systems or teams. For example, an identity team may manage keys while a platform team manages service metadata.
+
+3. **Caching semantics**: The JWKS endpoint can have its own cache-control headers tuned for key rotation frequency (e.g., short TTLs during a rotation event), independent of the `.well-known` document's caching policy.
+
+4. **Consistency with existing standards**: This approach mirrors the pattern established by OpenID Connect Discovery [@?OpenID.Discovery] and OAuth Authorization Server Metadata [@?RFC8414], which both use `jwks_uri` in metadata documents for the same reasons.
+
 # Acknowledgments
 
 The author would like to thank reviewers for their feedback on this specification.
