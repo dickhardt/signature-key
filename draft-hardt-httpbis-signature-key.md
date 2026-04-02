@@ -12,7 +12,7 @@ name = "Internet-Draft"
 value = "draft-hardt-httpbis-signature-key-latest"
 stream = "IETF"
 
-date = 2026-03-02T00:00:00Z
+date = 2026-03-26T00:00:00Z
 
 [[author]]
 initials = "D."
@@ -98,13 +98,15 @@ Verifiers MUST:
 
 3. For each label being verified, select the Signature-Key dictionary member with the same name
 
-4. If the corresponding dictionary member is missing, verification for that signature MUST fail
+4. If the Signature-Key header is present and the verifier is attempting to verify a label using it, but the corresponding dictionary member is missing, verification for that signature MUST fail
 
 > **Note:** A verifier might choose to verify only a subset of labels present (e.g., the application-required signature); labels not verified can be ignored.
 
+Signatures whose keys are distributed through mechanisms outside this specification (e.g., pre-configured keys, out-of-band key exchange) are out of scope. A Signature-Key header is not required for such signatures, and verifiers MAY use application-specific means to obtain the verification key.
+
 ## Label Consistency
 
-If a label appears in Signature or Signature-Input, and the verifier attempts to verify it, the corresponding member MUST exist in Signature-Key. If Signature-Key contains members for labels not being verified, verifiers MAY ignore them.
+If a label appears in Signature or Signature-Input, and the verifier attempts to verify it using Signature-Key, the corresponding member MUST exist in Signature-Key. If Signature-Key contains members for labels not being verified, verifiers MAY ignore them.
 
 ## Multiple Signatures
 
@@ -113,7 +115,7 @@ The dictionary format supports multiple signatures per message. Each signature h
 ```
 Signature-Input: sig1=(... "signature-key"), sig2=(... "signature-key")
 Signature: sig1=:...:, sig2=:...:
-Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";well-known="meta";kid="k1"
+Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk="meta";kid="k1"
 ```
 
 Most deployments SHOULD use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See [Signature-Key Integrity](#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
@@ -186,15 +188,13 @@ The jwks_uri scheme identifies the signer and enables key discovery via a metada
 
 - `id` (REQUIRED, String) - Signer identifier (HTTPS URL)
 
-- `well-known` (REQUIRED, String) - Metadata document name under `/.well-known/`
+- `dwk` (REQUIRED, String) - Dot well-known metadata document name under `/.well-known/`
 
 - `kid` (REQUIRED, String) - Key identifier
 
-> **Note:** The `well-known` parameter may be shortened to `wk` once the semantics are stable.
-
 **Discovery procedure:**
 
-1. Fetch `{id}/.well-known/{well-known}`
+1. Fetch `{id}/.well-known/{dwk}`
 
 2. Parse as JSON metadata
 
@@ -207,7 +207,7 @@ The jwks_uri scheme identifies the signer and enables key discovery via a metada
 **Example:**
 
 ```
-Signature-Key: sig=jwks_uri;id="https://agent.example";well-known="aauth-agent";kid="key-1"
+Signature-Key: sig=jwks_uri;id="https://agent.example";dwk="aauth-agent";kid="key-1"
 ```
 
 **Use cases:**
@@ -226,7 +226,7 @@ The x509 scheme provides certificate-based verification using PKI trust chains.
 
 - `x5u` (REQUIRED, String) - URL to X.509 certificate chain (PEM format, [@!RFC7517] Section 4.6)
 
-- `x5t` (REQUIRED, Byte Sequence) - Certificate thumbprint: SHA-256 hash of DER-encoded leaf certificate
+- `x5t` (REQUIRED, Byte Sequence) - Certificate thumbprint: SHA-256 hash of DER-encoded end-entity certificate
 
 **Verification procedure:**
 
@@ -238,7 +238,7 @@ The x509 scheme provides certificate-based verification using PKI trust chains.
 
 4. Check certificate validity and revocation status
 
-5. Verify `x5t` matches leaf certificate
+5. Verify `x5t` matches end-entity certificate
 
 6. Extract public key from end-entity certificate
 
@@ -272,19 +272,35 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 **JWT requirements:**
 
+- MUST contain `iss` claim (HTTPS URL of the issuer)
+
+- MUST contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`
+
 - MUST contain `cnf.jwk` claim with embedded JWK
 
-- SHOULD contain standard claims: `iss`, `sub`, `exp`, `iat`
+- SHOULD contain standard claims: `sub`, `exp`, `iat`
+
+- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
 **Verification procedure:**
 
-1. Validate the JWT: verify signature using issuer's public key and verify claims per policy (`iss`, `exp`, etc.)
+1. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
 
-2. Extract JWK from `cnf.jwk`
+2. Extract `iss` and `dwk` claims from the JWT payload
 
-3. Verify HTTP Message Signature using extracted key
+3. Fetch `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`
+
+4. Fetch JWKS from `jwks_uri`, find key matching `kid` in JWT header
+
+5. Verify JWT signature using the discovered key
+
+6. Validate JWT claims per policy (`iss`, `exp`, etc.)
+
+7. Extract JWK from `cnf.jwk`
+
+8. Verify HTTP Message Signature using extracted key
 
 **Example:**
 
@@ -297,6 +313,7 @@ Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
 ```json
 {
   "iss": "https://issuer.example",
+  "dwk": "oauth-authorization-server",
   "sub": "instance-123",
   "exp": 1732210000,
   "cnf": {
@@ -462,6 +479,20 @@ Parameters:
 
 {backmatter}
 
+# Document History
+
+*Note: This section is to be removed before publishing as an RFC.*
+
+## draft-hardt-httpbis-signature-key-02
+
+- Changed x5t parameter to byte sequence per reviewer feedback
+- Added structured field types to all parameters
+- Added design note explaining string vs byte sequence choice for hwk
+
+## draft-hardt-httpbis-signature-key-01
+
+- Initial public draft with four schemes: hwk, jwks_uri, x509, jwt
+
 # Design Rationale
 
 ## Why jwks_uri Instead of Inline JWKS?
@@ -475,6 +506,30 @@ The `jwks_uri` and `jwt` schemes reference a `jwks_uri` property in the `.well-k
 3. **Caching semantics**: The JWKS endpoint can have its own cache-control headers tuned for key rotation frequency (e.g., short TTLs during a rotation event), independent of the `.well-known` document's caching policy.
 
 4. **Consistency with existing standards**: This approach mirrors the pattern established by OpenID Connect Discovery [@?OpenID.Discovery] and OAuth Authorization Server Metadata [@?RFC8414], which both use `jwks_uri` in metadata documents for the same reasons.
+
+## Why a Separate Header?
+
+An alternative design would extend Signature-Input with additional parameters to carry key material. This was considered and rejected for several reasons:
+
+1. **Parameter complexity**: Each scheme has a different set of parameters (e.g., `hwk` needs `kty`, `crv`, `x`, `y`; `jwks_uri` needs `id`, `dwk`, `kid`; `jwt` needs a full JWT string). Overloading Signature-Input with all possible key parameters across all schemes would make the Signature-Input grammar unwieldy and harder to parse.
+
+2. **Separation of concerns**: Signature-Input describes *what* is signed and *how* (covered components, algorithm, timestamps). Signature-Key describes *who* signed it and *where to find the key*. These are distinct concerns, and separating them into distinct headers makes each easier to understand and process independently.
+
+3. **Extensibility**: A separate header with a scheme registry allows new key distribution mechanisms to be added without modifying the Signature-Input grammar. New schemes can define arbitrary parameters without coordination with RFC 9421.
+
+4. **Multiple signatures**: With a dictionary structure keyed by label, each signature can use a different scheme. This is natural in a separate header but would create complex nesting if embedded in Signature-Input.
+
+## Why Schemes Instead of Just a Key and Key ID?
+
+A simpler design would define Signature-Key as carrying only a public key (or key reference) and a key identifier, without the scheme abstraction. This was considered insufficient because:
+
+1. **Trust model varies**: A bare key tells the verifier nothing about the trust model. Is this a pseudonymous key to be evaluated on its own merits (hwk)? A key bound to a discoverable identity (jwks_uri)? A delegated key from an authority (jwt)? A certificate-backed key (x509)? The scheme token tells the verifier which verification procedure to follow and what trust properties the key carries.
+
+2. **Verification procedure differs**: Each scheme has a fundamentally different verification path. `hwk` requires no external fetches. `jwks_uri` requires metadata discovery. `x509` requires certificate chain validation. `jwt` requires JWT signature verification before the HTTP signature can be verified. A key-and-ID-only design would push scheme detection to heuristics or out-of-band agreement.
+
+3. **Security properties differ**: Without an explicit scheme, a verifier cannot distinguish between a self-asserted key and a CA-certified key. The scheme makes the trust model explicit, allowing verifiers to enforce policy (e.g., "only accept `jwt` or `x509` schemes").
+
+4. **Interoperability**: Explicit schemes create clear interoperability targets. Two implementations that support the `jwt` scheme know exactly what to expect from each other. Without schemes, the same key material could be interpreted differently by different implementations.
 
 # Acknowledgments
 
