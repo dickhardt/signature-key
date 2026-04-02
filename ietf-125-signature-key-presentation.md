@@ -111,12 +111,12 @@ Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj5P..."
 
 - Identifies the signer via HTTPS URL
 - Key discovery via well-known metadata document
-- Parameters: `id`, `well-known`, `kid`
-- Discovery: fetch metadata → extract `jwks_uri` → fetch JWKS → find `kid`
+- Parameters: `id`, `dwk` (dot well-known), `kid`
+- Discovery: `{id}/.well-known/{dwk}` → metadata → `jwks_uri` → JWKS → find `kid`
 - Use cases: identified services, crawlers, monitoring
 
 ```
-Signature-Key: sig=jwks_uri;id="https://service.example";well-known="oauth-authorization-server";kid="key-1"
+Signature-Key: sig=jwks_uri;id="https://service.example";dwk="oauth-authorization-server";kid="key-1"
 ```
 
 ---
@@ -125,7 +125,7 @@ Signature-Key: sig=jwks_uri;id="https://service.example";well-known="oauth-autho
 
 - Embeds public key in a signed JWT via `cnf.jwk` claim (RFC 7800)
 - Enables delegation: authority signs JWT, instance signs HTTP messages
-- JWT obtained out of band; verified via issuer's JWKS
+- JWT requires `iss` and `dwk` claims — verifier discovers issuer's keys via `{iss}/.well-known/{dwk}`
 - Use cases: horizontal scaling, ephemeral instance keys, delegation
 
 ```
@@ -193,6 +193,7 @@ A workload calls an API:
 ## New Scheme: jkt-jwt — Self-Issued Key Delegation
 
 - **New scheme** (post-cutoff): self-issued key delegation via JWT
+- Pronounced **"jacket jot"**
 
 ### The problem
 
