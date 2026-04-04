@@ -332,7 +332,7 @@ For HTTP Message Signatures, where every request requires a signature, this crea
 4. HTTP requests are signed with the fast ephemeral key
 5. The JWT proves the ephemeral key was authorized by the enclave key
 
-The enclave key's JWK Thumbprint URI (`urn:jkt:<hash-algorithm>:<thumbprint>`) serves as a stable, pseudonymous device identity. Verifiers build trust in this identity over time (TOFU — Trust On First Use).
+The enclave key's JWK Thumbprint URI (`urn:jkt:<hash-algorithm>:<thumbprint>`) serves as a stable, pseudonymous device identity. Verifiers build trust in this identity over time (TOFU — Trust On First Use [@?RFC7435]).
 
 **Parameters:**
 
