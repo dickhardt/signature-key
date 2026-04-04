@@ -34,7 +34,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Four initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS URI discovery (jwks_uri), X.509 certificate chains (x509), and JWT-based delegation (jwt). These schemes enable flexible trust models ranging from privacy-preserving pseudonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
+This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Five initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS URI discovery (jwks_uri), X.509 certificate chains (x509), JWT-based delegation (jwt), and self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt). These schemes enable flexible trust models ranging from privacy-preserving pseudonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
 
 .# Discussion Venues
 
@@ -56,6 +56,7 @@ The header supports four schemes, each designed for different trust models and o
 2. **JWKS URI (jwks_uri)** - Identified signers with key discovery via metadata
 3. **X.509 (x509)** - Certificate-based verification with PKI trust chains
 4. **JWT (jwt)** - Delegated keys embedded in signed JWTs for horizontal scale
+5. **JKT JWT (jkt-jwt)** - Self-issued key delegation via JWK Thumbprint JWTs ("jacket jot")
 
 Additional schemes may be defined through the IANA registry established by this document.
 
@@ -317,6 +318,133 @@ Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
 
 - Short-lived credentials for horizontal scaling
 
+## JKT JWT Self-Issued Key Delegation (jkt-jwt)
+
+The jkt-jwt scheme (pronounced "jacket jot") provides self-issued key delegation using a JWT whose signing key is embedded in the JWT header. This enables devices with hardware-backed secure enclaves to delegate signing authority to ephemeral keys, avoiding the performance cost of repeated enclave operations while maintaining a cryptographic chain of trust rooted in the enclave key.
+
+Many devices — mobile phones, laptops, IoT hardware — include secure enclaves or trusted execution environments (e.g., Apple Secure Enclave, Android StrongBox, TPM) that can generate and store private keys with strong protection guarantees. However, signing operations using these enclaves are comparatively slow and may require user interaction (biometric confirmation, PIN entry).
+
+For HTTP Message Signatures, where every request requires a signature, this creates a tension between security and performance. The jkt-jwt scheme resolves this by allowing the enclave key to sign a JWT that delegates authority to a faster ephemeral key:
+
+1. The enclave generates a long-lived key pair (the identity key)
+2. The device generates an ephemeral key pair in software (the signing key)
+3. The enclave signs a JWT binding the ephemeral key via the `cnf` claim
+4. HTTP requests are signed with the fast ephemeral key
+5. The JWT proves the ephemeral key was authorized by the enclave key
+
+The enclave key's JWK Thumbprint URI (`urn:jkt:<hash-algorithm>:<thumbprint>`) serves as a stable, pseudonymous device identity. Verifiers build trust in this identity over time (TOFU — Trust On First Use [@?RFC7435]).
+
+**Parameters:**
+
+- `jwt` (REQUIRED, String) - Compact-serialized JWT
+
+**JWT requirements:**
+
+Header:
+
+- `typ` (REQUIRED) - Identifies the thumbprint hash algorithm. Defined values: `jkt-s256+jwt` (SHA-256), `jkt-s512+jwt` (SHA-512). Implementations MUST support `jkt-s256+jwt` and MAY support additional algorithms.
+
+- `alg` (REQUIRED) - Signature algorithm used by the enclave key
+
+- `jwk` (REQUIRED) - JWK public key of the enclave/identity key (the key that signed this JWT)
+
+Payload:
+
+- `iss` (REQUIRED) - JWK Thumbprint URI of the signing key, in the format `urn:jkt:<hash-algorithm>:<thumbprint>` where the thumbprint is computed per [@!RFC7638]. The hash algorithm in the URN MUST match the algorithm indicated by the JWT `typ`. The verifier knows the hash algorithm from the `typ` it accepted, computes the thumbprint of the header `jwk`, prepends the known `urn:jkt:<hash-algorithm>:` prefix, and compares to `iss` by string equality.
+
+- `iat` (REQUIRED) - Issued-at timestamp
+
+- `exp` (REQUIRED) - Expiration timestamp
+
+- `cnf` (REQUIRED) - Confirmation claim [@!RFC7800] containing `jwk`: the ephemeral public key delegated for HTTP message signing
+
+The `sub` claim is not used. The identity is the enclave key itself, fully represented by the `iss` thumbprint.
+
+**JWT Type Values:**
+
+The `typ` value encodes both the purpose and the thumbprint hash algorithm:
+
+| `typ` | Hash Algorithm | `iss` prefix |
+|---|---|---|
+| `jkt-s256+jwt` | SHA-256 | `urn:jkt:sha-256:` |
+| `jkt-s512+jwt` | SHA-512 | `urn:jkt:sha-512:` |
+
+The `jkt-` prefix indicates a self-issued delegation JWT: the signing key is embedded in the JWT header as a JWK, the issuer is identified by the key's thumbprint, and the JWT delegates signing authority to the key in the `cnf` claim. The suffix (`s256`, `s512`) identifies the hash algorithm used for the thumbprint. The `typ` and `iss` prefix MUST be consistent.
+
+These types are independent of the Signature-Key header and MAY be used in other contexts where self-issued key delegation is needed. Additional hash algorithms can be supported by registering new `typ` values following the `jkt-<alg>+jwt` pattern.
+
+**Example:**
+
+```
+Signature-Key: sig=jkt-jwt;jwt="eyJ..."
+```
+
+JWT header:
+
+```json
+{
+  "typ": "jkt-s256+jwt",
+  "alg": "ES256",
+  "jwk": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+    "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0"
+  }
+}
+```
+
+JWT payload:
+
+```json
+{
+  "iss": "urn:jkt:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs",
+  "iat": 1732210000,
+  "exp": 1732296400,
+  "cnf": {
+    "jwk": {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+    }
+  }
+}
+```
+
+In this example, the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software). The identity is `urn:jkt:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs`.
+
+**Verification procedure:**
+
+1. Parse the JWT without verifying the signature
+
+2. Check the `typ` header (e.g., `jkt-s256+jwt`). Reject if the type is not supported.
+
+3. Determine the hash algorithm and `iss` prefix from the `typ` (e.g., `jkt-s256+jwt` → SHA-256, `urn:jkt:sha-256:`)
+
+4. Extract the `jwk` from the JWT header
+
+5. Compute the JWK Thumbprint ([@!RFC7638]) of the header `jwk` using the determined hash algorithm
+
+6. Construct the expected `iss` value by prepending the known prefix to the computed thumbprint
+
+7. Verify the `iss` claim matches the constructed value by string equality
+
+8. Verify the JWT signature using the header `jwk`
+
+9. Validate `exp` and `iat` claims per policy
+
+10. Extract the ephemeral public key from `cnf.jwk`
+
+11. Verify the HTTP Message Signature using the ephemeral key
+
+**Use cases:**
+
+- Devices with hardware-backed secure enclaves delegating to fast ephemeral keys
+
+- Persistent pseudonymous identity without requiring registration or authority
+
+- Mobile apps, laptops, and IoT devices with enclave-backed identity
+
 # Security Considerations
 
 ## Key Validation
@@ -331,6 +459,8 @@ Verifiers MUST validate all cryptographic material before use:
 
 - **jwt**: Verify JWT signature and validate embedded JWK
 
+- **jkt-jwt**: Verify JWT signature using header `jwk`, validate thumbprint matches `iss`, validate embedded ephemeral JWK
+
 ## Caching and Performance
 
 Verifiers MAY cache keys to improve performance but MUST implement appropriate cache expiration:
@@ -340,6 +470,8 @@ Verifiers MAY cache keys to improve performance but MUST implement appropriate c
 - **x509**: Cache by `x5t`, invalidate on certificate expiry
 
 - **jwt**: Cache embedded keys until JWT expiration
+
+- **jkt-jwt**: Cache embedded keys until JWT expiration; cache by `iss` thumbprint URI
 
 Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.
 
@@ -352,6 +484,8 @@ Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.
 **x509**: Requires robust certificate validation including revocation checking. Verifiers MUST NOT skip certificate chain validation.
 
 **jwt**: Delegation trust depends on JWT issuer verification. Verifiers MUST validate JWT signatures and claims before trusting embedded keys.
+
+**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised. Implementations SHOULD use the shortest practical lifetime. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
 
 ## Algorithm Selection
 
@@ -390,6 +524,8 @@ The hwk scheme enables pseudonymous operation where the signer's identity is not
 - Key reuse enables tracking but may be necessary for reputation/rate-limiting
 
 - Verifiers should not log or retain hwk keys beyond operational necessity
+
+The jkt-jwt scheme is pseudonymous like hwk — the identity is a key thumbprint URI. However, because the thumbprint is stable across sessions (tied to the enclave key), it enables long-term tracking. Verifiers should apply the same retention considerations as for hwk keys.
 
 The jwks_uri, x509, and jwt schemes all reveal signer identity. Protocols using these schemes should inform signers that their identity will be disclosed to verifiers.
 
@@ -445,6 +581,7 @@ New scheme registrations require Specification Required per [@!RFC8126].
 | jwks_uri | JWKS URI Discovery - key discovery via metadata | [this document] |
 | x509 | X.509 Certificate - PKI certificate chain | [this document] |
 | jwt | JWT Confirmation Key - delegated key in JWT | [this document] |
+| jkt-jwt | JKT JWT Self-Issued Key Delegation - enclave-backed delegation | [this document] |
 
 ### Registration Template
 
@@ -461,6 +598,14 @@ Parameters:
 : List of parameters defined for this scheme
 
 {backmatter}
+
+# Document History
+
+*Note: This section is to be removed before publishing as an RFC.*
+
+## draft-hardt-httpbis-signature-key-03
+
+- Added jkt-jwt scheme for self-issued key delegation
 
 # Acknowledgments
 

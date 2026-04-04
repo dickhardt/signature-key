@@ -193,6 +193,7 @@ A workload calls an API:
 ## New Scheme: jkt-jwt — Self-Issued Key Delegation
 
 - **New scheme** (post-cutoff): self-issued key delegation via JWT
+- Pronounced **"jacket jot"**
 
 ### The problem
 
