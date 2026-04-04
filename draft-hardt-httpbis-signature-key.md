@@ -34,7 +34,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Five initial key distribution schemes are defined: pseudonymous inline keys (hwk), identified signers with JWKS URI discovery (jwks_uri), X.509 certificate chains (x509), JWT-based delegation (jwt), and self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt). These schemes enable flexible trust models ranging from privacy-preserving pseudonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
+This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Five initial key distribution schemes are defined: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation (jwt), and X.509 certificate chains (x509). These schemes enable flexible trust models ranging from privacy-preserving pseudonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
 
 .# Discussion Venues
 
@@ -53,10 +53,10 @@ This document defines the Signature-Key HTTP header field to standardize key dis
 The header supports four schemes, each designed for different trust models and operational requirements:
 
 1. **Header Web Key (hwk)** - Self-contained public keys for pseudonymous verification
-2. **JWKS URI (jwks_uri)** - Identified signers with key discovery via metadata
-3. **X.509 (x509)** - Certificate-based verification with PKI trust chains
+2. **JKT JWT (jkt-jwt)** - Self-issued key delegation via JWK Thumbprint JWTs ("jacket jot")
+3. **JWKS URI (jwks_uri)** - Identified signers with key discovery via metadata
 4. **JWT (jwt)** - Delegated keys embedded in signed JWTs for horizontal scale
-5. **JKT JWT (jkt-jwt)** - Self-issued key delegation via JWK Thumbprint JWTs ("jacket jot")
+3. **X.509 (x509)** - Certificate-based verification with PKI trust chains
 
 Additional schemes may be defined through the IANA registry established by this document.
 
@@ -178,162 +178,6 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB"
 - Experimental or temporary access without registration
 
 - Rate limiting and reputation building on a per-key basis
-
-## JWKS URI Discovery (jwks_uri)
-
-The jwks_uri scheme identifies the signer and enables key discovery via a metadata document containing a `jwks_uri` property.
-
-**Parameters:**
-
-- `id` (REQUIRED, String) - Signer identifier (HTTPS URL)
-
-- `dwk` (REQUIRED, String) - Dot well-known metadata document name under `/.well-known/`
-
-- `kid` (REQUIRED, String) - Key identifier
-
-**Discovery procedure:**
-
-1. Fetch `{id}/.well-known/{dwk}`
-
-2. Parse as JSON metadata
-
-3. Extract `jwks_uri` property
-
-4. Fetch JWKS from `jwks_uri`
-
-5. Find key with matching `kid`
-
-**Example:**
-
-```
-Signature-Key: sig=jwks_uri;id="https://agent.example";dwk="aauth-agent";kid="key-1"
-```
-
-**Use cases:**
-
-- Identified services with stable HTTPS identity
-
-- Search engine crawlers and monitoring services
-
-- Services requiring explicit entity identification
-
-## X.509 Certificates (x509)
-
-The x509 scheme provides certificate-based verification using PKI trust chains.
-
-**Parameters:**
-
-- `x5u` (REQUIRED, String) - URL to X.509 certificate chain (PEM format, [@!RFC7517] Section 4.6)
-
-- `x5t` (REQUIRED, Byte Sequence) - Certificate thumbprint: SHA-256 hash of DER-encoded end-entity certificate
-
-**Verification procedure:**
-
-1. Check cache for certificate with matching `x5t`
-
-2. If not cached or expired, fetch PEM from `x5u`
-
-3. Validate certificate chain to trusted root CA
-
-4. Check certificate validity and revocation status
-
-5. Verify `x5t` matches end-entity certificate
-
-6. Extract public key from end-entity certificate
-
-7. Verify signature using extracted key
-
-8. Cache certificate indexed by `x5t`
-
-**Example:**
-
-```
-Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t=:bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM=:
-```
-
-**Use cases:**
-
-- Enterprise environments with PKI infrastructure
-
-- Integration with existing certificate management systems
-
-- Scenarios requiring certificate revocation checking
-
-- Regulated industries requiring certificate-based authentication
-
-## JWT Confirmation Key (jwt)
-
-The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirmation) claim [@!RFC7800], enabling delegation and horizontal scale.
-
-**Parameters:**
-
-- `jwt` (REQUIRED, String) - Compact-serialized JWT
-
-**JWT requirements:**
-
-- MUST contain `cnf.jwk` claim with embedded JWK
-
-- SHOULD contain `iss` claim (HTTPS URL of the issuer) — using SHOULD rather than MUST allows existing JWT infrastructure to be used without modification
-
-- SHOULD contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`. Using SHOULD allows deployments where the verifier already knows the issuer's keys.
-
-- SHOULD contain standard claims: `sub`, `exp`, `iat`
-
-- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
-
-> **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
-
-**Verification procedure:**
-
-1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Reject if the value is not a well-formed JWT (three base64url-encoded segments separated by periods, each decoding to valid JSON for the header and payload). This and subsequent pre-signature checks allow the verifier to fail early without expensive cryptographic operations or network fetches.
-
-2. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
-
-3. Validate `exp` claim if present. Reject if the token has expired.
-
-4. Verify required claims are present (`cnf.jwk`, plus any claims required by deployment policy). Reject if a required claim is missing.
-
-5. If `iss` and `dwk` claims are present, fetch `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`. Fetch JWKS from `jwks_uri`, find key matching `kid` in JWT header. If `iss` or `dwk` is absent, the verifier MUST obtain the issuer's key through an application-specific mechanism.
-
-6. Verify JWT signature using the discovered key
-
-7. Validate remaining JWT claims per policy (`iss`, `sub`, etc.)
-
-8. Extract JWK from `cnf.jwk`
-
-9. Verify HTTP Message Signature using extracted key
-
-**Example:**
-
-```
-Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
-```
-
-**JWT payload example:**
-
-```json
-{
-  "iss": "https://issuer.example",
-  "dwk": "oauth-authorization-server",
-  "sub": "instance-123",
-  "exp": 1732210000,
-  "cnf": {
-    "jwk": {
-      "kty": "OKP",
-      "crv": "Ed25519",
-      "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
-    }
-  }
-}
-```
-
-**Use cases:**
-
-- Distributed services with ephemeral instance keys
-
-- Delegation scenarios where instances act on behalf of an authority
-
-- Short-lived credentials for horizontal scaling
 
 ## JKT JWT Self-Issued Key Delegation (jkt-jwt)
 
@@ -461,6 +305,162 @@ In this example, the enclave holds a P-256 key (signed via hardware) and delegat
 - Persistent pseudonymous identity without requiring registration or authority
 
 - Mobile apps, laptops, and IoT devices with enclave-backed identity
+
+## JWKS URI Discovery (jwks_uri)
+
+The jwks_uri scheme identifies the signer and enables key discovery via a metadata document containing a `jwks_uri` property.
+
+**Parameters:**
+
+- `id` (REQUIRED, String) - Signer identifier (HTTPS URL)
+
+- `dwk` (REQUIRED, String) - Dot well-known metadata document name under `/.well-known/`
+
+- `kid` (REQUIRED, String) - Key identifier
+
+**Discovery procedure:**
+
+1. Fetch `{id}/.well-known/{dwk}`
+
+2. Parse as JSON metadata
+
+3. Extract `jwks_uri` property
+
+4. Fetch JWKS from `jwks_uri`
+
+5. Find key with matching `kid`
+
+**Example:**
+
+```
+Signature-Key: sig=jwks_uri;id="https://agent.example";dwk="aauth-agent";kid="key-1"
+```
+
+**Use cases:**
+
+- Identified services with stable HTTPS identity
+
+- Search engine crawlers and monitoring services
+
+- Services requiring explicit entity identification
+
+## JWT Confirmation Key (jwt)
+
+The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirmation) claim [@!RFC7800], enabling delegation and horizontal scale.
+
+**Parameters:**
+
+- `jwt` (REQUIRED, String) - Compact-serialized JWT
+
+**JWT requirements:**
+
+- MUST contain `cnf.jwk` claim with embedded JWK
+
+- SHOULD contain `iss` claim (HTTPS URL of the issuer) — using SHOULD rather than MUST allows existing JWT infrastructure to be used without modification
+
+- SHOULD contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`. Using SHOULD allows deployments where the verifier already knows the issuer's keys.
+
+- SHOULD contain standard claims: `sub`, `exp`, `iat`
+
+- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+
+> **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
+
+**Verification procedure:**
+
+1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Reject if the value is not a well-formed JWT. This and subsequent pre-signature checks allow the verifier to fail early without expensive cryptographic operations or network fetches.
+
+2. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
+
+3. Validate `exp` claim if present. Reject if the token has expired.
+
+4. Verify required claims are present (`cnf.jwk`, plus any claims required by deployment policy). Reject if a required claim is missing.
+
+5. If `iss` and `dwk` claims are present, fetch `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`. Fetch JWKS from `jwks_uri`, find key matching `kid` in JWT header. If `iss` or `dwk` is absent, the verifier MUST obtain the issuer's key through an application-specific mechanism.
+
+6. Verify JWT signature using the discovered key
+
+7. Validate remaining JWT claims per policy (`iss`, `sub`, etc.)
+
+8. Extract JWK from `cnf.jwk`
+
+9. Verify HTTP Message Signature using extracted key
+
+**Example:**
+
+```
+Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
+```
+
+**JWT payload example:**
+
+```json
+{
+  "iss": "https://issuer.example",
+  "dwk": "oauth-authorization-server",
+  "sub": "instance-123",
+  "exp": 1732210000,
+  "cnf": {
+    "jwk": {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+    }
+  }
+}
+```
+
+**Use cases:**
+
+- Distributed services with ephemeral instance keys
+
+- Delegation scenarios where instances act on behalf of an authority
+
+- Short-lived credentials for horizontal scaling
+
+## X.509 Certificates (x509)
+
+The x509 scheme provides certificate-based verification using PKI trust chains.
+
+**Parameters:**
+
+- `x5u` (REQUIRED, String) - URL to X.509 certificate chain (PEM format, [@!RFC7517] Section 4.6)
+
+- `x5t` (REQUIRED, Byte Sequence) - Certificate thumbprint: SHA-256 hash of DER-encoded end-entity certificate
+
+**Verification procedure:**
+
+1. Check cache for certificate with matching `x5t`
+
+2. If not cached or expired, fetch PEM from `x5u`
+
+3. Validate certificate chain to trusted root CA
+
+4. Check certificate validity and revocation status
+
+5. Verify `x5t` matches end-entity certificate
+
+6. Extract public key from end-entity certificate
+
+7. Verify signature using extracted key
+
+8. Cache certificate indexed by `x5t`
+
+**Example:**
+
+```
+Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t=:bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM=:
+```
+
+**Use cases:**
+
+- Enterprise environments with PKI infrastructure
+
+- Integration with existing certificate management systems
+
+- Scenarios requiring certificate revocation checking
+
+- Regulated industries requiring certificate-based authentication
 
 # Security Considerations
 
@@ -595,10 +595,10 @@ New scheme registrations require Specification Required per [@!RFC8126].
 | Scheme | Description | Reference |
 |--------|-------------|-----------|
 | hwk | Header Web Key - inline public key | [this document] |
-| jwks_uri | JWKS URI Discovery - key discovery via metadata | [this document] |
-| x509 | X.509 Certificate - PKI certificate chain | [this document] |
-| jwt | JWT Confirmation Key - delegated key in JWT | [this document] |
 | jkt-jwt | JKT JWT Self-Issued Key Delegation - enclave-backed delegation | [this document] |
+| jwks_uri | JWKS URI Discovery - key discovery via metadata | [this document] |
+| jwt | JWT Confirmation Key - delegated key in JWT | [this document] |
+| x509 | X.509 Certificate - PKI certificate chain | [this document] |
 
 ### Registration Template
 
@@ -623,6 +623,14 @@ Parameters:
 ## draft-hardt-httpbis-signature-key-03
 
 - Added jkt-jwt scheme for self-issued key delegation
+- Renamed `well-known` parameter to `dwk` (dot well-known)
+- Added `iss` and `dwk` claims to jwt scheme (SHOULD) for issuer key discovery
+- Added early validation step to jwt verification procedure (format, typ, exp checks before network fetches)
+- Added TOFU reference (RFC 7435) to jkt-jwt scheme
+- Added design rationale for jwks_uri vs inline JWKS
+- Moved hwk string vs byte sequence design note to rationale appendix
+- Reordered schemes
+- Added acknowledgments
 
 ## draft-hardt-httpbis-signature-key-02
 
@@ -678,4 +686,4 @@ The hwk parameters use structured field strings rather than byte sequences. JWK 
 
 # Acknowledgments
 
-The author would like to thank reviewers for their feedback on this specification.
+The author would like to thank Yaron Sheffer for their feedback on this specification.
