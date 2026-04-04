@@ -281,7 +281,7 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 - SHOULD contain standard claims: `sub`, `exp`, `iat`
 
-- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy
+- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
