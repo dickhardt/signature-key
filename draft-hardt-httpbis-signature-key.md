@@ -273,11 +273,11 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 **JWT requirements:**
 
-- MUST contain `iss` claim (HTTPS URL of the issuer)
-
-- MUST contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`
-
 - MUST contain `cnf.jwk` claim with embedded JWK
+
+- SHOULD contain `iss` claim (HTTPS URL of the issuer) — using SHOULD rather than MUST allows existing JWT infrastructure to be used without modification
+
+- SHOULD contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`. Using SHOULD allows deployments where the verifier already knows the issuer's keys.
 
 - SHOULD contain standard claims: `sub`, `exp`, `iat`
 
@@ -287,21 +287,23 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 **Verification procedure:**
 
-1. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
+1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Reject if the value is not a well-formed JWT (three base64url-encoded segments separated by periods, each decoding to valid JSON for the header and payload). This and subsequent pre-signature checks allow the verifier to fail early without expensive cryptographic operations or network fetches.
 
-2. Extract `iss` and `dwk` claims from the JWT payload
+2. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
 
-3. Fetch `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`
+3. Validate `exp` claim if present. Reject if the token has expired.
 
-4. Fetch JWKS from `jwks_uri`, find key matching `kid` in JWT header
+4. Verify required claims are present (`cnf.jwk`, plus any claims required by deployment policy). Reject if a required claim is missing.
 
-5. Verify JWT signature using the discovered key
+5. If `iss` and `dwk` claims are present, fetch `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`. Fetch JWKS from `jwks_uri`, find key matching `kid` in JWT header. If `iss` or `dwk` is absent, the verifier MUST obtain the issuer's key through an application-specific mechanism.
 
-6. Validate JWT claims per policy (`iss`, `exp`, etc.)
+6. Verify JWT signature using the discovered key
 
-7. Extract JWK from `cnf.jwk`
+7. Validate remaining JWT claims per policy (`iss`, `sub`, etc.)
 
-8. Verify HTTP Message Signature using extracted key
+8. Extract JWK from `cnf.jwk`
+
+9. Verify HTTP Message Signature using extracted key
 
 **Example:**
 
