@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 1 October 2026                                       Cloudflare
-                                                           30 March 2026
+Expires: 6 October 2026                                       Cloudflare
+                                                            4 April 2026
 
 
                        HTTP Signature-Key Header
@@ -47,7 +47,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 October 2026.
+   This Internet-Draft will expire on 6 October 2026.
 
 Copyright Notice
 
@@ -90,7 +90,9 @@ Table of Contents
        5.2.1.  Registration Procedure
        5.2.2.  Initial Registry Contents
        5.2.3.  Registration Template
-   6.  Normative References
+   6.  References
+     6.1.  Normative References
+     6.2.  Informative References
    Appendix A.  Document History
      A.1.  draft-hardt-httpbis-signature-key-03
    Appendix B.  Acknowledgments
@@ -451,7 +453,7 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t=:bW
    The enclave key's JWK Thumbprint URI (urn:jkt:<hash-
    algorithm>:<thumbprint>) serves as a stable, pseudonymous device
    identity.  Verifiers build trust in this identity over time (TOFU —
-   Trust On First Use).
+   Trust On First Use [RFC7435]).
 
    *Parameters:*
 
@@ -804,7 +806,9 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    Specification:  Reference to the specification defining the scheme
    Parameters:  List of parameters defined for this scheme
 
-6.  Normative References
+6.  References
+
+6.1.  Normative References
 
    [RFC7517]  Jones, M., "JSON Web Key (JWK)", RFC 7517,
               DOI 10.17487/RFC7517, May 2015,
@@ -836,6 +840,12 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    [RFC9421]  Backman, A., Ed., Richer, J., Ed., and M. Sporny, "HTTP
               Message Signatures", RFC 9421, DOI 10.17487/RFC9421,
               February 2024, <https://www.rfc-editor.org/info/rfc9421>.
+
+6.2.  Informative References
+
+   [RFC7435]  Dukhovni, V., "Opportunistic Security: Some Protection
+              Most of the Time", RFC 7435, DOI 10.17487/RFC7435,
+              December 2014, <https://www.rfc-editor.org/info/rfc7435>.
 
 Appendix A.  Document History
 
