@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 1 October 2026                                       Cloudflare
-                                                           30 March 2026
+Expires: 6 October 2026                                       Cloudflare
+                                                            4 April 2026
 
 
                        HTTP Signature-Key Header
@@ -47,7 +47,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 October 2026.
+   This Internet-Draft will expire on 6 October 2026.
 
 Copyright Notice
 
@@ -381,41 +381,57 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t=:bW
 
    *JWT requirements:*
 
-   *  MUST contain iss claim (HTTPS URL of the issuer)
-
-   *  MUST contain dwk claim (dot well-known metadata document name) —
-      the verifier constructs {iss}/.well-known/{dwk} to discover the
-      issuer's jwks_uri
-
    *  MUST contain cnf.jwk claim with embedded JWK
+
+   *  SHOULD contain iss claim (HTTPS URL of the issuer) — using SHOULD
+      rather than MUST allows existing JWT infrastructure to be used
+      without modification
+
+   *  SHOULD contain dwk claim (dot well-known metadata document name) —
+      the verifier constructs {iss}/.well-known/{dwk} to discover the
+      issuer's jwks_uri.  Using SHOULD allows deployments where the
+      verifier already knows the issuer's keys.
 
    *  SHOULD contain standard claims: sub, exp, iat
 
    *  Verifiers SHOULD verify the JWT typ header parameter has an
-      expected value per deployment policy
+      expected value per deployment policy, to optimize for a quick
+      rejection
 
    |  *Note:* The mechanism by which the JWT is obtained is out of scope
    |  of this specification.
 
    *Verification procedure:*
 
-   1.  Verify the JWT typ header parameter has an expected value per
+   1.  Parse the JWT parameter value per [RFC7519] Section 7.2.  Reject
+       if the value is not a well-formed JWT (three base64url-encoded
+       segments separated by periods, each decoding to valid JSON for
+       the header and payload).  This and subsequent pre-signature
+       checks allow the verifier to fail early without expensive
+       cryptographic operations or network fetches.
+
+   2.  Verify the JWT typ header parameter has an expected value per
        policy.  Reject if unexpected.
 
-   2.  Extract iss and dwk claims from the JWT payload
+   3.  Validate exp claim if present.  Reject if the token has expired.
 
-   3.  Fetch {iss}/.well-known/{dwk}, parse as JSON metadata, extract
-       jwks_uri
+   4.  Verify required claims are present (cnf.jwk, plus any claims
+       required by deployment policy).  Reject if a required claim is
+       missing.
 
-   4.  Fetch JWKS from jwks_uri, find key matching kid in JWT header
+   5.  If iss and dwk claims are present, fetch {iss}/.well-known/{dwk},
+       parse as JSON metadata, extract jwks_uri.  Fetch JWKS from
+       jwks_uri, find key matching kid in JWT header.  If iss or dwk is
+       absent, the verifier MUST obtain the issuer's key through an
+       application-specific mechanism.
 
-   5.  Verify JWT signature using the discovered key
+   6.  Verify JWT signature using the discovered key
 
-   6.  Validate JWT claims per policy (iss, exp, etc.)
+   7.  Validate remaining JWT claims per policy (iss, sub, etc.)
 
-   7.  Extract JWK from cnf.jwk
+   8.  Extract JWK from cnf.jwk
 
-   8.  Verify HTTP Message Signature using extracted key
+   9.  Verify HTTP Message Signature using extracted key
 
    *Example:*
 
@@ -628,6 +644,10 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    [RFC7517]  Jones, M., "JSON Web Key (JWK)", RFC 7517,
               DOI 10.17487/RFC7517, May 2015,
               <https://www.rfc-editor.org/info/rfc7517>.
+
+   [RFC7519]  Jones, M., Bradley, J., and N. Sakimura, "JSON Web Token
+              (JWT)", RFC 7519, DOI 10.17487/RFC7519, May 2015,
+              <https://www.rfc-editor.org/info/rfc7519>.
 
    [RFC7800]  Jones, M., Bradley, J., and H. Tschofenig, "Proof-of-
               Possession Key Semantics for JSON Web Tokens (JWTs)",
