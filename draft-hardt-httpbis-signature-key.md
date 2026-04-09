@@ -501,7 +501,7 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
 
 # Accept-Signature sigkey Parameter
 
-RFC 9421 Section 5 defines the `Accept-Signature` response header for requesting HTTP Message Signatures. This document extends `Accept-Signature` with a `sigkey` parameter that indicates the type of Signature-Key the server requires.
+[@!RFC9421] Section 5 defines the `Accept-Signature` response header for requesting HTTP Message Signatures. This document extends `Accept-Signature` with a `sigkey` parameter that indicates the type of Signature-Key the server requires.
 
 ## Parameter Definition
 
@@ -539,7 +539,7 @@ The `signature-key` covered component is added by the client per this specificat
 
 ## Response Status Codes
 
-`Accept-Signature` with a `sigkey` parameter MAY appear in responses with the following status codes:
+`Accept-Signature` with a `sigkey` parameter can be set for any response. Below is a list of what it MAY mean on responses with the following status codes:
 
 | Status | Meaning | Legacy client behavior | Signature-aware client behavior |
 |--------|---------|----------------------|-------------------------------|
@@ -563,6 +563,8 @@ The server requires a signed request with a URI-identified Signature-Key (jwks_u
 
 The server requires a signed request using an X.509 certificate chain (x509 scheme). This is useful for enterprise environments with PKI infrastructure, regulated industries requiring certificate-based authentication, and scenarios requiring certificate revocation checking.
 
+[@!RFC9421] Section 5.2 defines the processing of `Accept-Signature` by the client. If the `sigkey` parameter is unsupported, the client MAY ignore it.
+
 If a client already knows the server's `sigkey` requirement (from a previous interaction or metadata), it MAY sign the initial request directly without waiting for a challenge response.
 
 ## Incremental Adoption
@@ -571,7 +573,7 @@ If a client already knows the server's `sigkey` requirement (from a previous int
 
 **Stage 1 — Rate limiting (429):** A server adds `Accept-Signature` with `sigkey=jkt` to its 429 responses. Legacy clients slow down as before. Signature-aware clients sign requests and get higher per-key rate limits. The server gains per-client rate limiting without requiring registration or API keys.
 
-**Stage 2 — Authentication (401):** The server starts requiring signatures on some paths, returning 401 with `Accept-Signature` and `sigkey`. It can include `WWW-Authenticate` alongside for legacy clients that have other auth mechanisms. Signature-aware clients sign; legacy clients fall back to bearer tokens or other schemes.
+**Stage 2 — Authentication (401):** The server starts requiring signatures on some paths, returning 401 with `Accept-Signature` and `sigkey=jkt`. It can include `WWW-Authenticate` alongside for legacy clients that have other auth mechanisms. Signature-aware clients sign; legacy clients fall back to bearer tokens or other schemes.
 
 **Stage 3 — Identity (401):** The server upgrades from `sigkey=jkt` to `sigkey=uri` on sensitive paths, requiring verifiable client identity via `jwks_uri`, `jwt`, or `x509` schemes. The server can now make identity-based policy decisions without pre-registration.
 
@@ -635,7 +637,7 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
 
 When a client receives a response containing an `Accept-Signature` header with a `sigkey` parameter, it MAY retry the request with an HTTP Message Signature using a Signature-Key scheme appropriate for the indicated `sigkey` value.
 
-When a `429` response includes both `Retry-After` and `Accept-Signature` with `sigkey`, the client MAY retry immediately with a signed request without waiting for the `Retry-After` interval. Signing the request provides a key thumbprint that enables per-client rate limiting, which may result in a higher rate limit for the client.
+When a `429` response includes both `Retry-After` and `Accept-Signature` with `sigkey`, the client MAY retry one time with a signed request without waiting for the `Retry-After` interval. Signing the request provides a key thumbprint that enables per-client rate limiting, which may result in a higher rate limit for the client.
 
 A server MAY return a `429` response without `Accept-Signature` to a signed request when it wants to rate-limit the client regardless of signing. In this case, the client MUST respect `Retry-After` as usual.
 
@@ -927,6 +929,20 @@ Status: standard
 Specification document(s): [this document]
 
 Description: Indicates the type of Signature-Key the server requires. Defined values: `jkt` (pseudonymous key identified by JWK Thumbprint), `uri` (key identified by a URI), `x509` (X.509 certificate chain).
+
+## URN Sub-namespace Registration
+
+This document registers the following URN sub-namespace in the "IETF URN Sub-namespace for Registered Protocol Parameter Identifiers" registry defined in [@!RFC3553].
+
+Registry name: sig-error
+
+Specification: [this document]
+
+Repository: [this document], Section on Error Codes
+
+Index value: Values are registered in the "Signature Error Code" registry defined in this document.
+
+The URN pattern is `urn:ietf:params:sig-error:<error-code>`, where `<error-code>` corresponds to a value in the Signature Error Code registry. These URNs are used as Problem Details `type` values ([@!RFC9457]) in response bodies accompanying `Signature-Error` headers.
 
 ## Signature Error Code Registry
 
