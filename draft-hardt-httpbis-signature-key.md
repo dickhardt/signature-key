@@ -1,10 +1,10 @@
 %%%
-title = "HTTP Signature-Key Header"
-abbrev = "Signature-Key"
+title = "HTTP Signature Keys"
+abbrev = "Signature-Keys"
 ipr = "trust200902"
 area = "Applications and Real-Time"
 workgroup = "HTTP"
-keyword = ["http", "signature", "authentication", "jwk", "jwt"]
+keyword = ["http", "signature", "key", "jwk", "jwt"]
 
 [seriesInfo]
 status = "standard"
@@ -12,7 +12,7 @@ name = "Internet-Draft"
 value = "draft-hardt-httpbis-signature-key-latest"
 stream = "IETF"
 
-date = 2026-03-26T00:00:00Z
+date = 2026-04-07T00:00:00Z
 
 [[author]]
 initials = "D."
@@ -31,6 +31,16 @@ organization = "Cloudflare"
   email = "ot-ietf@thibault.uk"
 
 %%%
+
+<reference anchor="x402" target="https://docs.x402.org">
+  <front>
+    <title>x402: HTTP 402 Payment Protocol</title>
+    <author>
+      <organization>x402 Foundation</organization>
+    </author>
+    <date year="2025"/>
+  </front>
+</reference>
 
 <reference anchor="OpenID.Discovery" target="https://openid.net/specs/openid-connect-discovery-1_0.html">
   <front>
@@ -53,7 +63,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines the Signature-Key HTTP header field for distributing public keys used to verify HTTP Message Signatures as defined in RFC 9421. Five initial key distribution schemes are defined: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation (jwt), and X.509 certificate chains (x509). These schemes enable flexible trust models ranging from privacy-preserving pseudonymous verification to PKI-based identity chains and horizontally-scalable delegated authentication.
+This document defines two HTTP header fields and one Accept-Signature parameter for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with five initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation (jwt), and X.509 certificate chains (x509). The sigkey parameter extends Accept-Signature (RFC 9421 Section 5) to indicate the type of Signature-Key the server requires. The Signature-Error response header provides structured error information when signature verification fails. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
 
 .# Discussion Venues
 
@@ -63,27 +73,35 @@ Source for this draft and an issue tracker can be found at https://github.com/di
 
 {mainmatter}
 
+# Conventions and Definitions
+
+{::boilerplate bcp14-tagged}
+
 # Introduction
 
 HTTP Message Signatures [@!RFC9421] provides a powerful mechanism for creating and verifying digital signatures over HTTP messages. To verify a signature, the verifier needs the signer's public key. While RFC 9421 defines signature creation and verification procedures, it intentionally leaves key distribution to application protocols, recognizing that different deployments have different trust requirements.
 
-This document defines the Signature-Key HTTP header field to standardize key distribution for HTTP Message Signatures. The header enables signers to provide their public key or a reference to it directly in the HTTP message, allowing verifiers to obtain keying material without prior coordination.
+This document defines:
 
-The header supports four schemes, each designed for different trust models and operational requirements:
+- **Signature-Key** ([Signature-Key HTTP Request Header](#signature-key-http-request-header)) — a request header that distributes public keys for HTTP Message Signature verification. The header supports five schemes, each designed for different trust models and operational requirements:
 
-1. **Header Web Key (hwk)** - Self-contained public keys for pseudonymous verification
-2. **JKT JWT (jkt-jwt)** - Self-issued key delegation via JWK Thumbprint JWTs ("jacket jot")
-3. **JWKS URI (jwks_uri)** - Identified signers with key discovery via metadata
-4. **JWT (jwt)** - Delegated keys embedded in signed JWTs for horizontal scale
-3. **X.509 (x509)** - Certificate-based verification with PKI trust chains
+  1. **Header Web Key (hwk)** - Self-contained public keys for pseudonymous verification
+  2. **JKT JWT (jkt-jwt)** - Self-issued key delegation via JWK Thumbprint JWTs ("jacket jot")
+  3. **JWKS URI (jwks_uri)** - Identified signers with key discovery via metadata
+  4. **JWT (jwt)** - Delegated keys embedded in signed JWTs for horizontal scale
+  5. **X.509 (x509)** - Certificate-based verification with PKI trust chains
 
-Additional schemes may be defined through the IANA registry established by this document.
+  Additional schemes may be defined through the IANA registry established by this document.
+
+- **sigkey** ([Accept-Signature sigkey Parameter](#accept-signature-sigkey-parameter)) — a parameter for the Accept-Signature header ([@!RFC9421], Section 5) that indicates the type of Signature-Key the server requires. This extends RFC 9421's existing mechanism for requesting signatures rather than defining a new header.
+
+- **Signature-Error** ([Signature-Error HTTP Response Header](#signature-error-http-response-header)) — a response header that provides structured error information when signature verification fails, enabling clients to diagnose and correct signing issues.
 
 The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.
 
-# The Signature-Key Header Field
+# Signature-Key HTTP Request Header
 
-The Signature-Key header field provides the public key or key reference needed to verify an HTTP Message Signature. The header is a Structured Field Dictionary [@!RFC8941] keyed by signature label, where each member describes how to obtain the verification key for the corresponding signature.
+The `Signature-Key` header provides the public key or key reference needed to verify an HTTP Message Signature. It is a Structured Field Dictionary [@!RFC8941] keyed by signature label, where each member describes how to obtain the verification key for the corresponding signature.
 
 **Format:**
 
@@ -135,7 +153,7 @@ The dictionary format supports multiple signatures per message. Each signature h
 ```
 Signature-Input: sig1=(... "signature-key"), sig2=(... "signature-key")
 Signature: sig1=:...:, sig2=:...:
-Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk="meta";kid="k1"
+Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk="eg-config";kid="k1"
 ```
 
 Most deployments SHOULD use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See [Signature-Key Integrity](#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
@@ -186,7 +204,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB"
 
 **Constraints:**
 
-- The `alg` parameter MUST NOT be present (algorithm is specified in Signature-Input)
+- The `alg` parameter MUST NOT be present (algorithm is derived from the key type and curve)
 
 - The `kid` parameter SHOULD NOT be used
 
@@ -352,7 +370,7 @@ The jwks_uri scheme identifies the signer and enables key discovery via a metada
 **Example:**
 
 ```
-Signature-Key: sig=jwks_uri;id="https://agent.example";dwk="aauth-agent";kid="key-1"
+Signature-Key: sig=jwks_uri;id="https://client.example";dwk="example-configuration";kid="key-1"
 ```
 
 **Use cases:**
@@ -416,7 +434,7 @@ Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
 ```json
 {
   "iss": "https://issuer.example",
-  "dwk": "oauth-authorization-server",
+  "dwk": "example-configuration",
   "sub": "instance-123",
   "exp": 1732210000,
   "cnf": {
@@ -468,7 +486,7 @@ The x509 scheme provides certificate-based verification using PKI trust chains.
 **Example:**
 
 ```
-Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t=:bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM=:
+Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM=:
 ```
 
 **Use cases:**
@@ -481,21 +499,276 @@ Signature-Key: sig=x509;x5u="https://agent.example/.well-known/cert.pem";x5t=:bW
 
 - Regulated industries requiring certificate-based authentication
 
+# Accept-Signature sigkey Parameter
+
+[@!RFC9421] Section 5 defines the `Accept-Signature` response header for requesting HTTP Message Signatures. This document extends `Accept-Signature` with a `sigkey` parameter that indicates the type of Signature-Key the server requires.
+
+## Parameter Definition
+
+The `sigkey` parameter is an Item parameter on each member of the `Accept-Signature` Dictionary. Its value is a Token ([@!RFC8941], Section 3.3.4) with three defined values:
+
+| Value | Meaning | Acceptable Signature-Key schemes |
+|-------|---------|----------------------------------|
+| `jkt` | Pseudonymous key identified by JWK Thumbprint | hwk, jkt-jwt |
+| `uri` | Key identified by a URI | jwks_uri, jwt, x509 (with URI SAN) |
+| `x509` | Key from an X.509 certificate chain | x509 |
+
+These values represent ordered levels of identification. A server requesting `sigkey=uri` accepts any scheme that provides a URI-based identifier. A server requesting `sigkey=x509` specifically requires PKI infrastructure.
+
+When `sigkey` is present, the `keyid` parameter ([@!RFC9421], Section 5) SHOULD NOT be included and MUST be ignored by the client. Key identification is handled by the Signature-Key header schemes, not by `keyid`. The `algs` and `tag` parameters remain applicable alongside `sigkey`.
+
+## Label Binding
+
+The signature label in `Accept-Signature` ties together all four headers on the signed request. When a server requests:
+
+```http
+Accept-Signature: sig1=("@method" "@path" "@authority");
+    alg="ecdsa-p256-sha256";sigkey=uri
+```
+
+The client responds with matching labels:
+
+```
+Signature-Key: sig1=jwks_uri;id="https://client.example";dwk="example-configuration";kid="key-1"
+Signature-Input: sig1=("@method" "@path" "@authority" "signature-key");
+    created=1732210000;keyid="https://client.example"
+Signature: sig1=:MEQCIA5...:
+```
+
+The `signature-key` covered component is added by the client per this specification's requirement that `signature-key` appear in covered components. The server does not need to list it in `Accept-Signature`.
+
+## Response Status Codes
+
+`Accept-Signature` with a `sigkey` parameter can be set for any response. Below is a list of what it MAY mean on responses with the following status codes:
+
+| Status | Meaning | Legacy client behavior | Signature-aware client behavior |
+|--------|---------|----------------------|-------------------------------|
+| `401` | Authentication required | Falls back to WWW-Authenticate | Signs request with appropriate Signature-Key scheme |
+| `402` | Payment + authentication required | Processes payment mechanism | Signs request AND processes payment |
+| `429` | Rate limited | Respects Retry-After, slows down | Signs request, gets higher per-key rate limit |
+
+The `429` case is particularly important for incremental adoption: a server can add `Accept-Signature` with `sigkey` to its existing 429 responses with zero risk. Legacy clients ignore the unknown header and respect `Retry-After`. Signature-aware clients sign with a pseudonymous key, giving the server a stable key thumbprint for per-client rate limiting — and the client gets a higher rate limit in return.
+
+## sigkey Semantics
+
+### jkt
+
+The server requires a signed request using a pseudonymous Signature-Key scheme (hwk or jkt-jwt). The server can track the client by JWK Thumbprint ([@!RFC7638]) without knowing its identity. This is useful for rate limiting anonymous requests, tracking repeat visitors by key thumbprint, spam prevention without requiring verified identity, and hardware-backed pseudonymous identity.
+
+### uri
+
+The server requires a signed request with a URI-identified Signature-Key (jwks_uri, jwt, or x509 with a URI SAN). This is useful for API access policies based on known clients, webhook signature verification, and allowlisting trusted clients for elevated rate limits.
+
+### x509
+
+The server requires a signed request using an X.509 certificate chain (x509 scheme). This is useful for enterprise environments with PKI infrastructure, regulated industries requiring certificate-based authentication, and scenarios requiring certificate revocation checking.
+
+[@!RFC9421] Section 5.2 defines the processing of `Accept-Signature` by the client. If the `sigkey` parameter is unsupported, the client MAY ignore it.
+
+If a client already knows the server's `sigkey` requirement (from a previous interaction or metadata), it MAY sign the initial request directly without waiting for a challenge response.
+
+## Incremental Adoption
+
+`Accept-Signature` with `sigkey` is designed for zero-coordination deployment. The `sigkey` parameter is unknown to legacy clients and ignored per Structured Fields semantics — servers can add it to existing responses without breaking anything.
+
+**Stage 1 — Rate limiting (429):** A server adds `Accept-Signature` with `sigkey=jkt` to its 429 responses. Legacy clients slow down as before. Signature-aware clients sign requests and get higher per-key rate limits. The server gains per-client rate limiting without requiring registration or API keys.
+
+**Stage 2 — Authentication (401):** The server starts requiring signatures on some paths, returning 401 with `Accept-Signature` and `sigkey=jkt`. It can include `WWW-Authenticate` alongside for legacy clients that have other auth mechanisms. Signature-aware clients sign; legacy clients fall back to bearer tokens or other schemes.
+
+**Stage 3 — Identity (401):** The server upgrades from `sigkey=jkt` to `sigkey=uri` on sensitive paths, requiring verifiable client identity via `jwks_uri`, `jwt`, or `x509` schemes. The server can now make identity-based policy decisions without pre-registration.
+
+Each stage is independently deployable. A server can use stage 1 on all endpoints while using stage 3 on admin endpoints. No bilateral agreements or client coordination required.
+
+## Coexistence with WWW-Authenticate
+
+`Accept-Signature` and `WWW-Authenticate` ([@!RFC9110], Section 11.6.1) are independent header fields; a response MAY include both. A client that understands Signature-Key processes `Accept-Signature` with `sigkey`; a legacy client processes `WWW-Authenticate`. Neither header's presence invalidates the other.
+
+```http
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm="api"
+Accept-Signature: sig1=("@method" "@path" "@authority");
+    alg="ecdsa-p256-sha256";sigkey=uri
+```
+
+A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]) alongside `Accept-Signature` for authentication:
+
+```http
+HTTP/1.1 402 Payment Required
+WWW-Authenticate: Payment id="x7Tg2pLq", method="example",
+    request="eyJhbW91bnQiOiIxMDAw..."
+Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
+```
+
+## Examples
+
+Pseudonymous access:
+
+```http
+HTTP/1.1 401 Unauthorized
+Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
+```
+
+Identity with algorithm restriction:
+
+```http
+HTTP/1.1 401 Unauthorized
+Accept-Signature: sig1=("@method" "@authority" "@path");
+    alg="ecdsa-p256-sha256";sigkey=uri
+```
+
+Rate limiting with pseudonymous upgrade:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 30
+Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
+```
+
+Payment with pseudonymous authentication:
+
+```http
+HTTP/1.1 402 Payment Required
+WWW-Authenticate: Payment id="x7Tg2pLq", method="example",
+    request="eyJhbW91bnQiOiIxMDAw..."
+Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
+```
+
+## Client Processing
+
+When a client receives a response containing an `Accept-Signature` header with a `sigkey` parameter, it MAY retry the request with an HTTP Message Signature using a Signature-Key scheme appropriate for the indicated `sigkey` value.
+
+When a `429` response includes both `Retry-After` and `Accept-Signature` with `sigkey`, the client MAY retry one time with a signed request without waiting for the `Retry-After` interval. Signing the request provides a key thumbprint that enables per-client rate limiting, which may result in a higher rate limit for the client.
+
+A server MAY return a `429` response without `Accept-Signature` to a signed request when it wants to rate-limit the client regardless of signing. In this case, the client MUST respect `Retry-After` as usual.
+
+> **Open Issue:** Should this specification define a baseline HTTP Message Signatures profile (minimum covered components, timestamp requirements, verification steps), or is that always the responsibility of the protocol using these headers? See [GitHub issue #7](https://github.com/dickhardt/signature-key/issues/7).
+
+# Signature-Error HTTP Response Header
+
+When a server rejects a signed request due to a signature-related error, the response SHOULD include the `Signature-Error` header. The response status code is typically `400 Bad Request`, since the signature or keying material is malformed or invalid. A server MAY use `401 Unauthorized` for recoverable errors (e.g., `unsupported_algorithm`, `invalid_input`) where the client can retry with corrected parameters.
+
+## Header Structure
+
+The `Signature-Error` header is a Dictionary ([@!RFC8941], Section 3.2) with the following member:
+
+- `error` (REQUIRED): A Token ([@!RFC8941], Section 3.3.4) indicating the error code.
+
+Additional members are defined per error code. Recipients MUST ignore unknown members.
+
+```http
+Signature-Error: error=unsupported_algorithm,
+    supported_algorithms=("ed25519" "ecdsa-p256-sha256")
+```
+
+The `Signature-Error` header is the authoritative source for machine-readable error information. The client MUST NOT depend on the response body for error handling.
+
+## Response Body
+
+Servers SHOULD use Problem Details [@!RFC9457] (`application/problem+json`) for the response body when returning `Signature-Error`. The `type` member SHOULD be a URN of the form `urn:ietf:params:sig-error:<error-code>`, where `<error-code>` matches the `error` value in the header.
+
+```json
+{
+  "type": "urn:ietf:params:sig-error:unsupported_algorithm",
+  "title": "Unsupported signature algorithm",
+  "status": 400,
+  "detail": "The server does not support rsa-v1_5-sha256"
+}
+```
+
+Extension members in the Problem Details object (e.g., `supported_algorithms`) MAY duplicate information from the `Signature-Error` header for convenience. When the header and body conflict, the header takes precedence.
+
+## Access Denied
+
+When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns `403 Forbidden`. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an `Accept-Signature` header with `sigkey` or a `Signature-Error` header.
+
+## Error Codes {#error-codes}
+
+### unsupported_algorithm
+
+The signing algorithm used by the client is not supported by the server.
+
+- `supported_algorithms` (REQUIRED): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the algorithms the server accepts, using identifiers from the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2). The registry description for each identifier specifies the corresponding key type and curve. The response MUST include this member.
+
+```http
+Signature-Error: error=unsupported_algorithm,
+    supported_algorithms=("ed25519" "ecdsa-p256-sha256")
+```
+
+### invalid_signature
+
+The HTTP Message Signature is missing, malformed, or cryptographic verification failed. This includes missing `Signature`, `Signature-Input`, or `Signature-Key` headers, an expired `created` timestamp, or a signature that does not verify.
+
+```http
+Signature-Error: error=invalid_signature
+```
+
+### invalid_input
+
+The Signature-Input is missing required covered components.
+
+- `required_input` (OPTIONAL): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the covered components the server requires. The response SHOULD include this member.
+
+```http
+Signature-Error: error=invalid_input,
+    required_input=("@method" "@authority" "@path"
+    "signature-key" "content-digest")
+```
+
+### invalid_request
+
+The request is malformed or missing required information unrelated to signature verification — such as missing query parameters or an unsupported content type.
+
+```http
+Signature-Error: error=invalid_request
+```
+
+### invalid_key
+
+The public key in `Signature-Key` could not be parsed, is expired, or does not meet the server's trust requirements.
+
+```http
+Signature-Error: error=invalid_key
+```
+
+### unknown_key
+
+The public key from `Signature-Key` does not match any key at the client's `jwks_uri` (applicable when the client uses `scheme=jwks_uri`). The server SHOULD re-fetch the JWKS once before returning this error, to handle key rotation.
+
+```http
+Signature-Error: error=unknown_key
+```
+
+### invalid_jwt
+
+The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) is malformed or its signature verification failed.
+
+```http
+Signature-Error: error=invalid_jwt
+```
+
+### expired_jwt
+
+The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) has expired (`exp` claim is in the past).
+
+```http
+Signature-Error: error=expired_jwt
+```
+
 # Security Considerations
 
 ## Key Validation
 
 Verifiers MUST validate all cryptographic material before use:
 
-- **hwk**: Validate JWK structure and key parameters
+- **hwk**: Validate JWK structure and key parameters per [@!RFC7517]
 
-- **jwks_uri**: Verify HTTPS transport and validate fetched JWKS
+- **jwks_uri**: Verify HTTPS transport and validate fetched JWKS per [@!RFC7517]
 
-- **x509**: Validate complete certificate chain, check revocation status
+- **x509**: Validate complete certificate chain per [@!RFC5280], check revocation status
 
-- **jwt**: Verify JWT signature and validate embedded JWK
+- **jwt**: Verify JWT signature per [@!RFC7519] and validate embedded JWK per [@!RFC7517]
 
-- **jkt-jwt**: Verify JWT signature using header `jwk`, validate thumbprint matches `iss`, validate embedded ephemeral JWK
+- **jkt-jwt**: Verify JWT signature per [@!RFC7519] using header `jwk`, validate thumbprint matches `iss` per [@!RFC7638], validate embedded ephemeral JWK per [@!RFC7517]
 
 ## Caching and Performance
 
@@ -515,23 +788,27 @@ Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.
 
 **hwk**: No identity verification - suitable only for scenarios where pseudonymous access is acceptable.
 
-**jwks_uri**: Relies on HTTPS security - vulnerable to DNS/CA compromise. Verifiers should implement certificate pinning where appropriate.
+**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised. Implementations SHOULD use the shortest practical lifetime. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
 
-**x509**: Requires robust certificate validation including revocation checking. Verifiers MUST NOT skip certificate chain validation.
+**jwks_uri**: Relies on HTTPS security — vulnerable to DNS/CA compromise. Beyond HTTPS validation, nothing prevents an attacker from copying a client's public keys and serving them from a different domain. Verifiers SHOULD verify that the `id` parameter in the Signature-Key header matches an expected or authorized origin.
 
 **jwt**: Delegation trust depends on JWT issuer verification. Verifiers MUST validate JWT signatures and claims before trusting embedded keys.
 
-**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised. Implementations SHOULD use the shortest practical lifetime. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
+**x509**: Requires robust certificate validation including revocation checking. Verifiers MUST NOT skip certificate chain validation.
 
 ## Algorithm Selection
 
-The `alg` parameter in Signature-Input (RFC 9421) determines the signature algorithm. Verifiers MUST:
+The signature algorithm is determined by the key material in Signature-Key, not by the optional `alg` parameter in Signature-Input ([@!RFC9421], Section 2.3). For JWK-based schemes (hwk, jkt-jwt, jwks_uri, jwt), the algorithm is identified by the key type and curve (`kty` + `crv`) or by the `alg` parameter in the JWK ([@!RFC7517]). For the x509 scheme, the algorithm is determined by the certificate's public key type.
 
-- Validate algorithm against policy (reject weak algorithms)
+If the `alg` parameter is present in Signature-Input, verifiers MUST verify it is consistent with the key material. If it is absent, verifiers derive the algorithm from the key.
 
-- Ensure key type matches algorithm requirements
+Verifiers MUST:
 
-- Reject algorithm/key mismatches
+- Validate the algorithm against policy (reject weak algorithms)
+
+- Ensure the key type is consistent with the derived algorithm
+
+- Reject keys whose type does not match an acceptable algorithm
 
 ## Signature-Key Integrity
 
@@ -553,27 +830,25 @@ Verifiers SHOULD reject requests where `signature-key` is not a covered componen
 
 ## Pseudonymity vs. Identity
 
-The hwk scheme enables pseudonymous operation where the signer's identity is not disclosed. Verifiers should be aware that:
+The hwk and jkt-jwt schemes enable pseudonymous operation where the signer's identity is not disclosed. Verifiers should be aware that:
 
-- hwk provides no identity linkage across requests (unless keys are reused)
+- A server can track a client across requests by JWK Thumbprint ([@!RFC7638]). If a client uses the same key across multiple servers, those servers could correlate the client's activity. Clients MUST use distinct keys for distinct servers to prevent cross-server correlation of pseudonymous identity.
 
-- Key reuse enables tracking but may be necessary for reputation/rate-limiting
+- The jkt-jwt thumbprint is stable across sessions (tied to the enclave key), enabling long-term tracking even when ephemeral keys rotate.
 
-- Verifiers should not log or retain hwk keys beyond operational necessity
+- Verifiers should not log or retain pseudonymous keys beyond operational necessity.
 
-The jkt-jwt scheme is pseudonymous like hwk — the identity is a key thumbprint URI. However, because the thumbprint is stable across sessions (tied to the enclave key), it enables long-term tracking. Verifiers should apply the same retention considerations as for hwk keys.
-
-The jwks_uri, x509, and jwt schemes all reveal signer identity. Protocols using these schemes should inform signers that their identity will be disclosed to verifiers.
+The jwks_uri, x509, and jwt schemes reveal signer identity. When a client presents its identity via these schemes, the server learns the client's HTTPS URL or certificate subject, revealing which software is making the request. Servers SHOULD NOT disclose client identity information to third parties without the client operator's consent.
 
 ## Key Discovery Tracking
 
-The jwks_uri and x509 schemes require verifiers to fetch resources from signer-controlled URLs. This creates potential tracking vectors:
+The jwks_uri, jwt, and x509 schemes require verifiers to fetch resources from signer-controlled URLs. This creates tracking vectors:
 
-- Signers can observe when and from where keys are fetched
+- Signers can observe when and from where keys are fetched. In particular, when a server fetches a client's JWKS from `jwks_uri` at verification time, the fetch reveals to the JWKS host that someone is verifying signatures for that client.
 
-- Verifiers should cache keys to minimize fetches
+- Verifiers should cache keys to minimize fetches.
 
-- Verifiers may wish to use shared caching infrastructure to reduce fingerprinting
+- Verifiers may wish to use shared caching infrastructure to reduce fingerprinting.
 
 ## JWT Contents
 
@@ -589,9 +864,19 @@ JWTs in the jwt scheme may contain additional claims beyond `cnf`. Verifiers sho
 
 ## HTTP Field Name Registration
 
-This document registers the Signature-Key header field in the "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in [@!RFC9110].
+This document registers the following header fields in the "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in [@!RFC9110].
 
 Header field name: Signature-Key
+
+Applicable protocol: http
+
+Status: standard
+
+Author/Change controller: IETF
+
+Specification document(s): [this document]
+
+Header field name: Signature-Error
 
 Applicable protocol: http
 
@@ -633,11 +918,64 @@ Specification:
 Parameters:
 : List of parameters defined for this scheme
 
+## HTTP Signature Metadata Parameters
+
+This document registers the following parameter in the "HTTP Signature Metadata Parameters" registry established by [@!RFC9421], Section 6.3.
+
+Parameter Name: sigkey
+
+Status: standard
+
+Specification document(s): [this document]
+
+Description: Indicates the type of Signature-Key the server requires. Defined values: `jkt` (pseudonymous key identified by JWK Thumbprint), `uri` (key identified by a URI), `x509` (X.509 certificate chain).
+
+## URN Sub-namespace Registration
+
+This document registers the following URN sub-namespace in the "IETF URN Sub-namespace for Registered Protocol Parameter Identifiers" registry defined in [@!RFC3553].
+
+Registry name: sig-error
+
+Specification: [this document]
+
+Repository: [this document], Section on Error Codes
+
+Index value: Values are registered in the "Signature Error Code" registry defined in this document.
+
+The URN pattern is `urn:ietf:params:sig-error:<error-code>`, where `<error-code>` corresponds to a value in the Signature Error Code registry. These URNs are used as Problem Details `type` values ([@!RFC9457]) in response bodies accompanying `Signature-Error` headers.
+
+## Signature Error Code Registry
+
+This document establishes the "Signature Error Code" registry. New values may be registered following the Specification Required policy ([@!RFC8126]).
+
+### Initial Registry Contents
+
+| Value | Description | Reference |
+|-------|-------------|-----------|
+| `unsupported_algorithm` | Signing algorithm not supported | [this document] |
+| `invalid_signature` | Signature missing, malformed, or verification failed | [this document] |
+| `invalid_input` | Missing required covered components | [this document] |
+| `invalid_request` | Missing required info unrelated to signature | [this document] |
+| `invalid_key` | Key cannot be parsed or doesn't meet trust requirements | [this document] |
+| `unknown_key` | Key not found at jwks_uri | [this document] |
+| `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
+| `expired_jwt` | JWT expired | [this document] |
+
 {backmatter}
 
 # Document History
 
 *Note: This section is to be removed before publishing as an RFC.*
+
+## draft-hardt-httpbis-signature-key-04
+
+- Renamed spec from "HTTP Signature-Key Header" to "HTTP Signature Keys"
+- Added `sigkey` parameter for Accept-Signature (RFC 9421 Section 5) with three values: `jkt` (pseudonymous), `uri` (URI-identified), `x509` (PKI certificate)
+- Added Signature-Error response header for structured signature verification error responses
+- Added incremental adoption section describing zero-coordination deployment via 429/401/402 status codes
+- Added privacy considerations for key thumbprint tracking, agent identity disclosure, and JWKS fetch side channel
+- Registered `sigkey` in the HTTP Signature Metadata Parameters registry (RFC 9421 Section 6.3)
+- Established Signature Error Code Registry
 
 ## draft-hardt-httpbis-signature-key-03
 
