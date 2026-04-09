@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 9 October 2026                                       Cloudflare
-                                                            7 April 2026
+Expires: 11 October 2026                                      Cloudflare
+                                                            9 April 2026
 
 
                           HTTP Signature Keys
@@ -52,7 +52,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 9 October 2026.
+   This Internet-Draft will expire on 11 October 2026.
 
 Copyright Notice
 
@@ -122,8 +122,9 @@ Table of Contents
        8.2.2.  Initial Registry Contents
        8.2.3.  Registration Template
      8.3.  HTTP Signature Metadata Parameters
-     8.4.  Signature Error Code Registry
-       8.4.1.  Initial Registry Contents
+     8.4.  URN Sub-namespace Registration
+     8.5.  Signature Error Code Registry
+       8.5.1.  Initial Registry Contents
    9.  References
      9.1.  Normative References
      9.2.  Informative References
@@ -687,7 +688,7 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
 
 4.  Accept-Signature sigkey Parameter
 
-   RFC 9421 Section 5 defines the Accept-Signature response header for
+   [RFC9421] Section 5 defines the Accept-Signature response header for
    requesting HTTP Message Signatures.  This document extends Accept-
    Signature with a sigkey parameter that indicates the type of
    Signature-Key the server requires.
@@ -746,8 +747,9 @@ Signature: sig1=:MEQCIA5...:
 
 4.3.  Response Status Codes
 
-   Accept-Signature with a sigkey parameter MAY appear in responses with
-   the following status codes:
+   Accept-Signature with a sigkey parameter can be set for any response.
+   Below is a list of what it MAY mean on responses with the following
+   status codes:
 
    +========+================+==================+======================+
    | Status | Meaning        | Legacy client    | Signature-aware      |
@@ -804,6 +806,10 @@ Signature: sig1=:MEQCIA5...:
    authentication, and scenarios requiring certificate revocation
    checking.
 
+   [RFC9421] Section 5.2 defines the processing of Accept-Signature by
+   the client.  If the sigkey parameter is unsupported, the client MAY
+   ignore it.
+
    If a client already knows the server's sigkey requirement (from a
    previous interaction or metadata), it MAY sign the initial request
    directly without waiting for a challenge response.
@@ -823,9 +829,9 @@ Signature: sig1=:MEQCIA5...:
 
    *Stage 2 — Authentication (401):* The server starts requiring
    signatures on some paths, returning 401 with Accept-Signature and
-   sigkey.  It can include WWW-Authenticate alongside for legacy clients
-   that have other auth mechanisms.  Signature-aware clients sign;
-   legacy clients fall back to bearer tokens or other schemes.
+   sigkey=jkt.  It can include WWW-Authenticate alongside for legacy
+   clients that have other auth mechanisms.  Signature-aware clients
+   sign; legacy clients fall back to bearer tokens or other schemes.
 
    *Stage 3 — Identity (401):* The server upgrades from sigkey=jkt to
    sigkey=uri on sensitive paths, requiring verifiable client identity
@@ -892,7 +898,7 @@ Signature: sig1=:MEQCIA5...:
    indicated sigkey value.
 
    When a 429 response includes both Retry-After and Accept-Signature
-   with sigkey, the client MAY retry immediately with a signed request
+   with sigkey, the client MAY retry one time with a signed request
    without waiting for the Retry-After interval.  Signing the request
    provides a key thumbprint that enables per-client rate limiting,
    which may result in a higher rate limit for the client.
@@ -1294,13 +1300,33 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    Defined values: jkt (pseudonymous key identified by JWK Thumbprint),
    uri (key identified by a URI), x509 (X.509 certificate chain).
 
-8.4.  Signature Error Code Registry
+8.4.  URN Sub-namespace Registration
+
+   This document registers the following URN sub-namespace in the "IETF
+   URN Sub-namespace for Registered Protocol Parameter Identifiers"
+   registry defined in [RFC3553].
+
+   Registry name: sig-error
+
+   Specification: [this document]
+
+   Repository: [this document], Section on Error Codes
+
+   Index value: Values are registered in the "Signature Error Code"
+   registry defined in this document.
+
+   The URN pattern is urn:ietf:params:sig-error:<error-code>, where
+   <error-code> corresponds to a value in the Signature Error Code
+   registry.  These URNs are used as Problem Details type values
+   ([RFC9457]) in response bodies accompanying Signature-Error headers.
+
+8.5.  Signature Error Code Registry
 
    This document establishes the "Signature Error Code" registry.  New
    values may be registered following the Specification Required policy
    ([RFC8126]).
 
-8.4.1.  Initial Registry Contents
+8.5.1.  Initial Registry Contents
 
    +=======================+===============================+===========+
    | Value                 | Description                   | Reference |
@@ -1339,6 +1365,11 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 9.  References
 
 9.1.  Normative References
+
+   [RFC3553]  Mealling, M., Masinter, L., Hardie, T., and G. Klyne, "An
+              IETF URN Sub-namespace for Registered Protocol
+              Parameters", BCP 73, RFC 3553, DOI 10.17487/RFC3553, June
+              2003, <https://www.rfc-editor.org/info/rfc3553>.
 
    [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
               Housley, R., and W. Polk, "Internet X.509 Public Key
