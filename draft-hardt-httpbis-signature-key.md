@@ -12,7 +12,7 @@ name = "Internet-Draft"
 value = "draft-hardt-httpbis-signature-key-latest"
 stream = "IETF"
 
-date = 2026-04-09T00:00:00Z
+date = 2026-06-17T00:00:00Z
 
 [[author]]
 initials = "D."
@@ -980,43 +980,40 @@ This document establishes the "Signature Error Code" registry. New values may be
 
 *Note: This section is to be removed before publishing as an RFC.*
 
-## draft-hardt-httpbis-signature-key-05
+- draft-hardt-httpbis-signature-key-05
   - Incorporated implementer feedback from Joshua Gay (sidecat).
   - SSRF / egress admission: extended the `jwks_uri` risk bullet with a mandatory egress-admission checklist covering HTTPS, size/timeout limits, redirect policy, private/loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.
   - Caching: added once-per-minute fetch floor to the `jwks_uri` cache bullet; added same-`kid` signature-failure refresh rule — one JWKS refresh and retry before returning `unknown_key` or `invalid_jwt`, subject to the same floor and egress-admission policy as unknown-`kid` refreshes.
   - `jkt-jwt`: added algorithm-profile note after the worked example — the stable (enclave) key algorithm is profile-defined; profiles permitting Ed25519 or other stable key algorithms SHOULD state so explicitly.
+  - Added Joshua Gay to acknowledgments.
 
-## draft-hardt-httpbis-signature-key-04
+- draft-hardt-httpbis-signature-key-04
+  - Renamed spec from "HTTP Signature-Key Header" to "HTTP Signature Keys"
+  - Added `sigkey` parameter for Accept-Signature (RFC 9421 Section 5) with three values: `jkt` (pseudonymous), `uri` (URI-identified), `x509` (PKI certificate)
+  - Added Signature-Error response header for structured signature verification error responses
+  - Added incremental adoption section describing zero-coordination deployment via 429/401/402 status codes
+  - Added privacy considerations for key thumbprint tracking, agent identity disclosure, and JWKS fetch side channel
+  - Registered `sigkey` in the HTTP Signature Metadata Parameters registry (RFC 9421 Section 6.3)
+  - Established Signature Error Code Registry
 
-- Renamed spec from "HTTP Signature-Key Header" to "HTTP Signature Keys"
-- Added `sigkey` parameter for Accept-Signature (RFC 9421 Section 5) with three values: `jkt` (pseudonymous), `uri` (URI-identified), `x509` (PKI certificate)
-- Added Signature-Error response header for structured signature verification error responses
-- Added incremental adoption section describing zero-coordination deployment via 429/401/402 status codes
-- Added privacy considerations for key thumbprint tracking, agent identity disclosure, and JWKS fetch side channel
-- Registered `sigkey` in the HTTP Signature Metadata Parameters registry (RFC 9421 Section 6.3)
-- Established Signature Error Code Registry
+- draft-hardt-httpbis-signature-key-03
+  - Added jkt-jwt scheme for self-issued key delegation
+  - Renamed `well-known` parameter to `dwk` (dot well-known)
+  - Added `iss` and `dwk` claims to jwt scheme (SHOULD) for issuer key discovery
+  - Added early validation step to jwt verification procedure (format, typ, exp checks before network fetches)
+  - Added TOFU reference (RFC 7435) to jkt-jwt scheme
+  - Added design rationale for jwks_uri vs inline JWKS
+  - Moved hwk string vs byte sequence design note to rationale appendix
+  - Reordered schemes
+  - Added acknowledgments
 
-## draft-hardt-httpbis-signature-key-03
+- draft-hardt-httpbis-signature-key-02
+  - Changed x5t parameter to byte sequence per reviewer feedback
+  - Added structured field types to all parameters
+  - Added design note explaining string vs byte sequence choice for hwk
 
-- Added jkt-jwt scheme for self-issued key delegation
-- Renamed `well-known` parameter to `dwk` (dot well-known)
-- Added `iss` and `dwk` claims to jwt scheme (SHOULD) for issuer key discovery
-- Added early validation step to jwt verification procedure (format, typ, exp checks before network fetches)
-- Added TOFU reference (RFC 7435) to jkt-jwt scheme
-- Added design rationale for jwks_uri vs inline JWKS
-- Moved hwk string vs byte sequence design note to rationale appendix
-- Reordered schemes
-- Added acknowledgments
-
-## draft-hardt-httpbis-signature-key-02
-
-- Changed x5t parameter to byte sequence per reviewer feedback
-- Added structured field types to all parameters
-- Added design note explaining string vs byte sequence choice for hwk
-
-## draft-hardt-httpbis-signature-key-01
-
-- Initial public draft with four schemes: hwk, jwks_uri, x509, jwt
+- draft-hardt-httpbis-signature-key-01
+  - Initial public draft with four schemes: hwk, jwks_uri, x509, jwt
 
 # Design Rationale
 
@@ -1062,4 +1059,4 @@ The hwk parameters use structured field strings rather than byte sequences. JWK 
 
 # Acknowledgments
 
-The author would like to thank Yaron Sheffer for their feedback on this specification.
+The author would like to thank Joshua Gay and Yaron Sheffer for their feedback on this specification.
