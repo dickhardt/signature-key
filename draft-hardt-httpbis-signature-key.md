@@ -311,6 +311,8 @@ JWT payload:
 
 In this example, the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software). The identity is `urn:jkt:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs`.
 
+The stable (enclave) key algorithm in the JWT `alg` header is profile-defined. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; a profile that also permits Ed25519 (or other) stable keys SHOULD state so explicitly. The `cnf.jwk` request key algorithm is likewise profile-defined.
+
 **Verification procedure:**
 
 1. Parse the JWT without verifying the signature
@@ -774,7 +776,7 @@ Verifiers MUST validate all cryptographic material before use:
 
 Verifiers MAY cache keys to improve performance but MUST implement appropriate cache expiration:
 
-- **jwks_uri**: Respect cache-control headers, implement reasonable TTLs
+- **jwks_uri**: Respect cache-control headers, implement reasonable TTLs. Verifiers MUST NOT refetch a given issuer's JWKS more frequently than once per minute to prevent abuse.
 
 - **x509**: Cache by `x5t`, invalidate on certificate expiry
 
@@ -784,6 +786,8 @@ Verifiers MAY cache keys to improve performance but MUST implement appropriate c
 
 Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.
 
+When the `Signature-Key` scheme is `jwks_uri` and a cached key matching the JWT `kid` fails signature verification, the verifier SHOULD refresh the issuer's JWKS once and retry verification before returning `unknown_key` (if the key is then absent) or `invalid_jwt` (if verification still fails), subject to the once-per-minute fetch floor and egress admission (§Scheme-Specific Risks) that apply to unknown-`kid` refreshes. This covers silent re-keying where the issuer replaces key material under the same `kid` without changing the identifier.
+
 ## Scheme-Specific Risks
 
 **hwk**: No identity verification - suitable only for scenarios where pseudonymous access is acceptable.
@@ -791,6 +795,15 @@ Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.
 **jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised. Implementations SHOULD use the shortest practical lifetime. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
 
 **jwks_uri**: Relies on HTTPS security — vulnerable to DNS/CA compromise. Beyond HTTPS validation, nothing prevents an attacker from copying a client's public keys and serving them from a different domain. Verifiers SHOULD verify that the `id` parameter in the Signature-Key header matches an expected or authorized origin.
+
+Because the `jwks_uri` (and the metadata document that yields it) is controlled by the asserted signer, an unconstrained verifier can be induced to fetch attacker-chosen internal URLs (SSRF). Verifiers MUST apply egress admission before fetching issuer metadata or a `jwks_uri`:
+
+- Require HTTPS for all outbound fetches.
+- Enforce response-size and timeout limits.
+- Refuse or constrain redirects (at minimum, do not follow redirects to a different host).
+- Reject private, loopback, and link-local destination addresses unless explicitly allowed by deployment configuration.
+- Defend against DNS rebinding by pinning the resolved IP address for the duration of the connection.
+- Treat cross-origin `jwks_uri` URLs (where the JWKS host differs from the metadata host) as requiring explicit deployment admission.
 
 **jwt**: Delegation trust depends on JWT issuer verification. Verifiers MUST validate JWT signatures and claims before trusting embedded keys.
 
@@ -966,6 +979,12 @@ This document establishes the "Signature Error Code" registry. New values may be
 # Document History
 
 *Note: This section is to be removed before publishing as an RFC.*
+
+## draft-hardt-httpbis-signature-key-05
+  - Incorporated implementer feedback from Joshua Gay (sidecat).
+  - SSRF / egress admission: extended the `jwks_uri` risk bullet with a mandatory egress-admission checklist covering HTTPS, size/timeout limits, redirect policy, private/loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.
+  - Caching: added once-per-minute fetch floor to the `jwks_uri` cache bullet; added same-`kid` signature-failure refresh rule — one JWKS refresh and retry before returning `unknown_key` or `invalid_jwt`, subject to the same floor and egress-admission policy as unknown-`kid` refreshes.
+  - `jkt-jwt`: added algorithm-profile note after the worked example — the stable (enclave) key algorithm is profile-defined; profiles permitting Ed25519 or other stable key algorithms SHOULD state so explicitly.
 
 ## draft-hardt-httpbis-signature-key-04
 
