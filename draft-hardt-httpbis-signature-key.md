@@ -311,7 +311,7 @@ JWT payload:
 
 In this example, the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software). The identity is `urn:jkt:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs`.
 
-The stable (enclave) key algorithm in the JWT `alg` header is profile-defined. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; a profile that also permits Ed25519 (or other) stable keys SHOULD state so explicitly. The `cnf.jwk` request key algorithm is likewise profile-defined.
+The stable (enclave) key algorithm in the JWT `alg` header is determined by what the enclave hardware supports. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; deployments whose enclaves support Ed25519 (or other) stable-key algorithms SHOULD document this explicitly. The `cnf.jwk` request key algorithm is likewise enclave-determined.
 
 **Verification procedure:**
 
@@ -974,8 +974,6 @@ This document establishes the "Signature Error Code" registry. New values may be
 | `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
 | `expired_jwt` | JWT expired | [this document] |
 
-{backmatter}
-
 # Document History
 
 *Note: This section is to be removed before publishing as an RFC.*
@@ -984,7 +982,7 @@ This document establishes the "Signature Error Code" registry. New values may be
   - Incorporated implementer feedback from Joshua Gay (sidecat).
   - SSRF / egress admission: extended the `jwks_uri` risk bullet with a mandatory egress-admission checklist covering HTTPS, size/timeout limits, redirect policy, private/loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.
   - Caching: added once-per-minute fetch floor to the `jwks_uri` cache bullet; added same-`kid` signature-failure refresh rule — one JWKS refresh and retry before returning `unknown_key` or `invalid_jwt`, subject to the same floor and egress-admission policy as unknown-`kid` refreshes.
-  - `jkt-jwt`: added algorithm-profile note after the worked example — the stable (enclave) key algorithm is profile-defined; profiles permitting Ed25519 or other stable key algorithms SHOULD state so explicitly.
+  - `jkt-jwt`: added algorithm note after the worked example — the stable (enclave) key algorithm is enclave-determined; deployments supporting Ed25519 or other stable-key algorithms SHOULD document this explicitly.
   - Added Joshua Gay to acknowledgments.
 
 - draft-hardt-httpbis-signature-key-04
@@ -1014,6 +1012,12 @@ This document establishes the "Signature Error Code" registry. New values may be
 
 - draft-hardt-httpbis-signature-key-01
   - Initial public draft with four schemes: hwk, jwks_uri, x509, jwt
+
+# Acknowledgments
+
+The author would like to thank Joshua Gay and Yaron Sheffer for their feedback on this specification.
+
+{backmatter}
 
 # Design Rationale
 
@@ -1056,7 +1060,3 @@ A simpler design would define Signature-Key as carrying only a public key (or ke
 ## Why Strings Instead of Byte Sequences for hwk?
 
 The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per [@!RFC7517], while structured field byte sequences use base64 encoding per [@!RFC8941]. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.
-
-# Acknowledgments
-
-The author would like to thank Joshua Gay and Yaron Sheffer for their feedback on this specification.
