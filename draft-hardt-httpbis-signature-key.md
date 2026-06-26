@@ -63,7 +63,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines two HTTP header fields and one Accept-Signature parameter for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with five initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation (jwt), and X.509 certificate chains (x509). The sigkey parameter extends Accept-Signature (RFC 9421 Section 5) to indicate the type of Signature-Key the server requires. The Signature-Error response header provides structured error information when signature verification fails. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
+This document defines two HTTP header fields and one Accept-Signature parameter for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with five initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation or self-issued JWT with JWKS discovery (jwt), and X.509 certificate chains (x509). The sigkey parameter extends Accept-Signature (RFC 9421 Section 5) to indicate the type of Signature-Key the server requires. The Signature-Error response header provides structured error information when signature verification fails. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
 
 .# Discussion Venues
 
@@ -88,7 +88,7 @@ This document defines:
   1. **Header Web Key (hwk)** - Self-contained public keys for pseudonymous verification
   2. **JKT JWT (jkt-jwt)** - Self-issued key delegation via JWK Thumbprint JWTs ("jacket jot")
   3. **JWKS URI (jwks_uri)** - Identified signers with key discovery via metadata
-  4. **JWT (jwt)** - Delegated keys embedded in signed JWTs for horizontal scale
+  4. **JWT (jwt)** - Delegated or self-issued JWTs with JWKS discovery
   5. **X.509 (x509)** - Certificate-based verification with PKI trust chains
 
   Additional schemes may be defined through the IANA registry established by this document.
@@ -385,23 +385,37 @@ Signature-Key: sig=jwks_uri;id="https://client.example";dwk="example-configurati
 
 ## JWT Confirmation Key (jwt)
 
-The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirmation) claim [@!RFC7800], enabling delegation and horizontal scale.
+The jwt scheme carries a signed JWT in the `Signature-Key` header and supports two modes:
+
+- **Delegated mode** — the JWT issuer and the HTTP request signer are different parties. The JWT embeds the HTTP signing key in the `cnf.jwk` claim [@!RFC7800]. The issuer vouches for the signer's ephemeral key, enabling delegation and horizontal scale.
+
+- **Self-issued mode** — the JWT issuer and the HTTP request signer are the same party. The JWT carries no `cnf` claim; instead the HTTP signing key is the same key that signed the JWT, discoverable from `{iss}/.well-known/{dwk}` using `kid` in the JWT header.
 
 **Parameters:**
 
 - `jwt` (REQUIRED, String) - Compact-serialized JWT
 
-**JWT requirements:**
+**JWT requirements — both modes:**
+
+- MUST contain `iss` claim (HTTPS URL of the issuer)
+
+- MUST contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`
+
+- MUST have `kid` in the JWT header identifying the signing key in the issuer's JWKS
+
+- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+
+**JWT requirements — delegated mode** (additionally, `cnf.jwk` present):
 
 - MUST contain `cnf.jwk` claim with embedded JWK
 
-- SHOULD contain `iss` claim (HTTPS URL of the issuer) — using SHOULD rather than MUST allows existing JWT infrastructure to be used without modification
-
-- SHOULD contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`. Using SHOULD allows deployments where the verifier already knows the issuer's keys.
-
 - SHOULD contain standard claims: `sub`, `exp`, `iat`
 
-- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+**JWT requirements — self-issued mode** (additionally, `cnf` absent):
+
+- MUST NOT contain `cnf` claim
+
+- SHOULD contain standard claims: `sub`, `aud`, `exp`, `iat`
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
@@ -413,25 +427,31 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 3. Validate `exp` claim if present. Reject if the token has expired.
 
-4. Verify required claims are present (`cnf.jwk`, plus any claims required by deployment policy). Reject if a required claim is missing.
+4. Verify `iss`, `dwk`, and JWT header `kid` are present. Reject if any is absent.
 
-5. If `iss` and `dwk` claims are present, fetch `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`. Fetch JWKS from `jwks_uri`, find key matching `kid` in JWT header. If `iss` or `dwk` is absent, the verifier MUST obtain the issuer's key through an application-specific mechanism.
+5. Determine the mode:
+   - If `cnf.jwk` is present: **delegated mode** — the HTTP signing key will be extracted from `cnf.jwk` (step 9).
+   - If `cnf` is absent: **self-issued mode** — the HTTP signing key is the same as the JWT signing key and will be reused from step 6.
 
-6. Verify JWT signature using the discovered key
+6. Obtain the JWT signing key: construct `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`, fetch the JWKS, and find the key matching `kid` from the JWT header. Reject if the key is not found.
 
-7. Validate remaining JWT claims per policy (`iss`, `sub`, etc.)
+7. Verify JWT signature using the discovered key.
 
-8. Extract JWK from `cnf.jwk`
+8. Validate remaining JWT claims per policy (`iss`, `sub`, `aud`, etc.)
 
-9. Verify HTTP Message Signature using extracted key
+9. Determine the HTTP signing key:
+   - **Delegated mode**: extract JWK from `cnf.jwk`.
+   - **Self-issued mode**: use the key discovered in step 6 (the JWT signing key is the HTTP signing key).
 
-**Example:**
+10. Verify HTTP Message Signature using the key from step 9.
+
+**Example — delegated mode:**
 
 ```
 Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
 ```
 
-**JWT payload example:**
+JWT payload:
 
 ```json
 {
@@ -449,13 +469,45 @@ Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
 }
 ```
 
+**Example — self-issued mode:**
+
+```
+Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiIsImtpZCI6InIxIn0..."
+```
+
+JWT header:
+
+```json
+{
+  "alg": "ES256",
+  "kid": "r1",
+  "typ": "aauth-resource+jwt"
+}
+```
+
+JWT payload:
+
+```json
+{
+  "iss": "https://resource.example",
+  "dwk": "aauth-resource",
+  "aud": "https://agent.example",
+  "eid": "evt-abc123",
+  "exp": 1732210000
+}
+```
+
+The verifier fetches `https://resource.example/.well-known/aauth-resource`, retrieves the JWKS, finds the key with `kid="r1"`, verifies the JWT signature with it, then uses that same key to verify the HTTP Message Signature.
+
 **Use cases:**
 
-- Distributed services with ephemeral instance keys
+- Distributed services with ephemeral instance keys (delegated mode)
 
-- Delegation scenarios where instances act on behalf of an authority
+- Delegation scenarios where instances act on behalf of an authority (delegated mode)
 
-- Short-lived credentials for horizontal scaling
+- Short-lived credentials for horizontal scaling (delegated mode)
+
+- Resources delivering events with application-layer claims that the verifier needs alongside key verification (self-issued mode)
 
 ## X.509 Certificates (x509)
 
@@ -768,7 +820,7 @@ Verifiers MUST validate all cryptographic material before use:
 
 - **x509**: Validate complete certificate chain per [@!RFC5280], check revocation status
 
-- **jwt**: Verify JWT signature per [@!RFC7519] and validate embedded JWK per [@!RFC7517]
+- **jwt**: Verify JWT signature per [@!RFC7519]; in delegated mode validate embedded JWK per [@!RFC7517]; in self-issued mode reuse the key from JWKS discovery as the HTTP signing key
 
 - **jkt-jwt**: Verify JWT signature per [@!RFC7519] using header `jwk`, validate thumbprint matches `iss` per [@!RFC7638], validate embedded ephemeral JWK per [@!RFC7517]
 
@@ -780,7 +832,7 @@ Verifiers MAY cache keys to improve performance but MUST implement appropriate c
 
 - **x509**: Cache by `x5t`, invalidate on certificate expiry
 
-- **jwt**: Cache embedded keys until JWT expiration
+- **jwt**: Cache embedded keys (delegated mode) or discovered keys (self-issued mode) until JWT expiration
 
 - **jkt-jwt**: Cache embedded keys until JWT expiration; cache by `iss` thumbprint URI
 
@@ -805,7 +857,7 @@ Because the `jwks_uri` (and the metadata document that yields it) is controlled 
 - Defend against DNS rebinding by pinning the resolved IP address for the duration of the connection.
 - Treat cross-origin `jwks_uri` URLs (where the JWKS host differs from the metadata host) as requiring explicit deployment admission.
 
-**jwt**: Delegation trust depends on JWT issuer verification. Verifiers MUST validate JWT signatures and claims before trusting embedded keys.
+**jwt**: In delegated mode, trust is rooted in the JWT issuer, which vouches for the embedded `cnf.jwk`. In self-issued mode, the JWT is signed by the same entity making the HTTP request; the HTTP signing key is that same key. In both modes, verifiers MUST validate the JWT signature and claims before trusting the HTTP signing key.
 
 **x509**: Requires robust certificate validation including revocation checking. Verifiers MUST NOT skip certificate chain validation.
 
@@ -865,7 +917,7 @@ The jwks_uri, jwt, and x509 schemes require verifiers to fetch resources from si
 
 ## JWT Contents
 
-JWTs in the jwt scheme may contain additional claims beyond `cnf`. Verifiers should:
+JWTs in the jwt scheme may contain additional claims beyond `cnf` (delegated mode) or application-specific claims such as routing and authorization data (self-issued mode). Verifiers should:
 
 - Only process claims necessary for verification
 
@@ -914,7 +966,7 @@ New scheme registrations require Specification Required per [@!RFC8126].
 | hwk | Header Web Key - inline public key | [this document] |
 | jkt-jwt | JKT JWT Self-Issued Key Delegation - enclave-backed delegation | [this document] |
 | jwks_uri | JWKS URI Discovery - key discovery via metadata | [this document] |
-| jwt | JWT Confirmation Key - delegated key in JWT | [this document] |
+| jwt | JWT Confirmation Key - delegated or self-issued key in JWT | [this document] |
 | x509 | X.509 Certificate - PKI certificate chain | [this document] |
 
 ### Registration Template
