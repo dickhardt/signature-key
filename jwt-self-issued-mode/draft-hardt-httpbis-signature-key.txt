@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 11 October 2026                                      Cloudflare
-                                                            9 April 2026
+Expires: 28 December 2026                                     Cloudflare
+                                                            26 June 2026
 
 
                           HTTP Signature Keys
@@ -20,14 +20,15 @@ Abstract
    to verify signatures, with five initial key distribution schemes:
    pseudonymous inline keys (hwk), self-issued key delegation via JWK
    Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery
-   (jwks_uri), JWT-based delegation (jwt), and X.509 certificate chains
-   (x509).  The sigkey parameter extends Accept-Signature (RFC 9421
-   Section 5) to indicate the type of Signature-Key the server requires.
-   The Signature-Error response header provides structured error
-   information when signature verification fails.  Together, these
-   mechanisms enable flexible trust models ranging from privacy-
-   preserving pseudonymous verification to horizontally-scalable
-   delegated authentication and PKI-based identity chains.
+   (jwks_uri), JWT-based delegation or self-issued JWT with JWKS
+   discovery (jwt), and X.509 certificate chains (x509).  The sigkey
+   parameter extends Accept-Signature (RFC 9421 Section 5) to indicate
+   the type of Signature-Key the server requires.  The Signature-Error
+   response header provides structured error information when signature
+   verification fails.  Together, these mechanisms enable flexible trust
+   models ranging from privacy-preserving pseudonymous verification to
+   horizontally-scalable delegated authentication and PKI-based identity
+   chains.
 
 Discussion Venues
 
@@ -52,7 +53,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 October 2026.
+   This Internet-Draft will expire on 28 December 2026.
 
 Copyright Notice
 
@@ -125,20 +126,16 @@ Table of Contents
      8.4.  URN Sub-namespace Registration
      8.5.  Signature Error Code Registry
        8.5.1.  Initial Registry Contents
-   9.  References
-     9.1.  Normative References
-     9.2.  Informative References
-   Appendix A.  Document History
-     A.1.  draft-hardt-httpbis-signature-key-04
-     A.2.  draft-hardt-httpbis-signature-key-03
-     A.3.  draft-hardt-httpbis-signature-key-02
-     A.4.  draft-hardt-httpbis-signature-key-01
-   Appendix B.  Design Rationale
-     B.1.  Why jwks_uri Instead of Inline JWKS?
-     B.2.  Why a Separate Header?
-     B.3.  Why Schemes Instead of Just a Key and Key ID?
-     B.4.  Why Strings Instead of Byte Sequences for hwk?
-   Appendix C.  Acknowledgments
+   9.  Document History
+   10. Acknowledgments
+   11. References
+     11.1.  Normative References
+     11.2.  Informative References
+   Appendix A.  Design Rationale
+     A.1.  Why jwks_uri Instead of Inline JWKS?
+     A.2.  Why a Separate Header?
+     A.3.  Why Schemes Instead of Just a Key and Key ID?
+     A.4.  Why Strings Instead of Byte Sequences for hwk?
    Authors' Addresses
 
 1.  Conventions and Definitions
@@ -169,8 +166,8 @@ Table of Contents
           Thumbprint JWTs ("jacket jot")
       3.  *JWKS URI (jwks_uri)* - Identified signers with key discovery
           via metadata
-      4.  *JWT (jwt)* - Delegated keys embedded in signed JWTs for
-          horizontal scale
+      4.  *JWT (jwt)* - Delegated or self-issued JWTs with JWKS
+          discovery
       5.  *X.509 (x509)* - Certificate-based verification with PKI trust
           chains
 
@@ -474,6 +471,13 @@ Signature-Key: sig=hwk;kty="EC";crv="P-256";x="f83OJ3D...";y="x_FEzRu..."
    identity is urn:jkt:sha-256:NzbLsXh8uDCcd-
    6MNwXF4W_7noWXFZAfHkxZsRGC9Xs.
 
+   The stable (enclave) key algorithm in the JWT alg header is
+   determined by what the enclave hardware supports.  This document's
+   example uses ES256 with a P-256 stable key delegating to an Ed25519
+   request key; deployments whose enclaves support Ed25519 (or other)
+   stable-key algorithms SHOULD document this explicitly.  The cnf.jwk
+   request key algorithm is likewise enclave-determined.
+
    *Verification procedure:*
 
    1.   Parse the JWT without verifying the signature
@@ -553,71 +557,98 @@ Signature-Key: sig=jwks_uri;id="https://client.example";dwk="example-configurati
 
 3.6.  JWT Confirmation Key (jwt)
 
-   The jwt scheme embeds a public key inside a signed JWT using the cnf
-   (confirmation) claim [RFC7800], enabling delegation and horizontal
-   scale.
+   The jwt scheme carries a signed JWT in the Signature-Key header and
+   supports two modes:
+
+   *  *Delegated mode* — the JWT issuer and the HTTP request signer are
+      different parties.  The JWT embeds the HTTP signing key in the
+      cnf.jwk claim [RFC7800].  The issuer vouches for the signer's
+      ephemeral key, enabling delegation and horizontal scale.
+
+   *  *Self-issued mode* — the JWT issuer and the HTTP request signer
+      are the same party.  The JWT carries no cnf claim; instead the
+      HTTP signing key is the same key that signed the JWT, discoverable
+      from {iss}/.well-known/{dwk} using kid in the JWT header.
 
    *Parameters:*
 
    *  jwt (REQUIRED, String) - Compact-serialized JWT
 
-   *JWT requirements:*
+   *JWT requirements — both modes:*
 
-   *  MUST contain cnf.jwk claim with embedded JWK
+   *  MUST contain iss claim (HTTPS URL of the issuer)
 
-   *  SHOULD contain iss claim (HTTPS URL of the issuer) — using SHOULD
-      rather than MUST allows existing JWT infrastructure to be used
-      without modification
-
-   *  SHOULD contain dwk claim (dot well-known metadata document name) —
+   *  MUST contain dwk claim (dot well-known metadata document name) —
       the verifier constructs {iss}/.well-known/{dwk} to discover the
-      issuer's jwks_uri.  Using SHOULD allows deployments where the
-      verifier already knows the issuer's keys.
+      issuer's jwks_uri
 
-   *  SHOULD contain standard claims: sub, exp, iat
+   *  MUST have kid in the JWT header identifying the signing key in the
+      issuer's JWKS
 
    *  Verifiers SHOULD verify the JWT typ header parameter has an
       expected value per deployment policy, to optimize for a quick
       rejection
+
+   *JWT requirements — delegated mode* (additionally, cnf.jwk present):
+
+   *  MUST contain cnf.jwk claim with embedded JWK
+
+   *  SHOULD contain standard claims: sub, exp, iat
+
+   *JWT requirements — self-issued mode* (additionally, cnf absent):
+
+   *  MUST NOT contain cnf claim
+
+   *  SHOULD contain standard claims: sub, aud, exp, iat
 
    |  *Note:* The mechanism by which the JWT is obtained is out of scope
    |  of this specification.
 
    *Verification procedure:*
 
-   1.  Parse the JWT parameter value per [RFC7519] Section 7.2.  Reject
-       if the value is not a well-formed JWT.  This and subsequent pre-
-       signature checks allow the verifier to fail early without
-       expensive cryptographic operations or network fetches.
+   1.   Parse the JWT parameter value per [RFC7519] Section 7.2.  Reject
+        if the value is not a well-formed JWT.  This and subsequent pre-
+        signature checks allow the verifier to fail early without
+        expensive cryptographic operations or network fetches.
 
-   2.  Verify the JWT typ header parameter has an expected value per
-       policy.  Reject if unexpected.
+   2.   Verify the JWT typ header parameter has an expected value per
+        policy.  Reject if unexpected.
 
-   3.  Validate exp claim if present.  Reject if the token has expired.
+   3.   Validate exp claim if present.  Reject if the token has expired.
 
-   4.  Verify required claims are present (cnf.jwk, plus any claims
-       required by deployment policy).  Reject if a required claim is
-       missing.
+   4.   Verify iss, dwk, and JWT header kid are present.  Reject if any
+        is absent.
 
-   5.  If iss and dwk claims are present, fetch {iss}/.well-known/{dwk},
-       parse as JSON metadata, extract jwks_uri.  Fetch JWKS from
-       jwks_uri, find key matching kid in JWT header.  If iss or dwk is
-       absent, the verifier MUST obtain the issuer's key through an
-       application-specific mechanism.
+   5.   Determine the mode:
 
-   6.  Verify JWT signature using the discovered key
+        *  If cnf.jwk is present: *delegated mode* — the HTTP signing
+           key will be extracted from cnf.jwk (step 9).
+        *  If cnf is absent: *self-issued mode* — the HTTP signing key
+           is the same as the JWT signing key and will be reused from
+           step 6.
 
-   7.  Validate remaining JWT claims per policy (iss, sub, etc.)
+   6.   Obtain the JWT signing key: construct {iss}/.well-known/{dwk},
+        parse as JSON metadata, extract jwks_uri, fetch the JWKS, and
+        find the key matching kid from the JWT header.  Reject if the
+        key is not found.
 
-   8.  Extract JWK from cnf.jwk
+   7.   Verify JWT signature using the discovered key.
 
-   9.  Verify HTTP Message Signature using extracted key
+   8.   Validate remaining JWT claims per policy (iss, sub, aud, etc.)
 
-   *Example:*
+   9.   Determine the HTTP signing key:
+
+        *  *Delegated mode*: extract JWK from cnf.jwk.
+        *  *Self-issued mode*: use the key discovered in step 6 (the JWT
+           signing key is the HTTP signing key).
+
+   10.  Verify HTTP Message Signature using the key from step 9.
+
+   *Example — delegated mode:*
 
    Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
 
-   *JWT payload example:*
+   JWT payload:
 
    {
      "iss": "https://issuer.example",
@@ -633,13 +664,44 @@ Signature-Key: sig=jwks_uri;id="https://client.example";dwk="example-configurati
      }
    }
 
+   *Example — self-issued mode:*
+
+   Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiIsImtpZCI6InIxIn0..."
+
+   JWT header:
+
+   {
+     "alg": "ES256",
+     "kid": "r1",
+     "typ": "aauth-resource+jwt"
+   }
+
+   JWT payload:
+
+   {
+     "iss": "https://resource.example",
+     "dwk": "aauth-resource",
+     "aud": "https://agent.example",
+     "eid": "evt-abc123",
+     "exp": 1732210000
+   }
+
+   The verifier fetches https://resource.example/.well-known/aauth-
+   resource, retrieves the JWKS, finds the key with kid="r1", verifies
+   the JWT signature with it, then uses that same key to verify the HTTP
+   Message Signature.
+
    *Use cases:*
 
-   *  Distributed services with ephemeral instance keys
+   *  Distributed services with ephemeral instance keys (delegated mode)
 
    *  Delegation scenarios where instances act on behalf of an authority
+      (delegated mode)
 
-   *  Short-lived credentials for horizontal scaling
+   *  Short-lived credentials for horizontal scaling (delegated mode)
+
+   *  Resources delivering events with application-layer claims that the
+      verifier needs alongside key verification (self-issued mode)
 
 3.7.  X.509 Certificates (x509)
 
@@ -1060,8 +1122,9 @@ Signature: sig1=:MEQCIA5...:
    *  *x509*: Validate complete certificate chain per [RFC5280], check
       revocation status
 
-   *  *jwt*: Verify JWT signature per [RFC7519] and validate embedded
-      JWK per [RFC7517]
+   *  *jwt*: Verify JWT signature per [RFC7519]; in delegated mode
+      validate embedded JWK per [RFC7517]; in self-issued mode reuse the
+      key from JWKS discovery as the HTTP signing key
 
    *  *jkt-jwt*: Verify JWT signature per [RFC7519] using header jwk,
       validate thumbprint matches iss per [RFC7638], validate embedded
@@ -1073,17 +1136,29 @@ Signature: sig1=:MEQCIA5...:
    appropriate cache expiration:
 
    *  *jwks_uri*: Respect cache-control headers, implement reasonable
-      TTLs
+      TTLs.  Verifiers MUST NOT refetch a given issuer's JWKS more
+      frequently than once per minute to prevent abuse.
 
    *  *x509*: Cache by x5t, invalidate on certificate expiry
 
-   *  *jwt*: Cache embedded keys until JWT expiration
+   *  *jwt*: Cache embedded keys (delegated mode) or discovered keys
+      (self-issued mode) until JWT expiration
 
    *  *jkt-jwt*: Cache embedded keys until JWT expiration; cache by iss
       thumbprint URI
 
    Verifiers SHOULD implement cache limits to prevent resource
    exhaustion attacks.
+
+   When the Signature-Key scheme is jwks_uri and a cached key matching
+   the JWT kid fails signature verification, the verifier SHOULD refresh
+   the issuer's JWKS once and retry verification before returning
+   unknown_key (if the key is then absent) or invalid_jwt (if
+   verification still fails), subject to the once-per-minute fetch floor
+   and egress admission (§Scheme-Specific Risks) that apply to unknown-
+   kid refreshes.  This covers silent re-keying where the issuer
+   replaces key material under the same kid without changing the
+   identifier.
 
 6.3.  Scheme-Specific Risks
 
@@ -1113,9 +1188,28 @@ Signature: sig1=:MEQCIA5...:
    domain.  Verifiers SHOULD verify that the id parameter in the
    Signature-Key header matches an expected or authorized origin.
 
-   *jwt*: Delegation trust depends on JWT issuer verification.
-   Verifiers MUST validate JWT signatures and claims before trusting
-   embedded keys.
+   Because the jwks_uri (and the metadata document that yields it) is
+   controlled by the asserted signer, an unconstrained verifier can be
+   induced to fetch attacker-chosen internal URLs (SSRF).  Verifiers
+   MUST apply egress admission before fetching issuer metadata or a
+   jwks_uri:
+
+   *  Require HTTPS for all outbound fetches.
+   *  Enforce response-size and timeout limits.
+   *  Refuse or constrain redirects (at minimum, do not follow redirects
+      to a different host).
+   *  Reject private, loopback, and link-local destination addresses
+      unless explicitly allowed by deployment configuration.
+   *  Defend against DNS rebinding by pinning the resolved IP address
+      for the duration of the connection.
+   *  Treat cross-origin jwks_uri URLs (where the JWKS host differs from
+      the metadata host) as requiring explicit deployment admission.
+
+   *jwt*: In delegated mode, trust is rooted in the JWT issuer, which
+   vouches for the embedded cnf.jwk.  In self-issued mode, the JWT is
+   signed by the same entity making the HTTP request; the HTTP signing
+   key is that same key.  In both modes, verifiers MUST validate the JWT
+   signature and claims before trusting the HTTP signing key.
 
    *x509*: Requires robust certificate validation including revocation
    checking.  Verifiers MUST NOT skip certificate chain validation.
@@ -1207,8 +1301,9 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
 7.3.  JWT Contents
 
-   JWTs in the jwt scheme may contain additional claims beyond cnf.
-   Verifiers should:
+   JWTs in the jwt scheme may contain additional claims beyond cnf
+   (delegated mode) or application-specific claims such as routing and
+   authorization data (self-issued mode).  Verifiers should:
 
    *  Only process claims necessary for verification
 
@@ -1269,7 +1364,7 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
     |          | via metadata                       |                 |
     +----------+------------------------------------+-----------------+
     | jwt      | JWT Confirmation Key - delegated   | [this document] |
-    |          | key in JWT                         |                 |
+    |          | or self-issued key in JWT          |                 |
     +----------+------------------------------------+-----------------+
     | x509     | X.509 Certificate - PKI            | [this document] |
     |          | certificate chain                  |                 |
@@ -1362,9 +1457,81 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
                                   Table 5
 
-9.  References
+9.  Document History
 
-9.1.  Normative References
+   _Note: This section is to be removed before publishing as an RFC._
+
+   *  draft-hardt-httpbis-signature-key-05
+
+      -  Incorporated implementer feedback from Joshua Gay (sidecat).
+      -  SSRF / egress admission: extended the jwks_uri risk bullet with
+         a mandatory egress-admission checklist covering HTTPS, size/
+         timeout limits, redirect policy, private/loopback address
+         rejection, DNS rebinding defense, and cross-origin JWKS
+         admission.
+      -  Caching: added once-per-minute fetch floor to the jwks_uri
+         cache bullet; added same-kid signature-failure refresh rule —
+         one JWKS refresh and retry before returning unknown_key or
+         invalid_jwt, subject to the same floor and egress-admission
+         policy as unknown-kid refreshes.
+      -  jkt-jwt: added algorithm note after the worked example — the
+         stable (enclave) key algorithm is enclave-determined;
+         deployments supporting Ed25519 or other stable-key algorithms
+         SHOULD document this explicitly.
+      -  Added Joshua Gay to acknowledgments.
+
+   *  draft-hardt-httpbis-signature-key-04
+
+      -  Renamed spec from "HTTP Signature-Key Header" to "HTTP
+         Signature Keys"
+      -  Added sigkey parameter for Accept-Signature (RFC 9421
+         Section 5) with three values: jkt (pseudonymous), uri (URI-
+         identified), x509 (PKI certificate)
+      -  Added Signature-Error response header for structured signature
+         verification error responses
+      -  Added incremental adoption section describing zero-coordination
+         deployment via 429/401/402 status codes
+      -  Added privacy considerations for key thumbprint tracking, agent
+         identity disclosure, and JWKS fetch side channel
+      -  Registered sigkey in the HTTP Signature Metadata Parameters
+         registry (RFC 9421 Section 6.3)
+      -  Established Signature Error Code Registry
+
+   *  draft-hardt-httpbis-signature-key-03
+
+      -  Added jkt-jwt scheme for self-issued key delegation
+      -  Renamed well-known parameter to dwk (dot well-known)
+      -  Added iss and dwk claims to jwt scheme (SHOULD) for issuer key
+         discovery
+      -  Added early validation step to jwt verification procedure
+         (format, typ, exp checks before network fetches)
+      -  Added TOFU reference (RFC 7435) to jkt-jwt scheme
+      -  Added design rationale for jwks_uri vs inline JWKS
+      -  Moved hwk string vs byte sequence design note to rationale
+         appendix
+      -  Reordered schemes
+      -  Added acknowledgments
+
+   *  draft-hardt-httpbis-signature-key-02
+
+      -  Changed x5t parameter to byte sequence per reviewer feedback
+      -  Added structured field types to all parameters
+      -  Added design note explaining string vs byte sequence choice for
+         hwk
+
+   *  draft-hardt-httpbis-signature-key-01
+
+      -  Initial public draft with four schemes: hwk, jwks_uri, x509,
+         jwt
+
+10.  Acknowledgments
+
+   The author would like to thank Joshua Gay and Yaron Sheffer for their
+   feedback on this specification.
+
+11.  References
+
+11.1.  Normative References
 
    [RFC3553]  Mealling, M., Masinter, L., Hardie, T., and G. Klyne, "An
               IETF URN Sub-namespace for Registered Protocol
@@ -1416,7 +1583,7 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
               for HTTP APIs", RFC 9457, DOI 10.17487/RFC9457, July 2023,
               <https://www.rfc-editor.org/info/rfc9457>.
 
-9.2.  Informative References
+11.2.  Informative References
 
    [I-D.ryan-httpauth-payment]
               Ryan, B., Moxey, J., Meagher, T., Weinstein, J., and S.
@@ -1443,56 +1610,9 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    [x402]     x402 Foundation, "x402: HTTP 402 Payment Protocol", 2025,
               <https://docs.x402.org>.
 
-Appendix A.  Document History
+Appendix A.  Design Rationale
 
-   _Note: This section is to be removed before publishing as an RFC._
-
-A.1.  draft-hardt-httpbis-signature-key-04
-
-   *  Renamed spec from "HTTP Signature-Key Header" to "HTTP Signature
-      Keys"
-   *  Added sigkey parameter for Accept-Signature (RFC 9421 Section 5)
-      with three values: jkt (pseudonymous), uri (URI-identified), x509
-      (PKI certificate)
-   *  Added Signature-Error response header for structured signature
-      verification error responses
-   *  Added incremental adoption section describing zero-coordination
-      deployment via 429/401/402 status codes
-   *  Added privacy considerations for key thumbprint tracking, agent
-      identity disclosure, and JWKS fetch side channel
-   *  Registered sigkey in the HTTP Signature Metadata Parameters
-      registry (RFC 9421 Section 6.3)
-   *  Established Signature Error Code Registry
-
-A.2.  draft-hardt-httpbis-signature-key-03
-
-   *  Added jkt-jwt scheme for self-issued key delegation
-   *  Renamed well-known parameter to dwk (dot well-known)
-   *  Added iss and dwk claims to jwt scheme (SHOULD) for issuer key
-      discovery
-   *  Added early validation step to jwt verification procedure (format,
-      typ, exp checks before network fetches)
-   *  Added TOFU reference (RFC 7435) to jkt-jwt scheme
-   *  Added design rationale for jwks_uri vs inline JWKS
-   *  Moved hwk string vs byte sequence design note to rationale
-      appendix
-   *  Reordered schemes
-   *  Added acknowledgments
-
-A.3.  draft-hardt-httpbis-signature-key-02
-
-   *  Changed x5t parameter to byte sequence per reviewer feedback
-   *  Added structured field types to all parameters
-   *  Added design note explaining string vs byte sequence choice for
-      hwk
-
-A.4.  draft-hardt-httpbis-signature-key-01
-
-   *  Initial public draft with four schemes: hwk, jwks_uri, x509, jwt
-
-Appendix B.  Design Rationale
-
-B.1.  Why jwks_uri Instead of Inline JWKS?
+A.1.  Why jwks_uri Instead of Inline JWKS?
 
    The jwks_uri and jwt schemes reference a jwks_uri property in the
    .well-known metadata document rather than embedding the JWKS directly
@@ -1520,7 +1640,7 @@ B.1.  Why jwks_uri Instead of Inline JWKS?
        [RFC8414], which both use jwks_uri in metadata documents for the
        same reasons.
 
-B.2.  Why a Separate Header?
+A.2.  Why a Separate Header?
 
    An alternative design would extend Signature-Input with additional
    parameters to carry key material.  This was considered and rejected
@@ -1549,7 +1669,7 @@ B.2.  Why a Separate Header?
        natural in a separate header but would create complex nesting if
        embedded in Signature-Input.
 
-B.3.  Why Schemes Instead of Just a Key and Key ID?
+A.3.  Why Schemes Instead of Just a Key and Key ID?
 
    A simpler design would define Signature-Key as carrying only a public
    key (or key reference) and a key identifier, without the scheme
@@ -1583,7 +1703,7 @@ B.3.  Why Schemes Instead of Just a Key and Key ID?
        schemes, the same key material could be interpreted differently
        by different implementations.
 
-B.4.  Why Strings Instead of Byte Sequences for hwk?
+A.4.  Why Strings Instead of Byte Sequences for hwk?
 
    The hwk parameters use structured field strings rather than byte
    sequences.  JWK key values are base64url-encoded per [RFC7517], while
@@ -1591,11 +1711,6 @@ B.4.  Why Strings Instead of Byte Sequences for hwk?
    Using strings allows implementations to pass JWK values directly
    without converting between base64url and base64, avoiding a potential
    source of encoding bugs.
-
-Appendix C.  Acknowledgments
-
-   The author would like to thank Yaron Sheffer for their feedback on
-   this specification.
 
 Authors' Addresses
 
