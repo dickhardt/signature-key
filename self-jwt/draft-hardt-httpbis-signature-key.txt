@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 31 December 2026                                     Cloudflare
-                                                            29 June 2026
+Expires: 4 January 2027                                       Cloudflare
+                                                             3 July 2026
 
 
                           HTTP Signature Keys
@@ -53,7 +53,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 31 December 2026.
+   This Internet-Draft will expire on 4 January 2027.
 
 Copyright Notice
 
@@ -684,10 +684,11 @@ Signature-Key: sig=jwks_uri;id="https://client.example";dwk="example-configurati
 
    *Verification procedure:*
 
-   1.  Parse the JWT parameter value per [RFC7519] Section 7.2.  Reject
-       if the value is not a well-formed JWT.  This and subsequent pre-
-       signature checks allow the verifier to fail early without
-       expensive cryptographic operations or network fetches.
+   1.  Parse the JWT parameter value per [RFC7519] Section 7.2.
+       Verifiers SHOULD reject if the value is not a well-formed JWT.
+       This and subsequent pre-signature checks allow the verifier to
+       fail early without expensive cryptographic operations or network
+       fetches.
 
    2.  Verify the JWT typ header parameter has an expected value per
        policy.  Reject if unexpected.
@@ -701,8 +702,8 @@ Signature-Key: sig=jwks_uri;id="https://client.example";dwk="example-configurati
 
    6.  Construct {iss}/.well-known/{dwk}, parse as JSON metadata,
        extract jwks_uri.  Fetch JWKS from jwks_uri, find the key
-       matching kid from the JWT header.  Reject if the key is not
-       found.
+       matching kid from the JWT header.  Reject if the key is not found
+       (error: unknown_key).
 
    7.  Verify JWT signature using the discovered key.
 
