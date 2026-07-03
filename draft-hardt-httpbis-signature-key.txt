@@ -1781,7 +1781,7 @@ Authors' Addresses
 
    Dick Hardt
    Hellō
-   Email: dick.hardt@gmail.com
+   Email: dick.hardt@hello.coop
 
 
    Thibault Meunier
