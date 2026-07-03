@@ -484,7 +484,7 @@ The self-jwt scheme carries a signed JWT where the JWT issuer and the HTTP reque
 
 **Verification procedure:**
 
-1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Reject if the value is not a well-formed JWT. This and subsequent pre-signature checks allow the verifier to fail early without expensive cryptographic operations or network fetches.
+1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Verifiers SHOULD reject if the value is not a well-formed JWT. This and subsequent pre-signature checks allow the verifier to fail early without expensive cryptographic operations or network fetches.
 
 2. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
 
@@ -494,7 +494,7 @@ The self-jwt scheme carries a signed JWT where the JWT issuer and the HTTP reque
 
 5. Verify `cnf` claim is absent. Reject if present.
 
-6. Construct `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`. Fetch JWKS from `jwks_uri`, find the key matching `kid` from the JWT header. Reject if the key is not found.
+6. Construct `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`. Fetch JWKS from `jwks_uri`, find the key matching `kid` from the JWT header. Reject if the key is not found (error: `unknown_key`).
 
 7. Verify JWT signature using the discovered key.
 
