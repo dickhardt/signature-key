@@ -8,9 +8,9 @@
 <meta content="Dick Hardt" name="author">
 <meta content="Thibault Meunier" name="author">
 <meta content="
-       This document defines two HTTP header fields and one Accept-Signature parameter for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with five initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation (jwt), and X.509 certificate chains (x509). The sigkey parameter extends Accept-Signature (RFC 9421 Section 5) to indicate the type of Signature-Key the server requires. The Signature-Error response header provides structured error information when signature verification fails. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains. 
+       This document defines two HTTP header fields and one Accept-Signature parameter for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with six initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation (jwt), self-issued JWTs (self-jwt), and X.509 certificate chains (x509). The sigkey parameter extends Accept-Signature (RFC 9421 Section 5) to indicate the type of Signature-Key the server requires. The Signature-Error response header provides structured error information when signature verification fails. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains. 
     " name="description">
-<meta content="xml2rfc 3.32.0" name="generator">
+<meta content="xml2rfc 3.34.0" name="generator">
 <meta content="http" name="keyword">
 <meta content="signature" name="keyword">
 <meta content="key" name="keyword">
@@ -18,18 +18,19 @@
 <meta content="jwt" name="keyword">
 <meta content="draft-hardt-httpbis-signature-key-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.32.0
-    Python 3.12.12
-    ConfigArgParse 1.7
+  xml2rfc 3.34.0
+    Python 3.14.5
+    ConfigArgParse 1.7.5
     google-i18n-address 3.1.1
     intervaltree 3.2.1
     Jinja2 3.1.6
-    lxml 6.0.2
-    platformdirs 4.9.4
+    lxml 6.1.1
+    natsort 8.4.0
+    platformdirs 4.10.0
     pycountry 24.6.1
     PyYAML 6.0.3
-    requests 2.32.5
-    wcwidth 0.6.0
+    requests 2.33.1
+    wcwidth 0.8.1
 -->
 <link href="draft-hardt-httpbis-signature-key.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -296,16 +297,19 @@ h1, h2, h3, h4, h5, h6 {
   font-size-adjust: 0.5;
   color: var(--title-color);
 }
-h1#title {
-  font-size: 32px;
-  line-height: 40px;
-  clear: both;
-}
-h1#title, h1#rfcnum {
-  margin: 1.5em 0 0.2em;
-}
-h1#rfcnum + h1#title {
-  margin: 0.2em 0;
+h1 {
+  &#title {
+    font-size: 32px;
+    line-height: 40px;
+    clear: both;
+    margin: 1.5em 0 0.2em;
+  }
+  &#rfcnum {
+    margin: 1.5em 0 0.2em;
+    & + h1#title {
+      margin: 0.2em 0;
+    }
+  }
 }
 
 h1, h2, h3 {
@@ -325,10 +329,10 @@ h4, h5, h6 {
 #abstract+p {
   font-size: 18px;
   line-height: 24px;
-}
-#abstract+p code, #abstract+p samp, #abstract+p tt {
-  font-size: 16px;
-  line-height: 0;
+  & code, & samp, & tt {
+    font-size: 16px;
+    line-height: 0;
+  }
 }
 
 p {
@@ -339,59 +343,59 @@ p {
 div {
   margin: 0;
 }
-.alignRight.art-text {
-  background-color: var(--highlight-color);
-  border: 1px solid var(--line-color);
-  border-radius: 3px;
-  padding: 0.5em 1em 0;
-  margin-bottom: 0.5em;
-}
-.alignRight.art-text pre {
-  padding: 0;
-  width: auto;
-}
 .alignRight {
   margin: 1em 0;
-}
-.alignRight > *:first-child {
-  border: none;
-  margin: 0;
-  float: right;
-  clear: both;
-}
-.alignRight > *:nth-child(2) {
-  clear: both;
-  display: block;
-  border: none;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    margin: 0;
+    float: right;
+    clear: both;
+  }
+  & > *:nth-child(2) {
+    clear: both;
+    display: block;
+    border: none;
+  }
 }
 svg {
   display: block;
-}
-/* font-family isn't space-separated, but =~ will have to do */
-svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
-  font-family: var(--font-mono);
-}
-.alignCenter.art-text {
-  background-color: var(--highlight-color);
-  border: 1px solid var(--line-color);
-  border-radius: 3px;
-  padding: 0.5em 1em 0;
-  margin-bottom: 0.5em;
-}
-.alignCenter.art-text pre {
-  padding: 0;
-  width: auto;
+  /* font-family isn't space-separated, but =~ will have to do */
+  &[font-family~="monospace" i], & [font-family~="monospace" i] {
+    font-family: var(--font-mono);
+  }
 }
 .alignCenter {
   margin: 1em 0;
-}
-.alignCenter > *:first-child {
-  border: none;
-  /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
-     support flexbox yet.
-  */
-  display: table;
-  margin: 0 auto;
+  &.art-text {
+    background-color: var(--highlight-color);
+    border: 1px solid var(--line-color);
+    border-radius: 3px;
+    padding: 0.5em 1em 0;
+    margin-bottom: 0.5em;
+    & pre {
+      padding: 0;
+      width: auto;
+    }
+  }
+  & > *:first-child {
+    border: none;
+    /* this isn't optimal, but it's an existence proof.  PrinceXML doesn't
+       support flexbox yet.
+    */
+    display: table;
+    margin: 0 auto;
+  }
 }
 
 /* lists */
@@ -429,26 +433,25 @@ dl {
     --indent: 5ch;
     & > dt {
       min-width: calc(var(--indent) - 2ch);
+      float: none;
     }
-  }
-  &.olPercent > dt {
-    float: none;
   }
 
   dl > dd > & {
     margin-top: 0.5em;
     margin-bottom: 0;
   }
-}
-dl:not(.dlNewline) > dt {
-  float: left;
-  margin-right: 2ch;
-  min-width: 8ch;
-}
-dl > dd {
-  margin-bottom: .8em;
-  margin-left: var(--indent) !important; /* stupid element overrides */
-  min-height: 2ex;
+
+  &:not(.dlNewline) > dt {
+    float: left;
+    margin-right: 2ch;
+    min-width: 8ch;
+  }
+  & > dd {
+    margin-bottom: .8em;
+    margin-left: var(--indent) !important; /* stupid element overrides */
+    min-height: 2ex;
+  }
 }
 :is(dl.compact, .dlCompact) > dd {
   margin-bottom: 0;
@@ -464,20 +467,22 @@ dl > dd {
 }
 
 /* links */
-a, a[href].selfRef:hover {
+a {
   text-decoration: none;
+  &[href] {
+    color: var(--link-color);
+    &:hover { text-decoration: underline; }
+    &.selfRef {
+      color: var(--text-color);
+      &:hover {
+        text-decoration: none;
+        background-color: var(--highlight-color);
+      }
+    }
+  }
 }
-a[href] {
-  color: var(--link-color);
-}
-a[href].selfRef, .iref + a[href].internal {
+.iref + a[href].internal {
   color: var(--text-color);
-}
-a[href]:hover {
-  text-decoration: underline;
-}
-a[href].selfRef:hover {
-  background-color: var(--highlight-color);
 }
 a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
   white-space: nowrap;
@@ -513,9 +518,9 @@ img {
 figure {
   margin: 0.5em 0;
   padding: 0;
-}
-figure blockquote {
-  margin: 0.8em 0.4em 0.4em;
+  & blockquote {
+    margin: 0.8em 0.4em 0.4em;
+  }
 }
 figcaption, caption {
   font-style: italic;
@@ -525,17 +530,19 @@ figcaption, caption {
 }
 @media screen {
   /* Auto-collapse boilerplate. */
-  :is(#status-of-memo, #copyright) p {
-    margin: -2px 0;
-    max-height: 0;
-    transition: max-height 2s ease, margin 0.5s ease 0.5s;
-    overflow: hidden;
-  }
-  :is(#status-of-memo, #copyright):hover p,
-  :is(#status-of-memo, #copyright) h2:target ~ p {
-    margin: 0.5em 0;
-    max-height: 500px;
-    overflow: auto;
+  :is(#status-of-memo, #copyright) {
+    & p {
+      margin: -2px 0;
+      max-height: 0;
+      transition: max-height 2s ease, margin 0.5s ease 0.5s;
+      overflow: hidden;
+    }
+    &:hover p,
+    & h2:target ~ p {
+      margin: 0.5em 0;
+      max-height: 500px;
+      overflow: auto;
+    }
   }
   pre, svg {
     display: inline-block;
@@ -585,25 +592,17 @@ table {
   max-width: 100%;
   margin: 0 0 1em;
   border-collapse: collapse;
-}
-table.right {
-  margin-left: auto;
-}
-table.center {
-  margin-left: auto;
-  margin-right: auto;
-}
-table.left {
-  margin-right: auto;
-}
-table .text-left {
-  text-align: left;
-}
-table .text-center {
-  text-align: center;
-}
-table .text-right {
-  text-align: right;
+  &.right { margin-left: auto; }
+  &.center { margin-left: auto; margin-right: auto; }
+  &.left { margin-right: auto; }
+  & .text-left { text-align: left; }
+  & .text-center { text-align: center; }
+  & .text-right { text-align: right; }
+  & caption {
+    margin: 0;
+    padding: 3px 0 3px 1em;
+  }
+  & p { margin: 0; }
 }
 
 thead, tbody {
@@ -623,13 +622,6 @@ th {
 :is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
   background-color: var(--highlight-color);
 }
-table caption {
-  margin: 0;
-  padding: 3px 0 3px 1em;
-}
-table p {
-  margin: 0;
-}
 
 /* pilcrow */
 a.pilcrow {
@@ -640,18 +632,16 @@ a.pilcrow {
     color: var(--pilcrow-weak);
     &:hover { text-decoration: none; }
   }
-}
-@media not print {
-  :hover > a.pilcrow, a.pilcrow:focus {
-    opacity: 1;
+  @media not print {
+    :hover > &, &:focus {
+      opacity: 1;
+    }
+    &[href]:hover {
+      color: var(--pilcrow-strong);
+      background-color: transparent;
+    }
   }
-  a.pilcrow[href]:hover {
-    color: var(--pilcrow-strong);
-    background-color: transparent;
-  }
-}
-@media print {
-  a.pilcrow {
+  @media print {
     display: none;
   }
 }
@@ -710,9 +700,9 @@ sub, sup {
   font-size: 0.9em;
   font-style: italic;
   margin-top: 2em;
-}
-.docInfo .prepared {
-  float: right;
+  & .prepared {
+    float: right;
+  }
 }
 
 /* table of contents */
@@ -802,23 +792,27 @@ hr.addr {
   max-width: calc(100% - 16px);
 }
 @media (min-width: 500px) {
-  #authors-addresses > section {
-    column-count: 2;
-    column-gap: 20px;
-  }
-  #authors-addresses > section > h2 {
-    column-span: all;
-  }
-  /* hack for break-inside: avoid-column */
-  #authors-addresses address {
-    display: inline-block;
-    break-inside: avoid-column;
+  #authors-addresses {
+    & > section {
+      column-count: 2;
+      column-gap: 20px;
+    }
+    & > section > h2 {
+      column-span: all;
+    }
+    /* hack for break-inside: avoid-column */
+    & address {
+      display: inline-block;
+      break-inside: avoid-column;
+    }
   }
 }
 
 /* Comments */
-.rfcEditorRemove p:first-of-type {
-  font-style: italic;
+.rfcEditorRemove {
+  & p:first-of-type {
+    font-style: italic;
+  }
 }
 .cref {
   background-color: rgba(249, 232, 105, 0.3);
@@ -829,19 +823,21 @@ hr.addr {
 }
 
 @media screen {
-  #toc nav {
-    font-family: var(--font-title);
-    font-weight: 360;
-    & > ul { margin-bottom: 2em; }
-    & ul {
-      margin: 0 0 0 4px;
-      & :is(p, li) {
-        margin: 2px 0;
+  #toc {
+    & nav {
+      font-family: var(--font-title);
+      font-weight: 360;
+      & > ul { margin-bottom: 2em; }
+      & ul {
+        margin: 0 0 0 4px;
+        & :is(p, li) {
+          margin: 2px 0;
+        }
       }
     }
-  }
-  #toc a.toplink {
-    float: right;
+    & a.toplink {
+      float: right;
+    }
   }
 }
 @media not screen {
@@ -862,54 +858,54 @@ hr.addr {
     margin: 0;
     border-bottom: 1px solid #ccc;
     opacity: 0.6;
-  }
-  #toc h2 {
-    margin: 0;
-    padding: 2px 0 2px 6px;
-    padding-right: 1em;
-    font-size: 18px;
-    line-height: 24px;
-    min-width: 190px;
-    text-align: right;
-    background-color: #444;
-    color: white;
-    cursor: pointer;
-    &::before { /* css hamburger */
-      float: right;
-      position: relative;
-      width: 1em;
-      height: 1px;
-      left: -164px;
-      margin: 8px 0 0 0;
-      background: white none repeat scroll 0 0;
-      box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
-      content: "";
+    & h2 {
+      margin: 0;
+      padding: 2px 0 2px 6px;
+      padding-right: 1em;
+      font-size: 18px;
+      line-height: 24px;
+      min-width: 190px;
+      text-align: right;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      &::before { /* css hamburger */
+        float: right;
+        position: relative;
+        width: 1em;
+        height: 1px;
+        left: -164px;
+        margin: 8px 0 0 0;
+        background: white none repeat scroll 0 0;
+        box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+        content: "";
+      }
     }
-  }
-  #toc nav {
-    display: none;
-    background-color: var(--background-color);
-    padding: 0.5em 1em 1em;
-    overflow: auto;
-    overscroll-behavior: contain;
-    height: calc(100vh - 48px);
-    border-left: 1px solid #ddd;
-  }
-  #toc.active {
-    opacity: 1;
-    & nav { display: block; }
-  }
-  /* Make the collapsed ToC header render white on gray also when it's a link */
-  #toc h2 a,
-  #toc h2 a:is(:link, :focus, :hover),
-  #toc a.toplink,
-  #toc a.toplink:hover {
-    color: white;
-    background-color: #444;
-    text-decoration: none;
-  }
-  #toc a.toplink {
-    margin: 2px 0.5em 0;
+    & nav {
+      display: none;
+      background-color: var(--background-color);
+      padding: 0.5em 1em 1em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      height: calc(100vh - 48px);
+      border-left: 1px solid #ddd;
+    }
+    &.active {
+      opacity: 1;
+      & nav { display: block; }
+    }
+    /* Make the collapsed ToC header render white on gray also when it's a link */
+    & h2 a,
+    & h2 a:is(:link, :focus, :hover),
+    & a.toplink,
+    & a.toplink:hover {
+      color: white;
+      background-color: #444;
+      text-decoration: none;
+    }
+    & a.toplink {
+      margin: 2px 0.5em 0;
+    }
   }
 }
 
@@ -928,26 +924,26 @@ hr.addr {
     margin: 0;
     padding: 0;
     z-index: 1;
-  }
-  #toc h2 {
-    margin: 0;
-    padding: 0.25em 1em 1em 0;
-  }
-  #toc nav {
-    display: block;
-    height: calc(90vh - 84px);
-    bottom: 0;
-    padding: 0.5em 0 2em;
-    overflow: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
+    & h2 {
+      margin: 0;
+      padding: 0.25em 1em 1em 0;
+    }
+    & nav {
+      display: block;
+      height: calc(90vh - 84px);
+      bottom: 0;
+      padding: 0.5em 0 2em;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+    & a.toplink {
+      margin: 8px 0.5em 0;
+    }
   }
   img { /* future proofing */
     max-width: 100%;
     height: auto;
-  }
-  #toc a.toplink {
-    margin: 8px 0.5em 0;
   }
 }
 
@@ -963,12 +959,13 @@ hr.addr {
   #n-copyright-notice {
     border-bottom: none;
   }
-  #toc, #n-introduction {
-    page-break-before: always;
-  }
   #toc {
+    page-break-before: always;
     border-top: none;
     padding-top: 0;
+  }
+  #n-introduction {
+    page-break-before: always;
   }
   figure, pre, .vcard {
     page-break-inside: avoid;
@@ -1030,17 +1027,19 @@ hr.addr {
 }
 
 /* SVG Trick: a prefix match works because only black and white are allowed */
-svg :is([stroke="black"], [stroke^="#000"]) {
-  stroke: var(--text-color);
-}
-svg :is([stroke="white"], [stroke^="#fff"]) {
-  stroke: var(--background-color);
-}
-svg :is([fill="black"], [fill^="#000"], :not([fill])) {
-  fill: var(--text-color);
-}
-svg :is([fill="white"], [fill^="#fff"]) {
-  fill: var(--background-color);
+svg {
+  & :is([stroke="black"], [stroke^="#000"]) {
+    stroke: var(--text-color);
+  }
+  & :is([stroke="white"], [stroke^="#fff"]) {
+    stroke: var(--background-color);
+  }
+  & :is([fill="black"], [fill^="#000"], :not([fill])) {
+    fill: var(--text-color);
+  }
+  & :is([fill="white"], [fill^="#fff"]) {
+    fill: var(--background-color);
+  }
 }
 </style>
 
@@ -1050,11 +1049,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Signature-Keys</td>
-<td class="right">April 2026</td>
+<td class="right">July 2026</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hardt &amp; Meunier</td>
-<td class="center">Expires 11 October 2026</td>
+<td class="center">Expires 4 January 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1067,12 +1066,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-hardt-httpbis-signature-key-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-04-09" class="published">9 April 2026</time>
+<time datetime="2026-07-03" class="published">3 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-10-11">11 October 2026</time></dd>
+<dd class="expires"><time datetime="2027-01-04">4 January 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1089,7 +1088,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <h1 id="title">HTTP Signature Keys</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document defines two HTTP header fields and one Accept-Signature parameter for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with five initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation (jwt), and X.509 certificate chains (x509). The sigkey parameter extends Accept-Signature (RFC 9421 Section 5) to indicate the type of Signature-Key the server requires. The Signature-Error response header provides structured error information when signature verification fails. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines two HTTP header fields and one Accept-Signature parameter for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with six initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), JWT-based delegation (jwt), self-issued JWTs (self-jwt), and X.509 certificate chains (x509). The sigkey parameter extends Accept-Signature (RFC 9421 Section 5) to indicate the type of Signature-Key the server requires. The Signature-Error response header provides structured error information when signature verification fails. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1117,7 +1116,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 11 October 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 4 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1174,7 +1173,10 @@ svg :is([fill="white"], [fill^="#fff"]) {
                 <p id="section-toc.1-1.3.2.6.1"><a href="#section-3.6" class="auto internal xref">3.6</a>.  <a href="#name-jwt-confirmation-key-jwt" class="internal xref">JWT Confirmation Key (jwt)</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.7">
-                <p id="section-toc.1-1.3.2.7.1"><a href="#section-3.7" class="auto internal xref">3.7</a>.  <a href="#name-x509-certificates-x509" class="internal xref">X.509 Certificates (x509)</a></p>
+                <p id="section-toc.1-1.3.2.7.1"><a href="#section-3.7" class="auto internal xref">3.7</a>.  <a href="#name-self-issued-jwt-self-jwt" class="internal xref">Self-Issued JWT (self-jwt)</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.8">
+                <p id="section-toc.1-1.3.2.8.1"><a href="#section-3.8" class="auto internal xref">3.8</a>.  <a href="#name-x509-certificates-x509" class="internal xref">X.509 Certificates (x509)</a></p>
 </li>
             </ul>
 </li>
@@ -1332,55 +1334,41 @@ svg :is([fill="white"], [fill^="#fff"]) {
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-references" class="internal xref">References</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
-                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
-                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
-</li>
-            </ul>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-document-history" class="internal xref">Document History</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-document-history" class="internal xref">Document History</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.1">
-                <p id="section-toc.1-1.10.2.1.1"><a href="#appendix-A.1" class="auto internal xref">A.1</a>.  <a href="#name-draft-hardt-httpbis-signatu" class="internal xref">draft-hardt-httpbis-signature-key-04</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.2">
-                <p id="section-toc.1-1.10.2.2.1"><a href="#appendix-A.2" class="auto internal xref">A.2</a>.  <a href="#name-draft-hardt-httpbis-signatur" class="internal xref">draft-hardt-httpbis-signature-key-03</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.3">
-                <p id="section-toc.1-1.10.2.3.1"><a href="#appendix-A.3" class="auto internal xref">A.3</a>.  <a href="#name-draft-hardt-httpbis-signature" class="internal xref">draft-hardt-httpbis-signature-key-02</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10.2.4">
-                <p id="section-toc.1-1.10.2.4.1"><a href="#appendix-A.4" class="auto internal xref">A.4</a>.  <a href="#name-draft-hardt-httpbis-signature-" class="internal xref">draft-hardt-httpbis-signature-key-01</a></p>
-</li>
-            </ul>
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
-            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-design-rationale" class="internal xref">Design Rationale</a></p>
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-references" class="internal xref">References</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.1">
-                <p id="section-toc.1-1.11.2.1.1"><a href="#appendix-B.1" class="auto internal xref">B.1</a>.  <a href="#name-why-jwks_uri-instead-of-inl" class="internal xref">Why jwks_uri Instead of Inline JWKS?</a></p>
+                <p id="section-toc.1-1.11.2.1.1"><a href="#section-11.1" class="auto internal xref">11.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.2">
-                <p id="section-toc.1-1.11.2.2.1"><a href="#appendix-B.2" class="auto internal xref">B.2</a>.  <a href="#name-why-a-separate-header" class="internal xref">Why a Separate Header?</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.3">
-                <p id="section-toc.1-1.11.2.3.1"><a href="#appendix-B.3" class="auto internal xref">B.3</a>.  <a href="#name-why-schemes-instead-of-just" class="internal xref">Why Schemes Instead of Just a Key and Key ID?</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.4">
-                <p id="section-toc.1-1.11.2.4.1"><a href="#appendix-B.4" class="auto internal xref">B.4</a>.  <a href="#name-why-strings-instead-of-byte" class="internal xref">Why Strings Instead of Byte Sequences for hwk?</a></p>
+                <p id="section-toc.1-1.11.2.2.1"><a href="#section-11.2" class="auto internal xref">11.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
-            <p id="section-toc.1-1.12.1"><a href="#appendix-C" class="auto internal xref">Appendix C</a>.  <a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-design-rationale" class="internal xref">Design Rationale</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.1">
+                <p id="section-toc.1-1.12.2.1.1"><a href="#appendix-A.1" class="auto internal xref">A.1</a>.  <a href="#name-why-jwks_uri-instead-of-inl" class="internal xref">Why jwks_uri Instead of Inline JWKS?</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.2">
+                <p id="section-toc.1-1.12.2.2.1"><a href="#appendix-A.2" class="auto internal xref">A.2</a>.  <a href="#name-why-a-separate-header" class="internal xref">Why a Separate Header?</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.3">
+                <p id="section-toc.1-1.12.2.3.1"><a href="#appendix-A.3" class="auto internal xref">A.3</a>.  <a href="#name-why-schemes-instead-of-just" class="internal xref">Why Schemes Instead of Just a Key and Key ID?</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12.2.4">
+                <p id="section-toc.1-1.12.2.4.1"><a href="#appendix-A.4" class="auto internal xref">A.4</a>.  <a href="#name-why-strings-instead-of-byte" class="internal xref">Why Strings Instead of Byte Sequences for hwk?</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
-            <p id="section-toc.1-1.13.1"><a href="#appendix-D" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.13.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1403,7 +1391,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <p id="section-2-2">This document defines:<a href="#section-2-2" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-2-3.1">
-          <p id="section-2-3.1.1"><strong>Signature-Key</strong> (<a href="#signature-key-http-request-header">Signature-Key HTTP Request Header</a>) — a request header that distributes public keys for HTTP Message Signature verification. The header supports five schemes, each designed for different trust models and operational requirements:<a href="#section-2-3.1.1" class="pilcrow">¶</a></p>
+          <p id="section-2-3.1.1"><strong>Signature-Key</strong> (<a href="#signature-key-http-request-header">Signature-Key HTTP Request Header</a>) — a request header that distributes public keys for HTTP Message Signature verification. The header supports six schemes, each designed for different trust models and operational requirements:<a href="#section-2-3.1.1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="compact type-1" id="section-2-3.1.2">
 <li id="section-2-3.1.2.1">
               <strong>Header Web Key (hwk)</strong> - Self-contained public keys for pseudonymous verification<a href="#section-2-3.1.2.1" class="pilcrow">¶</a>
@@ -1418,7 +1406,10 @@ svg :is([fill="white"], [fill^="#fff"]) {
               <strong>JWT (jwt)</strong> - Delegated keys embedded in signed JWTs for horizontal scale<a href="#section-2-3.1.2.4" class="pilcrow">¶</a>
 </li>
             <li id="section-2-3.1.2.5">
-              <strong>X.509 (x509)</strong> - Certificate-based verification with PKI trust chains<a href="#section-2-3.1.2.5" class="pilcrow">¶</a>
+              <strong>Self-Issued JWT (self-jwt)</strong> - Self-signed JWTs where the signer and issuer are the same party<a href="#section-2-3.1.2.5" class="pilcrow">¶</a>
+</li>
+            <li id="section-2-3.1.2.6">
+              <strong>X.509 (x509)</strong> - Certificate-based verification with PKI trust chains<a href="#section-2-3.1.2.6" class="pilcrow">¶</a>
 </li>
           </ol>
 </li>
@@ -1721,52 +1712,53 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
 </pre><a href="#section-3.4-24" class="pilcrow">¶</a>
 </div>
 <p id="section-3.4-25">In this example, the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software). The identity is <code>urn:jkt:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs</code>.<a href="#section-3.4-25" class="pilcrow">¶</a></p>
-<p id="section-3.4-26"><strong>Verification procedure:</strong><a href="#section-3.4-26" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3.4-27">
-<li id="section-3.4-27.1">
-            <p id="section-3.4-27.1.1">Parse the JWT without verifying the signature<a href="#section-3.4-27.1.1" class="pilcrow">¶</a></p>
+<p id="section-3.4-26">The stable (enclave) key algorithm in the JWT <code>alg</code> header is determined by what the enclave hardware supports. This document's example uses <code>ES256</code> with a P-256 stable key delegating to an Ed25519 request key; deployments whose enclaves support Ed25519 (or other) stable-key algorithms SHOULD document this explicitly. The <code>cnf.jwk</code> request key algorithm is likewise enclave-determined.<a href="#section-3.4-26" class="pilcrow">¶</a></p>
+<p id="section-3.4-27"><strong>Verification procedure:</strong><a href="#section-3.4-27" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3.4-28">
+<li id="section-3.4-28.1">
+            <p id="section-3.4-28.1.1">Parse the JWT without verifying the signature<a href="#section-3.4-28.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.2">
-            <p id="section-3.4-27.2.1">Check the <code>typ</code> header (e.g., <code>jkt-s256+jwt</code>). Reject if the type is not supported.<a href="#section-3.4-27.2.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.2">
+            <p id="section-3.4-28.2.1">Check the <code>typ</code> header (e.g., <code>jkt-s256+jwt</code>). Reject if the type is not supported.<a href="#section-3.4-28.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.3">
-            <p id="section-3.4-27.3.1">Determine the hash algorithm and <code>iss</code> prefix from the <code>typ</code> (e.g., <code>jkt-s256+jwt</code> → SHA-256, <code>urn:jkt:sha-256:</code>)<a href="#section-3.4-27.3.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.3">
+            <p id="section-3.4-28.3.1">Determine the hash algorithm and <code>iss</code> prefix from the <code>typ</code> (e.g., <code>jkt-s256+jwt</code> → SHA-256, <code>urn:jkt:sha-256:</code>)<a href="#section-3.4-28.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.4">
-            <p id="section-3.4-27.4.1">Extract the <code>jwk</code> from the JWT header<a href="#section-3.4-27.4.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.4">
+            <p id="section-3.4-28.4.1">Extract the <code>jwk</code> from the JWT header<a href="#section-3.4-28.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.5">
-            <p id="section-3.4-27.5.1">Compute the JWK Thumbprint (<span>[<a href="#RFC7638" class="cite xref">RFC7638</a>]</span>) of the header <code>jwk</code> using the determined hash algorithm<a href="#section-3.4-27.5.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.5">
+            <p id="section-3.4-28.5.1">Compute the JWK Thumbprint (<span>[<a href="#RFC7638" class="cite xref">RFC7638</a>]</span>) of the header <code>jwk</code> using the determined hash algorithm<a href="#section-3.4-28.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.6">
-            <p id="section-3.4-27.6.1">Construct the expected <code>iss</code> value by prepending the known prefix to the computed thumbprint<a href="#section-3.4-27.6.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.6">
+            <p id="section-3.4-28.6.1">Construct the expected <code>iss</code> value by prepending the known prefix to the computed thumbprint<a href="#section-3.4-28.6.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.7">
-            <p id="section-3.4-27.7.1">Verify the <code>iss</code> claim matches the constructed value by string equality<a href="#section-3.4-27.7.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.7">
+            <p id="section-3.4-28.7.1">Verify the <code>iss</code> claim matches the constructed value by string equality<a href="#section-3.4-28.7.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.8">
-            <p id="section-3.4-27.8.1">Verify the JWT signature using the header <code>jwk</code><a href="#section-3.4-27.8.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.8">
+            <p id="section-3.4-28.8.1">Verify the JWT signature using the header <code>jwk</code><a href="#section-3.4-28.8.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.9">
-            <p id="section-3.4-27.9.1">Validate <code>exp</code> and <code>iat</code> claims per policy<a href="#section-3.4-27.9.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.9">
+            <p id="section-3.4-28.9.1">Validate <code>exp</code> and <code>iat</code> claims per policy<a href="#section-3.4-28.9.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.10">
-            <p id="section-3.4-27.10.1">Extract the ephemeral public key from <code>cnf.jwk</code><a href="#section-3.4-27.10.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.10">
+            <p id="section-3.4-28.10.1">Extract the ephemeral public key from <code>cnf.jwk</code><a href="#section-3.4-28.10.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.4-27.11">
-            <p id="section-3.4-27.11.1">Verify the HTTP Message Signature using the ephemeral key<a href="#section-3.4-27.11.1" class="pilcrow">¶</a></p>
+          <li id="section-3.4-28.11">
+            <p id="section-3.4-28.11.1">Verify the HTTP Message Signature using the ephemeral key<a href="#section-3.4-28.11.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
-<p id="section-3.4-28"><strong>Use cases:</strong><a href="#section-3.4-28" class="pilcrow">¶</a></p>
+<p id="section-3.4-29"><strong>Use cases:</strong><a href="#section-3.4-29" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.4-29.1">
-            <p id="section-3.4-29.1.1">Devices with hardware-backed secure enclaves delegating to fast ephemeral keys<a href="#section-3.4-29.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-3.4-30.1">
+            <p id="section-3.4-30.1.1">Devices with hardware-backed secure enclaves delegating to fast ephemeral keys<a href="#section-3.4-30.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.4-29.2">
-            <p id="section-3.4-29.2.1">Persistent pseudonymous identity without requiring registration or authority<a href="#section-3.4-29.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.4-30.2">
+            <p id="section-3.4-30.2.1">Persistent pseudonymous identity without requiring registration or authority<a href="#section-3.4-30.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.4-29.3">
-            <p id="section-3.4-29.3.1">Mobile apps, laptops, and IoT devices with enclave-backed identity<a href="#section-3.4-29.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.4-30.3">
+            <p id="section-3.4-30.3.1">Mobile apps, laptops, and IoT devices with enclave-backed identity<a href="#section-3.4-30.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -1928,67 +1920,173 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
         </ul>
 </section>
 </div>
-<div id="x-509-certificates-x509">
+<div id="self-issued-jwt-self-jwt">
 <section id="section-3.7">
-        <h3 id="name-x509-certificates-x509">
-<a href="#section-3.7" class="section-number selfRef">3.7. </a><a href="#name-x509-certificates-x509" class="section-name selfRef">X.509 Certificates (x509)</a>
+        <h3 id="name-self-issued-jwt-self-jwt">
+<a href="#section-3.7" class="section-number selfRef">3.7. </a><a href="#name-self-issued-jwt-self-jwt" class="section-name selfRef">Self-Issued JWT (self-jwt)</a>
         </h3>
-<p id="section-3.7-1">The x509 scheme provides certificate-based verification using PKI trust chains.<a href="#section-3.7-1" class="pilcrow">¶</a></p>
+<p id="section-3.7-1">The self-jwt scheme carries a signed JWT where the JWT issuer and the HTTP request signer are the same party. The signing key is discoverable from the issuer's JWKS, and that same key verifies both the JWT and the HTTP Message Signature. Unlike the jwt scheme, no <code>cnf</code> claim is present — the signing key is the confirmation key.<a href="#section-3.7-1" class="pilcrow">¶</a></p>
 <p id="section-3.7-2"><strong>Parameters:</strong><a href="#section-3.7-2" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-3.7-3.1">
-            <p id="section-3.7-3.1.1"><code>x5u</code> (REQUIRED, String) - URL to X.509 certificate chain (PEM format, <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span> Section 4.6)<a href="#section-3.7-3.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-3.7-3.2">
-            <p id="section-3.7-3.2.1"><code>x5t</code> (REQUIRED, Byte Sequence) - Certificate thumbprint: SHA-256 hash of DER-encoded end-entity certificate<a href="#section-3.7-3.2.1" class="pilcrow">¶</a></p>
+<ul class="compact">
+<li class="compact" id="section-3.7-3.1">
+            <code>jwt</code> (REQUIRED, String) - Compact-serialized JWT<a href="#section-3.7-3.1" class="pilcrow">¶</a>
 </li>
         </ul>
-<p id="section-3.7-4"><strong>Verification procedure:</strong><a href="#section-3.7-4" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3.7-5">
-<li id="section-3.7-5.1">
-            <p id="section-3.7-5.1.1">Check cache for certificate with matching <code>x5t</code><a href="#section-3.7-5.1.1" class="pilcrow">¶</a></p>
+<p id="section-3.7-4"><strong>JWT requirements:</strong><a href="#section-3.7-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.7-5.1">
+            <p id="section-3.7-5.1.1">MUST contain <code>iss</code> claim (HTTPS URL of the issuer)<a href="#section-3.7-5.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.7-5.2">
-            <p id="section-3.7-5.2.1">If not cached or expired, fetch PEM from <code>x5u</code><a href="#section-3.7-5.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.7-5.2">
+            <p id="section-3.7-5.2.1">MUST contain <code>dwk</code> claim (dot well-known metadata document name) — the verifier constructs <code>{iss}/.well-known/{dwk}</code> to discover the issuer's <code>jwks_uri</code><a href="#section-3.7-5.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.7-5.3">
-            <p id="section-3.7-5.3.1">Validate certificate chain to trusted root CA<a href="#section-3.7-5.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.7-5.3">
+            <p id="section-3.7-5.3.1">MUST have <code>kid</code> in the JWT header identifying the signing key in the issuer's JWKS<a href="#section-3.7-5.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.7-5.4">
-            <p id="section-3.7-5.4.1">Check certificate validity and revocation status<a href="#section-3.7-5.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.7-5.4">
+            <p id="section-3.7-5.4.1">MUST NOT contain <code>cnf</code> claim<a href="#section-3.7-5.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.7-5.5">
-            <p id="section-3.7-5.5.1">Verify <code>x5t</code> matches end-entity certificate<a href="#section-3.7-5.5.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.7-5.5">
+            <p id="section-3.7-5.5.1">SHOULD contain standard claims: <code>sub</code>, <code>aud</code>, <code>exp</code>, <code>iat</code><a href="#section-3.7-5.5.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.7-5.6">
-            <p id="section-3.7-5.6.1">Extract public key from end-entity certificate<a href="#section-3.7-5.6.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.7-5.6">
+            <p id="section-3.7-5.6.1">Verifiers SHOULD verify the JWT <code>typ</code> header parameter has an expected value per deployment policy, to optimize for a quick rejection<a href="#section-3.7-5.6.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.7-5.7">
-            <p id="section-3.7-5.7.1">Verify signature using extracted key<a href="#section-3.7-5.7.1" class="pilcrow">¶</a></p>
+        </ul>
+<blockquote id="section-3.7-6">
+          <p id="section-3.7-6.1"><strong>Note:</strong> The mechanism by which the JWT is obtained is out of scope of this specification.<a href="#section-3.7-6.1" class="pilcrow">¶</a></p>
+</blockquote>
+<p id="section-3.7-7"><strong>Verification procedure:</strong><a href="#section-3.7-7" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3.7-8">
+<li id="section-3.7-8.1">
+            <p id="section-3.7-8.1.1">Parse the JWT parameter value per <span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span> Section 7.2. Verifiers SHOULD reject if the value is not a well-formed JWT. This and subsequent pre-signature checks allow the verifier to fail early without expensive cryptographic operations or network fetches.<a href="#section-3.7-8.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.7-5.8">
-            <p id="section-3.7-5.8.1">Cache certificate indexed by <code>x5t</code><a href="#section-3.7-5.8.1" class="pilcrow">¶</a></p>
+          <li id="section-3.7-8.2">
+            <p id="section-3.7-8.2.1">Verify the JWT <code>typ</code> header parameter has an expected value per policy. Reject if unexpected.<a href="#section-3.7-8.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.7-8.3">
+            <p id="section-3.7-8.3.1">Validate <code>exp</code> claim if present. Reject if the token has expired.<a href="#section-3.7-8.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.7-8.4">
+            <p id="section-3.7-8.4.1">Verify <code>iss</code>, <code>dwk</code> claims and <code>kid</code> JWT header parameter are present. Reject if any is absent.<a href="#section-3.7-8.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.7-8.5">
+            <p id="section-3.7-8.5.1">Verify <code>cnf</code> claim is absent. Reject if present.<a href="#section-3.7-8.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.7-8.6">
+            <p id="section-3.7-8.6.1">Construct <code>{iss}/.well-known/{dwk}</code>, parse as JSON metadata, extract <code>jwks_uri</code>. Fetch JWKS from <code>jwks_uri</code>, find the key matching <code>kid</code> from the JWT header. Reject if the key is not found (error: <code>unknown_key</code>).<a href="#section-3.7-8.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.7-8.7">
+            <p id="section-3.7-8.7.1">Verify JWT signature using the discovered key.<a href="#section-3.7-8.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.7-8.8">
+            <p id="section-3.7-8.8.1">Validate remaining JWT claims per policy (<code>sub</code>, <code>aud</code>, etc.)<a href="#section-3.7-8.8.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.7-8.9">
+            <p id="section-3.7-8.9.1">Verify HTTP Message Signature using the same key from step 6.<a href="#section-3.7-8.9.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
-<p id="section-3.7-6"><strong>Example:</strong><a href="#section-3.7-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3.7-7">
+<p id="section-3.7-9"><strong>Example:</strong><a href="#section-3.7-9" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.7-10">
+<pre>Signature-Key: sig=self-jwt;jwt="eyJhbGciOiJFUzI1NiIsImtpZCI6InIxIn0..."
+
+</pre><a href="#section-3.7-10" class="pilcrow">¶</a>
+</div>
+<p id="section-3.7-11">JWT header:<a href="#section-3.7-11" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="section-3.7-12">
+<pre>{
+  "alg": "ES256",
+  "kid": "r1",
+  "typ": "aauth-resource+jwt"
+}
+
+</pre><a href="#section-3.7-12" class="pilcrow">¶</a>
+</div>
+<p id="section-3.7-13">JWT payload:<a href="#section-3.7-13" class="pilcrow">¶</a></p>
+<div class="lang-json sourcecode" id="section-3.7-14">
+<pre>{
+  "iss": "https://resource.example",
+  "dwk": "aauth-resource",
+  "aud": "https://agent.example",
+  "eid": "evt-abc123",
+  "exp": 1732210000
+}
+
+</pre><a href="#section-3.7-14" class="pilcrow">¶</a>
+</div>
+<p id="section-3.7-15">The verifier fetches <code>https://resource.example/.well-known/aauth-resource</code>, retrieves the JWKS, finds the key with <code>kid="r1"</code>, verifies the JWT signature with it, then uses that same key to verify the HTTP Message Signature.<a href="#section-3.7-15" class="pilcrow">¶</a></p>
+<p id="section-3.7-16"><strong>Use cases:</strong><a href="#section-3.7-16" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.7-17.1">
+            <p id="section-3.7-17.1.1">Resources delivering events with application-layer claims that the verifier needs alongside key verification<a href="#section-3.7-17.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.7-17.2">
+            <p id="section-3.7-17.2.1">Clients presenting themselves directly without delegating to a separate authority<a href="#section-3.7-17.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+</section>
+</div>
+<div id="x-509-certificates-x509">
+<section id="section-3.8">
+        <h3 id="name-x509-certificates-x509">
+<a href="#section-3.8" class="section-number selfRef">3.8. </a><a href="#name-x509-certificates-x509" class="section-name selfRef">X.509 Certificates (x509)</a>
+        </h3>
+<p id="section-3.8-1">The x509 scheme provides certificate-based verification using PKI trust chains.<a href="#section-3.8-1" class="pilcrow">¶</a></p>
+<p id="section-3.8-2"><strong>Parameters:</strong><a href="#section-3.8-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-3.8-3.1">
+            <p id="section-3.8-3.1.1"><code>x5u</code> (REQUIRED, String) - URL to X.509 certificate chain (PEM format, <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span> Section 4.6)<a href="#section-3.8-3.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-3.8-3.2">
+            <p id="section-3.8-3.2.1"><code>x5t</code> (REQUIRED, Byte Sequence) - Certificate thumbprint: SHA-256 hash of DER-encoded end-entity certificate<a href="#section-3.8-3.2.1" class="pilcrow">¶</a></p>
+</li>
+        </ul>
+<p id="section-3.8-4"><strong>Verification procedure:</strong><a href="#section-3.8-4" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3.8-5">
+<li id="section-3.8-5.1">
+            <p id="section-3.8-5.1.1">Check cache for certificate with matching <code>x5t</code><a href="#section-3.8-5.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.8-5.2">
+            <p id="section-3.8-5.2.1">If not cached or expired, fetch PEM from <code>x5u</code><a href="#section-3.8-5.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.8-5.3">
+            <p id="section-3.8-5.3.1">Validate certificate chain to trusted root CA<a href="#section-3.8-5.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.8-5.4">
+            <p id="section-3.8-5.4.1">Check certificate validity and revocation status<a href="#section-3.8-5.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.8-5.5">
+            <p id="section-3.8-5.5.1">Verify <code>x5t</code> matches end-entity certificate<a href="#section-3.8-5.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.8-5.6">
+            <p id="section-3.8-5.6.1">Extract public key from end-entity certificate<a href="#section-3.8-5.6.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.8-5.7">
+            <p id="section-3.8-5.7.1">Verify signature using extracted key<a href="#section-3.8-5.7.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-3.8-5.8">
+            <p id="section-3.8-5.8.1">Cache certificate indexed by <code>x5t</code><a href="#section-3.8-5.8.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+<p id="section-3.8-6"><strong>Example:</strong><a href="#section-3.8-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3.8-7">
 <pre>Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM=:
 
-</pre><a href="#section-3.7-7" class="pilcrow">¶</a>
+</pre><a href="#section-3.8-7" class="pilcrow">¶</a>
 </div>
-<p id="section-3.7-8"><strong>Use cases:</strong><a href="#section-3.7-8" class="pilcrow">¶</a></p>
+<p id="section-3.8-8"><strong>Use cases:</strong><a href="#section-3.8-8" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.7-9.1">
-            <p id="section-3.7-9.1.1">Enterprise environments with PKI infrastructure<a href="#section-3.7-9.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-3.8-9.1">
+            <p id="section-3.8-9.1.1">Enterprise environments with PKI infrastructure<a href="#section-3.8-9.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.7-9.2">
-            <p id="section-3.7-9.2.1">Integration with existing certificate management systems<a href="#section-3.7-9.2.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.8-9.2">
+            <p id="section-3.8-9.2.1">Integration with existing certificate management systems<a href="#section-3.8-9.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.7-9.3">
-            <p id="section-3.7-9.3.1">Scenarios requiring certificate revocation checking<a href="#section-3.7-9.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.8-9.3">
+            <p id="section-3.8-9.3.1">Scenarios requiring certificate revocation checking<a href="#section-3.8-9.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.7-9.4">
-            <p id="section-3.7-9.4.1">Regulated industries requiring certificate-based authentication<a href="#section-3.7-9.4.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.8-9.4">
+            <p id="section-3.8-9.4.1">Regulated industries requiring certificate-based authentication<a href="#section-3.8-9.4.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2029,7 +2127,7 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
                 <code>uri</code>
 </td>
               <td class="text-left" rowspan="1" colspan="1">Key identified by a URI</td>
-              <td class="text-left" rowspan="1" colspan="1">jwks_uri, jwt, x509 (with URI SAN)</td>
+              <td class="text-left" rowspan="1" colspan="1">jwks_uri, jwt, self-jwt, x509 (with URI SAN)</td>
             </tr>
             <tr>
               <td class="text-left" rowspan="1" colspan="1">
@@ -2443,7 +2541,10 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
             <p id="section-6.1-2.4.1"><strong>jwt</strong>: Verify JWT signature per <span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span> and validate embedded JWK per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span><a href="#section-6.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.1-2.5">
-            <p id="section-6.1-2.5.1"><strong>jkt-jwt</strong>: Verify JWT signature per <span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span> using header <code>jwk</code>, validate thumbprint matches <code>iss</code> per <span>[<a href="#RFC7638" class="cite xref">RFC7638</a>]</span>, validate embedded ephemeral JWK per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span><a href="#section-6.1-2.5.1" class="pilcrow">¶</a></p>
+            <p id="section-6.1-2.5.1"><strong>self-jwt</strong>: Verify JWT signature per <span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span> using the key discovered from <code>{iss}/.well-known/{dwk}</code>; reuse that key as the HTTP signing key<a href="#section-6.1-2.5.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.1-2.6">
+            <p id="section-6.1-2.6.1"><strong>jkt-jwt</strong>: Verify JWT signature per <span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span> using header <code>jwk</code>, validate thumbprint matches <code>iss</code> per <span>[<a href="#RFC7638" class="cite xref">RFC7638</a>]</span>, validate embedded ephemeral JWK per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span><a href="#section-6.1-2.6.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2456,7 +2557,7 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
 <p id="section-6.2-1">Verifiers MAY cache keys to improve performance but MUST implement appropriate cache expiration:<a href="#section-6.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-6.2-2.1">
-            <p id="section-6.2-2.1.1"><strong>jwks_uri</strong>: Respect cache-control headers, implement reasonable TTLs<a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-2.1.1"><strong>jwks_uri</strong>: Respect cache-control headers, implement reasonable TTLs. Verifiers MUST NOT refetch a given issuer's JWKS more frequently than once per minute to prevent abuse.<a href="#section-6.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-2.2">
             <p id="section-6.2-2.2.1"><strong>x509</strong>: Cache by <code>x5t</code>, invalidate on certificate expiry<a href="#section-6.2-2.2.1" class="pilcrow">¶</a></p>
@@ -2465,10 +2566,14 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
             <p id="section-6.2-2.3.1"><strong>jwt</strong>: Cache embedded keys until JWT expiration<a href="#section-6.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-6.2-2.4">
-            <p id="section-6.2-2.4.1"><strong>jkt-jwt</strong>: Cache embedded keys until JWT expiration; cache by <code>iss</code> thumbprint URI<a href="#section-6.2-2.4.1" class="pilcrow">¶</a></p>
+            <p id="section-6.2-2.4.1"><strong>self-jwt</strong>: Cache discovered keys until JWT expiration; cache by <code>iss</code> + <code>kid</code><a href="#section-6.2-2.4.1" class="pilcrow">¶</a></p>
+</li>
+          <li class="normal" id="section-6.2-2.5">
+            <p id="section-6.2-2.5.1"><strong>jkt-jwt</strong>: Cache embedded keys until JWT expiration; cache by <code>iss</code> thumbprint URI<a href="#section-6.2-2.5.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-6.2-3">Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+<p id="section-6.2-4">When the <code>Signature-Key</code> scheme is <code>jwks_uri</code> and a cached key matching the JWT <code>kid</code> fails signature verification, the verifier SHOULD refresh the issuer's JWKS once and retry verification before returning <code>unknown_key</code> (if the key is then absent) or <code>invalid_jwt</code> (if verification still fails), subject to the once-per-minute fetch floor and egress admission (§Scheme-Specific Risks) that apply to unknown-<code>kid</code> refreshes. This covers silent re-keying where the issuer replaces key material under the same <code>kid</code> without changing the identifier.<a href="#section-6.2-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="scheme-specific-risks">
@@ -2479,8 +2584,24 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
 <p id="section-6.3-1"><strong>hwk</strong>: No identity verification - suitable only for scenarios where pseudonymous access is acceptable.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
 <p id="section-6.3-2"><strong>jkt-jwt</strong>: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the <code>jwt</code> scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The <code>exp</code> claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised. Implementations SHOULD use the shortest practical lifetime. The <code>iss</code> value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected <code>iss</code> from the header <code>jwk</code> and compare by string equality — never trust the <code>iss</code> value alone.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
 <p id="section-6.3-3"><strong>jwks_uri</strong>: Relies on HTTPS security — vulnerable to DNS/CA compromise. Beyond HTTPS validation, nothing prevents an attacker from copying a client's public keys and serving them from a different domain. Verifiers SHOULD verify that the <code>id</code> parameter in the Signature-Key header matches an expected or authorized origin.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
-<p id="section-6.3-4"><strong>jwt</strong>: Delegation trust depends on JWT issuer verification. Verifiers MUST validate JWT signatures and claims before trusting embedded keys.<a href="#section-6.3-4" class="pilcrow">¶</a></p>
-<p id="section-6.3-5"><strong>x509</strong>: Requires robust certificate validation including revocation checking. Verifiers MUST NOT skip certificate chain validation.<a href="#section-6.3-5" class="pilcrow">¶</a></p>
+<p id="section-6.3-4">Because the <code>jwks_uri</code> (and the metadata document that yields it) is controlled by the asserted signer, an unconstrained verifier can be induced to fetch attacker-chosen internal URLs (SSRF). Verifiers MUST apply egress admission before fetching issuer metadata or a <code>jwks_uri</code>:<a href="#section-6.3-4" class="pilcrow">¶</a></p>
+<ul class="compact">
+<li class="compact" id="section-6.3-5.1">Require HTTPS for all outbound fetches.<a href="#section-6.3-5.1" class="pilcrow">¶</a>
+</li>
+          <li class="compact" id="section-6.3-5.2">Enforce response-size and timeout limits.<a href="#section-6.3-5.2" class="pilcrow">¶</a>
+</li>
+          <li class="compact" id="section-6.3-5.3">Refuse or constrain redirects (at minimum, do not follow redirects to a different host).<a href="#section-6.3-5.3" class="pilcrow">¶</a>
+</li>
+          <li class="compact" id="section-6.3-5.4">Reject private, loopback, and link-local destination addresses unless explicitly allowed by deployment configuration.<a href="#section-6.3-5.4" class="pilcrow">¶</a>
+</li>
+          <li class="compact" id="section-6.3-5.5">Defend against DNS rebinding by pinning the resolved IP address for the duration of the connection.<a href="#section-6.3-5.5" class="pilcrow">¶</a>
+</li>
+          <li class="compact" id="section-6.3-5.6">Treat cross-origin <code>jwks_uri</code> URLs (where the JWKS host differs from the metadata host) as requiring explicit deployment admission.<a href="#section-6.3-5.6" class="pilcrow">¶</a>
+</li>
+        </ul>
+<p id="section-6.3-6"><strong>jwt</strong>: Delegation trust depends on JWT issuer verification. Verifiers MUST validate JWT signatures and claims before trusting embedded keys.<a href="#section-6.3-6" class="pilcrow">¶</a></p>
+<p id="section-6.3-7"><strong>self-jwt</strong>: Trust is rooted entirely in the issuer's JWKS. The same SSRF egress admission requirements that apply to <code>jwks_uri</code> and <code>jwt</code> apply here — the <code>iss</code> and <code>dwk</code> values are asserted by the presenter. Verifiers MUST validate that <code>cnf</code> is absent before treating the scheme as self-issued; a JWT containing <code>cnf</code> MUST be rejected. Short JWT lifetimes are especially important because the signing key also authenticates the HTTP request — compromise of the key is immediately exploitable at both layers.<a href="#section-6.3-7" class="pilcrow">¶</a></p>
+<p id="section-6.3-8"><strong>x509</strong>: Requires robust certificate validation including revocation checking. Verifiers MUST NOT skip certificate chain validation.<a href="#section-6.3-8" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="algorithm-selection">
@@ -2488,7 +2609,7 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
         <h3 id="name-algorithm-selection">
 <a href="#section-6.4" class="section-number selfRef">6.4. </a><a href="#name-algorithm-selection" class="section-name selfRef">Algorithm Selection</a>
         </h3>
-<p id="section-6.4-1">The signature algorithm is determined by the key material in Signature-Key, not by the optional <code>alg</code> parameter in Signature-Input (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 2.3). For JWK-based schemes (hwk, jkt-jwt, jwks_uri, jwt), the algorithm is identified by the key type and curve (<code>kty</code> + <code>crv</code>) or by the <code>alg</code> parameter in the JWK (<span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>). For the x509 scheme, the algorithm is determined by the certificate's public key type.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
+<p id="section-6.4-1">The signature algorithm is determined by the key material in Signature-Key, not by the optional <code>alg</code> parameter in Signature-Input (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 2.3). For JWK-based schemes (hwk, jkt-jwt, jwks_uri, jwt, self-jwt), the algorithm is identified by the key type and curve (<code>kty</code> + <code>crv</code>) or by the <code>alg</code> parameter in the JWK (<span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>). For the x509 scheme, the algorithm is determined by the certificate's public key type.<a href="#section-6.4-1" class="pilcrow">¶</a></p>
 <p id="section-6.4-2">If the <code>alg</code> parameter is present in Signature-Input, verifiers MUST verify it is consistent with the key material. If it is absent, verifiers derive the algorithm from the key.<a href="#section-6.4-2" class="pilcrow">¶</a></p>
 <p id="section-6.4-3">Verifiers MUST:<a href="#section-6.4-3" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -2545,7 +2666,7 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
             <p id="section-7.1-2.3.1">Verifiers should not log or retain pseudonymous keys beyond operational necessity.<a href="#section-7.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-7.1-3">The jwks_uri, x509, and jwt schemes reveal signer identity. When a client presents its identity via these schemes, the server learns the client's HTTPS URL or certificate subject, revealing which software is making the request. Servers SHOULD NOT disclose client identity information to third parties without the client operator's consent.<a href="#section-7.1-3" class="pilcrow">¶</a></p>
+<p id="section-7.1-3">The jwks_uri, x509, jwt, and self-jwt schemes reveal signer identity. When a client presents its identity via these schemes, the server learns the client's HTTPS URL or certificate subject, revealing which software is making the request. Servers SHOULD NOT disclose client identity information to third parties without the client operator's consent.<a href="#section-7.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="key-discovery-tracking">
@@ -2553,7 +2674,7 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
         <h3 id="name-key-discovery-tracking">
 <a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-key-discovery-tracking" class="section-name selfRef">Key Discovery Tracking</a>
         </h3>
-<p id="section-7.2-1">The jwks_uri, jwt, and x509 schemes require verifiers to fetch resources from signer-controlled URLs. This creates tracking vectors:<a href="#section-7.2-1" class="pilcrow">¶</a></p>
+<p id="section-7.2-1">The jwks_uri, jwt, self-jwt, and x509 schemes require verifiers to fetch resources from signer-controlled URLs. This creates tracking vectors:<a href="#section-7.2-1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-7.2-2.1">
             <p id="section-7.2-2.1.1">Signers can observe when and from where keys are fetched. In particular, when a server fetches a client's JWKS from <code>jwks_uri</code> at verification time, the fetch reveals to the JWKS host that someone is verifying signatures for that client.<a href="#section-7.2-2.1.1" class="pilcrow">¶</a></p>
@@ -2658,6 +2779,11 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
               <tr>
                 <td class="text-left" rowspan="1" colspan="1">jwt</td>
                 <td class="text-left" rowspan="1" colspan="1">JWT Confirmation Key - delegated key in JWT</td>
+                <td class="text-left" rowspan="1" colspan="1">[this document]</td>
+              </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">self-jwt</td>
+                <td class="text-left" rowspan="1" colspan="1">Self-Issued JWT - signer and issuer are the same party</td>
                 <td class="text-left" rowspan="1" colspan="1">[this document]</td>
               </tr>
               <tr>
@@ -2806,13 +2932,114 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
 </div>
 </section>
 </div>
+<div id="document-history">
 <section id="section-9">
-      <h2 id="name-references">
-<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-references" class="section-name selfRef">References</a>
+      <h2 id="name-document-history">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-document-history" class="section-name selfRef">Document History</a>
       </h2>
-<section id="section-9.1">
+<p id="section-9-1"><em>Note: This section is to be removed before publishing as an RFC.</em><a href="#section-9-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-9-2.1">
+          <p id="section-9-2.1.1">draft-hardt-httpbis-signature-key-06<a href="#section-9-2.1.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-9-2.1.2.1">Added <code>self-jwt</code> as a new standalone scheme for self-issued JWTs where the signer and JWT issuer are the same party. The JWT signing key (discovered via <code>{iss}/.well-known/{dwk}</code>) is reused as the HTTP signing key; no <code>cnf</code> claim is present.<a href="#section-9-2.1.2.1" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-9-2.2">
+          <p id="section-9-2.2.1">draft-hardt-httpbis-signature-key-05<a href="#section-9-2.2.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-9-2.2.2.1">Incorporated implementer feedback from Joshua Gay (sidecat).<a href="#section-9-2.2.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.2.2.2">SSRF / egress admission: extended the <code>jwks_uri</code> risk bullet with a mandatory egress-admission checklist covering HTTPS, size/timeout limits, redirect policy, private/loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.<a href="#section-9-2.2.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.2.2.3">Caching: added once-per-minute fetch floor to the <code>jwks_uri</code> cache bullet; added same-<code>kid</code> signature-failure refresh rule — one JWKS refresh and retry before returning <code>unknown_key</code> or <code>invalid_jwt</code>, subject to the same floor and egress-admission policy as unknown-<code>kid</code> refreshes.<a href="#section-9-2.2.2.3" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.2.2.4">
+              <code>jkt-jwt</code>: added algorithm note after the worked example — the stable (enclave) key algorithm is enclave-determined; deployments supporting Ed25519 or other stable-key algorithms SHOULD document this explicitly.<a href="#section-9-2.2.2.4" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.2.2.5">Added Joshua Gay to acknowledgments.<a href="#section-9-2.2.2.5" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-9-2.3">
+          <p id="section-9-2.3.1">draft-hardt-httpbis-signature-key-04<a href="#section-9-2.3.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-9-2.3.2.1">Renamed spec from "HTTP Signature-Key Header" to "HTTP Signature Keys"<a href="#section-9-2.3.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.3.2.2">Added <code>sigkey</code> parameter for Accept-Signature (RFC 9421 Section 5) with three values: <code>jkt</code> (pseudonymous), <code>uri</code> (URI-identified), <code>x509</code> (PKI certificate)<a href="#section-9-2.3.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.3.2.3">Added Signature-Error response header for structured signature verification error responses<a href="#section-9-2.3.2.3" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.3.2.4">Added incremental adoption section describing zero-coordination deployment via 429/401/402 status codes<a href="#section-9-2.3.2.4" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.3.2.5">Added privacy considerations for key thumbprint tracking, agent identity disclosure, and JWKS fetch side channel<a href="#section-9-2.3.2.5" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.3.2.6">Registered <code>sigkey</code> in the HTTP Signature Metadata Parameters registry (RFC 9421 Section 6.3)<a href="#section-9-2.3.2.6" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.3.2.7">Established Signature Error Code Registry<a href="#section-9-2.3.2.7" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-9-2.4">
+          <p id="section-9-2.4.1">draft-hardt-httpbis-signature-key-03<a href="#section-9-2.4.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-9-2.4.2.1">Added jkt-jwt scheme for self-issued key delegation<a href="#section-9-2.4.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.4.2.2">Renamed <code>well-known</code> parameter to <code>dwk</code> (dot well-known)<a href="#section-9-2.4.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.4.2.3">Added <code>iss</code> and <code>dwk</code> claims to jwt scheme (SHOULD) for issuer key discovery<a href="#section-9-2.4.2.3" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.4.2.4">Added early validation step to jwt verification procedure (format, typ, exp checks before network fetches)<a href="#section-9-2.4.2.4" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.4.2.5">Added TOFU reference (RFC 7435) to jkt-jwt scheme<a href="#section-9-2.4.2.5" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.4.2.6">Added design rationale for jwks_uri vs inline JWKS<a href="#section-9-2.4.2.6" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.4.2.7">Moved hwk string vs byte sequence design note to rationale appendix<a href="#section-9-2.4.2.7" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.4.2.8">Reordered schemes<a href="#section-9-2.4.2.8" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.4.2.9">Added acknowledgments<a href="#section-9-2.4.2.9" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-9-2.5">
+          <p id="section-9-2.5.1">draft-hardt-httpbis-signature-key-02<a href="#section-9-2.5.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-9-2.5.2.1">Changed x5t parameter to byte sequence per reviewer feedback<a href="#section-9-2.5.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.5.2.2">Added structured field types to all parameters<a href="#section-9-2.5.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-9-2.5.2.3">Added design note explaining string vs byte sequence choice for hwk<a href="#section-9-2.5.2.3" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-9-2.6">
+          <p id="section-9-2.6.1">draft-hardt-httpbis-signature-key-01<a href="#section-9-2.6.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-9-2.6.2.1">Initial public draft with four schemes: hwk, jwks_uri, x509, jwt<a href="#section-9-2.6.2.1" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+      </ul>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="section-10">
+      <h2 id="name-acknowledgments">
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
+      </h2>
+<p id="section-10-1">The author would like to thank Joshua Gay and Yaron Sheffer for their feedback on this specification.<a href="#section-10-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<section id="section-11">
+      <h2 id="name-references">
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<section id="section-11.1">
         <h3 id="name-normative-references">
-<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-11.1" class="section-number selfRef">11.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
         </h3>
 <dl class="references">
 <dt id="RFC3553">[RFC3553]</dt>
@@ -2861,9 +3088,9 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
 <dd class="break"></dd>
 </dl>
 </section>
-<section id="section-9.2">
+<section id="section-11.2">
         <h3 id="name-informative-references">
-<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+<a href="#section-11.2" class="section-number selfRef">11.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
         </h3>
 <dl class="references">
 <dt id="I-D.ryan-httpauth-payment">[I-D.ryan-httpauth-payment]</dt>
@@ -2889,181 +3116,89 @@ Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=jkt
 </dl>
 </section>
 </section>
-<div id="document-history">
-<section id="appendix-A">
-      <h2 id="name-document-history">
-<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-document-history" class="section-name selfRef">Document History</a>
-      </h2>
-<p id="appendix-A-1"><em>Note: This section is to be removed before publishing as an RFC.</em><a href="#appendix-A-1" class="pilcrow">¶</a></p>
-<div id="draft-hardt-httpbis-signature-key-04">
-<section id="appendix-A.1">
-        <h3 id="name-draft-hardt-httpbis-signatu">
-<a href="#appendix-A.1" class="section-number selfRef">A.1. </a><a href="#name-draft-hardt-httpbis-signatu" class="section-name selfRef">draft-hardt-httpbis-signature-key-04</a>
-        </h3>
-<ul class="compact">
-<li class="compact" id="appendix-A.1-1.1">Renamed spec from "HTTP Signature-Key Header" to "HTTP Signature Keys"<a href="#appendix-A.1-1.1" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.1-1.2">Added <code>sigkey</code> parameter for Accept-Signature (RFC 9421 Section 5) with three values: <code>jkt</code> (pseudonymous), <code>uri</code> (URI-identified), <code>x509</code> (PKI certificate)<a href="#appendix-A.1-1.2" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.1-1.3">Added Signature-Error response header for structured signature verification error responses<a href="#appendix-A.1-1.3" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.1-1.4">Added incremental adoption section describing zero-coordination deployment via 429/401/402 status codes<a href="#appendix-A.1-1.4" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.1-1.5">Added privacy considerations for key thumbprint tracking, agent identity disclosure, and JWKS fetch side channel<a href="#appendix-A.1-1.5" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.1-1.6">Registered <code>sigkey</code> in the HTTP Signature Metadata Parameters registry (RFC 9421 Section 6.3)<a href="#appendix-A.1-1.6" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.1-1.7">Established Signature Error Code Registry<a href="#appendix-A.1-1.7" class="pilcrow">¶</a>
-</li>
-        </ul>
-</section>
-</div>
-<div id="draft-hardt-httpbis-signature-key-03">
-<section id="appendix-A.2">
-        <h3 id="name-draft-hardt-httpbis-signatur">
-<a href="#appendix-A.2" class="section-number selfRef">A.2. </a><a href="#name-draft-hardt-httpbis-signatur" class="section-name selfRef">draft-hardt-httpbis-signature-key-03</a>
-        </h3>
-<ul class="compact">
-<li class="compact" id="appendix-A.2-1.1">Added jkt-jwt scheme for self-issued key delegation<a href="#appendix-A.2-1.1" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.2-1.2">Renamed <code>well-known</code> parameter to <code>dwk</code> (dot well-known)<a href="#appendix-A.2-1.2" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.2-1.3">Added <code>iss</code> and <code>dwk</code> claims to jwt scheme (SHOULD) for issuer key discovery<a href="#appendix-A.2-1.3" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.2-1.4">Added early validation step to jwt verification procedure (format, typ, exp checks before network fetches)<a href="#appendix-A.2-1.4" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.2-1.5">Added TOFU reference (RFC 7435) to jkt-jwt scheme<a href="#appendix-A.2-1.5" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.2-1.6">Added design rationale for jwks_uri vs inline JWKS<a href="#appendix-A.2-1.6" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.2-1.7">Moved hwk string vs byte sequence design note to rationale appendix<a href="#appendix-A.2-1.7" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.2-1.8">Reordered schemes<a href="#appendix-A.2-1.8" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.2-1.9">Added acknowledgments<a href="#appendix-A.2-1.9" class="pilcrow">¶</a>
-</li>
-        </ul>
-</section>
-</div>
-<div id="draft-hardt-httpbis-signature-key-02">
-<section id="appendix-A.3">
-        <h3 id="name-draft-hardt-httpbis-signature">
-<a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-draft-hardt-httpbis-signature" class="section-name selfRef">draft-hardt-httpbis-signature-key-02</a>
-        </h3>
-<ul class="compact">
-<li class="compact" id="appendix-A.3-1.1">Changed x5t parameter to byte sequence per reviewer feedback<a href="#appendix-A.3-1.1" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.3-1.2">Added structured field types to all parameters<a href="#appendix-A.3-1.2" class="pilcrow">¶</a>
-</li>
-          <li class="compact" id="appendix-A.3-1.3">Added design note explaining string vs byte sequence choice for hwk<a href="#appendix-A.3-1.3" class="pilcrow">¶</a>
-</li>
-        </ul>
-</section>
-</div>
-<div id="draft-hardt-httpbis-signature-key-01">
-<section id="appendix-A.4">
-        <h3 id="name-draft-hardt-httpbis-signature-">
-<a href="#appendix-A.4" class="section-number selfRef">A.4. </a><a href="#name-draft-hardt-httpbis-signature-" class="section-name selfRef">draft-hardt-httpbis-signature-key-01</a>
-        </h3>
-<ul class="compact">
-<li class="compact" id="appendix-A.4-1.1">Initial public draft with four schemes: hwk, jwks_uri, x509, jwt<a href="#appendix-A.4-1.1" class="pilcrow">¶</a>
-</li>
-        </ul>
-</section>
-</div>
-</section>
-</div>
 <div id="design-rationale">
-<section id="appendix-B">
+<section id="appendix-A">
       <h2 id="name-design-rationale">
-<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-design-rationale" class="section-name selfRef">Design Rationale</a>
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-design-rationale" class="section-name selfRef">Design Rationale</a>
       </h2>
 <div id="why-jwks-uri-instead-of-inline-jwks">
-<section id="appendix-B.1">
+<section id="appendix-A.1">
         <h3 id="name-why-jwks_uri-instead-of-inl">
-<a href="#appendix-B.1" class="section-number selfRef">B.1. </a><a href="#name-why-jwks_uri-instead-of-inl" class="section-name selfRef">Why jwks_uri Instead of Inline JWKS?</a>
+<a href="#appendix-A.1" class="section-number selfRef">A.1. </a><a href="#name-why-jwks_uri-instead-of-inl" class="section-name selfRef">Why jwks_uri Instead of Inline JWKS?</a>
         </h3>
-<p id="appendix-B.1-1">The <code>jwks_uri</code> and <code>jwt</code> schemes reference a <code>jwks_uri</code> property in the <code>.well-known</code> metadata document rather than embedding the JWKS directly in the metadata. This separation of concerns is deliberate:<a href="#appendix-B.1-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.1-2">
-<li id="appendix-B.1-2.1">
-            <p id="appendix-B.1-2.1.1"><strong>Independent key rotation</strong>: Keys can be rotated by updating the JWKS endpoint without modifying the <code>.well-known</code> metadata document. This decouples key lifecycle management from configuration management, allowing operations teams to rotate keys on their own schedule without redeploying metadata.<a href="#appendix-B.1-2.1.1" class="pilcrow">¶</a></p>
+<p id="appendix-A.1-1">The <code>jwks_uri</code> and <code>jwt</code> schemes reference a <code>jwks_uri</code> property in the <code>.well-known</code> metadata document rather than embedding the JWKS directly in the metadata. This separation of concerns is deliberate:<a href="#appendix-A.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="appendix-A.1-2">
+<li id="appendix-A.1-2.1">
+            <p id="appendix-A.1-2.1.1"><strong>Independent key rotation</strong>: Keys can be rotated by updating the JWKS endpoint without modifying the <code>.well-known</code> metadata document. This decouples key lifecycle management from configuration management, allowing operations teams to rotate keys on their own schedule without redeploying metadata.<a href="#appendix-A.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.1-2.2">
-            <p id="appendix-B.1-2.2.1"><strong>Independent management</strong>: The <code>.well-known</code> metadata document and the JWKS can be hosted, managed, and secured by different systems or teams. For example, an identity team may manage keys while a platform team manages service metadata.<a href="#appendix-B.1-2.2.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.1-2.2">
+            <p id="appendix-A.1-2.2.1"><strong>Independent management</strong>: The <code>.well-known</code> metadata document and the JWKS can be hosted, managed, and secured by different systems or teams. For example, an identity team may manage keys while a platform team manages service metadata.<a href="#appendix-A.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.1-2.3">
-            <p id="appendix-B.1-2.3.1"><strong>Caching semantics</strong>: The JWKS endpoint can have its own cache-control headers tuned for key rotation frequency (e.g., short TTLs during a rotation event), independent of the <code>.well-known</code> document's caching policy.<a href="#appendix-B.1-2.3.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.1-2.3">
+            <p id="appendix-A.1-2.3.1"><strong>Caching semantics</strong>: The JWKS endpoint can have its own cache-control headers tuned for key rotation frequency (e.g., short TTLs during a rotation event), independent of the <code>.well-known</code> document's caching policy.<a href="#appendix-A.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.1-2.4">
-            <p id="appendix-B.1-2.4.1"><strong>Consistency with existing standards</strong>: This approach mirrors the pattern established by OpenID Connect Discovery <span>[<a href="#OpenID.Discovery" class="cite xref">OpenID.Discovery</a>]</span> and OAuth Authorization Server Metadata <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>, which both use <code>jwks_uri</code> in metadata documents for the same reasons.<a href="#appendix-B.1-2.4.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.1-2.4">
+            <p id="appendix-A.1-2.4.1"><strong>Consistency with existing standards</strong>: This approach mirrors the pattern established by OpenID Connect Discovery <span>[<a href="#OpenID.Discovery" class="cite xref">OpenID.Discovery</a>]</span> and OAuth Authorization Server Metadata <span>[<a href="#RFC8414" class="cite xref">RFC8414</a>]</span>, which both use <code>jwks_uri</code> in metadata documents for the same reasons.<a href="#appendix-A.1-2.4.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
 </section>
 </div>
 <div id="why-a-separate-header">
-<section id="appendix-B.2">
+<section id="appendix-A.2">
         <h3 id="name-why-a-separate-header">
-<a href="#appendix-B.2" class="section-number selfRef">B.2. </a><a href="#name-why-a-separate-header" class="section-name selfRef">Why a Separate Header?</a>
+<a href="#appendix-A.2" class="section-number selfRef">A.2. </a><a href="#name-why-a-separate-header" class="section-name selfRef">Why a Separate Header?</a>
         </h3>
-<p id="appendix-B.2-1">An alternative design would extend Signature-Input with additional parameters to carry key material. This was considered and rejected for several reasons:<a href="#appendix-B.2-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.2-2">
-<li id="appendix-B.2-2.1">
-            <p id="appendix-B.2-2.1.1"><strong>Parameter complexity</strong>: Each scheme has a different set of parameters (e.g., <code>hwk</code> needs <code>kty</code>, <code>crv</code>, <code>x</code>, <code>y</code>; <code>jwks_uri</code> needs <code>id</code>, <code>dwk</code>, <code>kid</code>; <code>jwt</code> needs a full JWT string). Overloading Signature-Input with all possible key parameters across all schemes would make the Signature-Input grammar unwieldy and harder to parse.<a href="#appendix-B.2-2.1.1" class="pilcrow">¶</a></p>
+<p id="appendix-A.2-1">An alternative design would extend Signature-Input with additional parameters to carry key material. This was considered and rejected for several reasons:<a href="#appendix-A.2-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="appendix-A.2-2">
+<li id="appendix-A.2-2.1">
+            <p id="appendix-A.2-2.1.1"><strong>Parameter complexity</strong>: Each scheme has a different set of parameters (e.g., <code>hwk</code> needs <code>kty</code>, <code>crv</code>, <code>x</code>, <code>y</code>; <code>jwks_uri</code> needs <code>id</code>, <code>dwk</code>, <code>kid</code>; <code>jwt</code> needs a full JWT string). Overloading Signature-Input with all possible key parameters across all schemes would make the Signature-Input grammar unwieldy and harder to parse.<a href="#appendix-A.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.2-2.2">
-            <p id="appendix-B.2-2.2.1"><strong>Separation of concerns</strong>: Signature-Input describes <em>what</em> is signed and <em>how</em> (covered components, algorithm, timestamps). Signature-Key describes <em>who</em> signed it and <em>where to find the key</em>. These are distinct concerns, and separating them into distinct headers makes each easier to understand and process independently.<a href="#appendix-B.2-2.2.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.2-2.2">
+            <p id="appendix-A.2-2.2.1"><strong>Separation of concerns</strong>: Signature-Input describes <em>what</em> is signed and <em>how</em> (covered components, algorithm, timestamps). Signature-Key describes <em>who</em> signed it and <em>where to find the key</em>. These are distinct concerns, and separating them into distinct headers makes each easier to understand and process independently.<a href="#appendix-A.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.2-2.3">
-            <p id="appendix-B.2-2.3.1"><strong>Extensibility</strong>: A separate header with a scheme registry allows new key distribution mechanisms to be added without modifying the Signature-Input grammar. New schemes can define arbitrary parameters without coordination with RFC 9421.<a href="#appendix-B.2-2.3.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.2-2.3">
+            <p id="appendix-A.2-2.3.1"><strong>Extensibility</strong>: A separate header with a scheme registry allows new key distribution mechanisms to be added without modifying the Signature-Input grammar. New schemes can define arbitrary parameters without coordination with RFC 9421.<a href="#appendix-A.2-2.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.2-2.4">
-            <p id="appendix-B.2-2.4.1"><strong>Multiple signatures</strong>: With a dictionary structure keyed by label, each signature can use a different scheme. This is natural in a separate header but would create complex nesting if embedded in Signature-Input.<a href="#appendix-B.2-2.4.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.2-2.4">
+            <p id="appendix-A.2-2.4.1"><strong>Multiple signatures</strong>: With a dictionary structure keyed by label, each signature can use a different scheme. This is natural in a separate header but would create complex nesting if embedded in Signature-Input.<a href="#appendix-A.2-2.4.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
 </section>
 </div>
 <div id="why-schemes-instead-of-just-a-key-and-key-id">
-<section id="appendix-B.3">
+<section id="appendix-A.3">
         <h3 id="name-why-schemes-instead-of-just">
-<a href="#appendix-B.3" class="section-number selfRef">B.3. </a><a href="#name-why-schemes-instead-of-just" class="section-name selfRef">Why Schemes Instead of Just a Key and Key ID?</a>
+<a href="#appendix-A.3" class="section-number selfRef">A.3. </a><a href="#name-why-schemes-instead-of-just" class="section-name selfRef">Why Schemes Instead of Just a Key and Key ID?</a>
         </h3>
-<p id="appendix-B.3-1">A simpler design would define Signature-Key as carrying only a public key (or key reference) and a key identifier, without the scheme abstraction. This was considered insufficient because:<a href="#appendix-B.3-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="appendix-B.3-2">
-<li id="appendix-B.3-2.1">
-            <p id="appendix-B.3-2.1.1"><strong>Trust model varies</strong>: A bare key tells the verifier nothing about the trust model. Is this a pseudonymous key to be evaluated on its own merits (hwk)? A key bound to a discoverable identity (jwks_uri)? A delegated key from an authority (jwt)? A certificate-backed key (x509)? The scheme token tells the verifier which verification procedure to follow and what trust properties the key carries.<a href="#appendix-B.3-2.1.1" class="pilcrow">¶</a></p>
+<p id="appendix-A.3-1">A simpler design would define Signature-Key as carrying only a public key (or key reference) and a key identifier, without the scheme abstraction. This was considered insufficient because:<a href="#appendix-A.3-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="appendix-A.3-2">
+<li id="appendix-A.3-2.1">
+            <p id="appendix-A.3-2.1.1"><strong>Trust model varies</strong>: A bare key tells the verifier nothing about the trust model. Is this a pseudonymous key to be evaluated on its own merits (hwk)? A key bound to a discoverable identity (jwks_uri)? A delegated key from an authority (jwt)? A certificate-backed key (x509)? The scheme token tells the verifier which verification procedure to follow and what trust properties the key carries.<a href="#appendix-A.3-2.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.3-2.2">
-            <p id="appendix-B.3-2.2.1"><strong>Verification procedure differs</strong>: Each scheme has a fundamentally different verification path. <code>hwk</code> requires no external fetches. <code>jwks_uri</code> requires metadata discovery. <code>x509</code> requires certificate chain validation. <code>jwt</code> requires JWT signature verification before the HTTP signature can be verified. A key-and-ID-only design would push scheme detection to heuristics or out-of-band agreement.<a href="#appendix-B.3-2.2.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.3-2.2">
+            <p id="appendix-A.3-2.2.1"><strong>Verification procedure differs</strong>: Each scheme has a fundamentally different verification path. <code>hwk</code> requires no external fetches. <code>jwks_uri</code> requires metadata discovery. <code>x509</code> requires certificate chain validation. <code>jwt</code> requires JWT signature verification before the HTTP signature can be verified. A key-and-ID-only design would push scheme detection to heuristics or out-of-band agreement.<a href="#appendix-A.3-2.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.3-2.3">
-            <p id="appendix-B.3-2.3.1"><strong>Security properties differ</strong>: Without an explicit scheme, a verifier cannot distinguish between a self-asserted key and a CA-certified key. The scheme makes the trust model explicit, allowing verifiers to enforce policy (e.g., "only accept <code>jwt</code> or <code>x509</code> schemes").<a href="#appendix-B.3-2.3.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.3-2.3">
+            <p id="appendix-A.3-2.3.1"><strong>Security properties differ</strong>: Without an explicit scheme, a verifier cannot distinguish between a self-asserted key and a CA-certified key. The scheme makes the trust model explicit, allowing verifiers to enforce policy (e.g., "only accept <code>jwt</code> or <code>x509</code> schemes").<a href="#appendix-A.3-2.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="appendix-B.3-2.4">
-            <p id="appendix-B.3-2.4.1"><strong>Interoperability</strong>: Explicit schemes create clear interoperability targets. Two implementations that support the <code>jwt</code> scheme know exactly what to expect from each other. Without schemes, the same key material could be interpreted differently by different implementations.<a href="#appendix-B.3-2.4.1" class="pilcrow">¶</a></p>
+          <li id="appendix-A.3-2.4">
+            <p id="appendix-A.3-2.4.1"><strong>Interoperability</strong>: Explicit schemes create clear interoperability targets. Two implementations that support the <code>jwt</code> scheme know exactly what to expect from each other. Without schemes, the same key material could be interpreted differently by different implementations.<a href="#appendix-A.3-2.4.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
 </section>
 </div>
 <div id="why-strings-instead-of-byte-sequences-for-hwk">
-<section id="appendix-B.4">
+<section id="appendix-A.4">
         <h3 id="name-why-strings-instead-of-byte">
-<a href="#appendix-B.4" class="section-number selfRef">B.4. </a><a href="#name-why-strings-instead-of-byte" class="section-name selfRef">Why Strings Instead of Byte Sequences for hwk?</a>
+<a href="#appendix-A.4" class="section-number selfRef">A.4. </a><a href="#name-why-strings-instead-of-byte" class="section-name selfRef">Why Strings Instead of Byte Sequences for hwk?</a>
         </h3>
-<p id="appendix-B.4-1">The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>, while structured field byte sequences use base64 encoding per <span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.<a href="#appendix-B.4-1" class="pilcrow">¶</a></p>
+<p id="appendix-A.4-1">The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>, while structured field byte sequences use base64 encoding per <span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.<a href="#appendix-A.4-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-</section>
-</div>
-<div id="acknowledgments">
-<section id="appendix-C">
-      <h2 id="name-acknowledgments">
-<a href="#appendix-C" class="section-number selfRef">Appendix C. </a><a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
-      </h2>
-<p id="appendix-C-1">The author would like to thank Yaron Sheffer for their feedback on this specification.<a href="#appendix-C-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">
-<section id="appendix-D">
+<section id="appendix-B">
       <h2 id="name-authors-addresses">
 <a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
