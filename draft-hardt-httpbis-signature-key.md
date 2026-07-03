@@ -20,7 +20,7 @@ surname = "Hardt"
 fullname = "Dick Hardt"
 organization = "Hellō"
   [author.address]
-  email = "dick.hardt@hello.coop"
+  email = "dick.hardt@gmail.com"
 
 [[author]]
 initials = "T."
