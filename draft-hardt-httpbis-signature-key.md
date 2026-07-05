@@ -100,6 +100,8 @@ This document defines:
 
 The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.
 
+The mechanisms in this document were designed as general-purpose building blocks and are used by other specifications. In the AAuth protocol [@?I-D.hardt-oauth-aauth-protocol], all parties communicate using Signature-Key to distribute the keys that verify their signed requests. Email Verification [@?I-D.hardt-email-verification] uses the `hwk` scheme to convey the browser's public key so the issuer can bind it into the verification token it issues. Additional protocols can adopt these mechanisms without further coordination.
+
 # Signature-Key HTTP Request Header
 
 The `Signature-Key` header provides the public key or key reference needed to verify an HTTP Message Signature. It is a Structured Field Dictionary [@!RFC8941] keyed by signature label, where each member describes how to obtain the verification key for the corresponding signature.
