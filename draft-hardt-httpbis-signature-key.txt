@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 4 January 2027                                       Cloudflare
-                                                             3 July 2026
+Expires: 6 January 2027                                       Cloudflare
+                                                             5 July 2026
 
 
                           HTTP Signature Keys
@@ -53,7 +53,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 January 2027.
+   This Internet-Draft will expire on 6 January 2027.
 
 Copyright Notice
 
@@ -191,6 +191,15 @@ Table of Contents
    The Signature-Key header works in conjunction with the Signature-
    Input and Signature headers defined in RFC 9421, using matching
    labels to correlate signature metadata with keying material.
+
+   The mechanisms in this document were designed as general-purpose
+   building blocks and are used by other specifications.  In the AAuth
+   protocol [I-D.hardt-oauth-aauth-protocol], all parties communicate
+   using Signature-Key to distribute the keys that verify their signed
+   requests.  Email Verification [I-D.hardt-email-verification] uses the
+   hwk scheme to convey the browser's public key so the issuer can bind
+   it into the verification token it issues.  Additional protocols can
+   adopt these mechanisms without further coordination.
 
 3.  Signature-Key HTTP Request Header
 
@@ -1650,6 +1659,19 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
 11.2.  Informative References
 
+   [I-D.hardt-email-verification]
+              Hardt, D. and S. Goto, "Email Verification Protocol", Work
+              in Progress, Internet-Draft, draft-hardt-email-
+              verification-00, 17 June 2026,
+              <https://datatracker.ietf.org/doc/html/draft-hardt-email-
+              verification-00>.
+
+   [I-D.hardt-oauth-aauth-protocol]
+              Hardt, D., "AAuth Protocol", Work in Progress, Internet-
+              Draft, draft-hardt-oauth-aauth-protocol-08, 24 June 2026,
+              <https://datatracker.ietf.org/doc/html/draft-hardt-oauth-
+              aauth-protocol-08>.
+
    [I-D.ryan-httpauth-payment]
               Ryan, B., Moxey, J., Meagher, T., Weinstein, J., and S.
               Kaliski, "The "Payment" HTTP Authentication Scheme", Work
@@ -1781,7 +1803,7 @@ Authors' Addresses
 
    Dick Hardt
    Hellō
-   Email: dick.hardt@hello.coop
+   Email: dick.hardt@gmail.com
 
 
    Thibault Meunier
