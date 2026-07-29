@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 19 January 2027                                      Cloudflare
-                                                            18 July 2026
+Expires: 30 January 2027                                      Cloudflare
+                                                            29 July 2026
 
 
                           HTTP Signature Keys
@@ -53,7 +53,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 19 January 2027.
+   This Internet-Draft will expire on 30 January 2027.
 
 Copyright Notice
 
@@ -1586,7 +1586,7 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
    _Note: This section is to be removed before publishing as an RFC._
 
-   *  draft-hardt-httpbis-signature-key-08
+   *  draft-hardt-httpbis-signature-key-07
 
       -  IANA review feedback: added Designated Expert Instructions for
          the HTTP Signature-Key Scheme and Signature Error Code
