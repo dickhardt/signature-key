@@ -283,7 +283,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
 - Rate limiting and reputation building on a per-key basis
 
-## JKT JWT Self-Issued Key Delegation (jkt-jwt)
+## JKT JWT Self-Issued Key Delegation (jkt-jwt) {#jkt-jwt-scheme}
 
 The jkt-jwt scheme (pronounced "jacket jot") provides self-issued key delegation using a JWT whose signing key is embedded in the JWT header. This enables devices with hardware-backed secure enclaves to delegate signing authority to ephemeral keys, avoiding the performance cost of repeated enclave operations while maintaining a cryptographic chain of trust rooted in the enclave key.
 
@@ -302,6 +302,8 @@ The enclave key's JWK Thumbprint URI (`urn:jkt:<hash-algorithm>:<thumbprint>`) s
 **Parameters:**
 
 - `jwt` (REQUIRED, String) - Compact-serialized JWT
+
+- `cache` (OPTIONAL, Boolean) - As for the jwt scheme ((#jwt-confirmation-key-jwt)): the caller indicates it can present a cache identifier on subsequent requests and requests that the verifier issue one. A JWT presented with `cache` MUST contain a `jti` claim. See (#signature-key-cache-response-header).
 
 **JWT requirements:**
 
@@ -322,6 +324,8 @@ Payload:
 - `exp` (REQUIRED) - Expiration timestamp
 
 - `cnf` (REQUIRED) - Confirmation claim [@!RFC7800] containing `jwk`: the ephemeral public key delegated for HTTP message signing
+
+- `jti` (OPTIONAL) - Unique identifier for this delegation. REQUIRED when the JWT is presented with the `cache` parameter, since a cacheable assertion must be identifiable ((#signature-key-cache-response-header)). The `iss` thumbprint does not serve: it names the enclave key, so successive delegations from one enclave share it.
 
 The `sub` claim is not used. The identity is the enclave key itself, fully represented by the `iss` thumbprint.
 
@@ -405,6 +409,10 @@ The stable (enclave) key algorithm in the JWT `alg` header is determined by what
 10. Extract the ephemeral public key from `cnf.jwk`
 
 11. Verify the HTTP Message Signature using the ephemeral key
+
+**Caching:**
+
+A jkt-jwt carries the enclave public key in its header and is signed by that key, so it is the largest assertion this document defines when the enclave key is post-quantum, and the most expensive to verify. Caching it ((#signature-key-cache-response-header)) removes both costs from the steady state: the key and its signature are transmitted once, and the thumbprint computation and JWT signature verification are performed once rather than on every request. The per-request signature continues to use the ephemeral `cnf.jwk` key.
 
 **Use cases:**
 
@@ -593,6 +601,8 @@ The self-jwt scheme carries a signed JWT where the JWT issuer and the HTTP reque
 - MUST NOT contain `cnf` claim
 
 - SHOULD contain standard claims: `sub`, `aud`, `exp`, `iat`
+
+The self-jwt scheme does not support the `cache` parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. Assertion caching resolves a cache identifier to an assertion and takes the confirmation key from it ((#cached-scheme)); a self-jwt has no `cnf` claim, and its signing key is discovered from the issuer's JWKS rather than carried in the assertion, so there is no key to recover by resolution alone. A self-jwt is also small, carrying no embedded key, and typically carries claims specific to the request it accompanies, so there is little to be saved by referencing it instead of sending it.
 
 - Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
 
@@ -1023,7 +1033,7 @@ Signature-Error: error=expired_jwt
 
 # Signature-Key-Cache Response Header {#signature-key-cache-response-header}
 
-A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal ((#jwt-confirmation-key-jwt)), MAY return the `Signature-Key-Cache` response header to issue the caller a cache identifier for later reference.
+A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal on the presented scheme ((#jwt-confirmation-key-jwt), (#jkt-jwt-scheme)), MAY return the `Signature-Key-Cache` response header to issue the caller a cache identifier for later reference.
 
 `Signature-Key-Cache` is a Dictionary ([@!RFC8941], Section 3.2) keyed by the signature label whose assertion was cached.
 
@@ -1033,7 +1043,7 @@ The cache identifier is opaque to the caller. A verifier chooses its own form: a
 
 The member's parameters describe the cached assertion:
 
-- `jti` (String, OPTIONAL): The `jti` claim of the cached assertion ([@!RFC7519], Section 4.1.7), echoed so the caller can associate the cache identifier with the assertion's own identity rather than with the per-request signature label. A JWT is cacheable only if it carries a `jti` ((#jwt-confirmation-key-jwt)), so this value always exists; a verifier SHOULD include it when a caller may have more than one assertion in flight.
+- `jti` (String, OPTIONAL): The `jti` claim of the cached assertion ([@!RFC7519], Section 4.1.7), echoed so the caller can associate the cache identifier with the assertion's own identity rather than with the per-request signature label. A JWT is cacheable only if it carries a `jti` ((#jwt-confirmation-key-jwt), (#jkt-jwt-scheme)), so this value always exists; a verifier SHOULD include it when a caller may have more than one assertion in flight.
 
 - `expires` (Integer, OPTIONAL): An advisory time, in seconds since the Unix epoch, after which the verifier may no longer honor the cache identifier. When present it MUST NOT be later than the assertion's own expiry. This is advisory; the caller MUST be prepared for a cache miss ((#cache_miss)) at any time regardless of `expires`.
 
@@ -1380,7 +1390,7 @@ This document establishes the "Signature Error Code" registry. New values may be
   - Required defined rejection of unimplemented JWK key types, including the `AKP` type from RFC 9964, reported via `unsupported_algorithm`.
   - Noted that ML-DSA identifiers are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.
   - Added a Problem Statement section stating the gaps this document addresses and the invariants that follow.
-  - Added assertion caching: the `cached` scheme carrying a verifier-issued `cid`, the `cache` signal on the jwt scheme, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. A JWT is cacheable only if it carries a `jti`. Implementation is optional; the degradation behavior is not.
+  - Added assertion caching: the `cached` scheme carrying a verifier-issued `cid`, the `cache` signal on the jwt and jkt-jwt schemes, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. A JWT is cacheable only if it carries a `jti`. The self-jwt scheme is explicitly excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not.
   - Added the `unsupported_scheme` error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.
   - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
 
@@ -1512,6 +1522,8 @@ Adding header fields here does not contradict the argument against per-scheme ke
 ## Layered Cryptographic Agility
 
 Post-quantum protection is applied to artifacts whose authenticity must survive into the quantum era: durable, consequential, or retained assertions. The per-request HTTP Message Signature is ephemeral, replay-bounded proof of possession that no verifier accepts outside its short window, and so does not face a harvest-now-forge-later threat; it MAY continue to use a classical algorithm such as Ed25519 in a post-quantum deployment. Ed25519 is not itself post-quantum; the claim here is that it remains acceptable for ephemeral per-request authentication in a post-quantum setting, which is a statement about the threat model for short-lived authentication signatures rather than about the algorithm's quantum resistance. The agent's proof-of-possession key is itself short-lived and is carried within the assertion, so its exploitable lifetime is bounded by the assertion's expiry. Caching ((#signature-key-cache-response-header)) makes the post-quantum assertion, whose signature is large ((#pqc-sizes)), affordable to reference on each request without retransmitting it.
+
+The saving is on both sides, and the jkt-jwt scheme ((#jkt-jwt-scheme)) shows it most clearly. That scheme exists because signing in a secure enclave is slow, so the enclave key signs once and delegates to a fast ephemeral key. Verification has the same shape: checking a post-quantum delegation is expensive, so a verifier that caches the delegation performs the thumbprint computation and the signature verification once and references the result thereafter. The same argument that motivates delegation on the signer's side motivates caching on the verifier's.
 
 Long-term non-repudiation is out of scope for this layer and is provided above it. The per-request signature is not the durable evidentiary record. Where long-term, tamper-evident proof of what an agent did is required, it is provided by a transparency ledger that records actions and is itself protected for the long term, not by retaining and later trusting individual per-request signatures. Because durable evidence lives in the ledger, the per-request signature has no long-term evidentiary value to protect, and the classical hot path needs no post-quantum sealing at this layer. The ledger, being the durable artifact, is where post-quantum protection is applied for audit. The ledger itself is outside the scope of this document.
 
