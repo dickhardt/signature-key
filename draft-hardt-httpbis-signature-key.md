@@ -213,6 +213,8 @@ In particular:
 
 This requirement follows the guidance of [@!RFC9864], which recommends that the algorithm of a JWK be present so that a key is used only with the algorithm intended, and which deprecates polymorphic algorithm identifiers in the JOSE registry.
 
+A JWK also carries key-structure members: `kty`, which [@!RFC7517] requires, and `crv` where the key type has one. Because a fully-specified `alg` determines the key type and the curve, these members are redundant with it. They remain present, since the schemes in this document convey ordinary JWKs, and the redundancy is used as a check rather than ignored: a verifier MUST verify that `kty` and, where present, `crv` are consistent with `alg`, and MUST reject the key if they are not. A JWK with an `alg` of `ES256` and a `kty` of `RSA` is inconsistent and MUST be rejected, as is one with an `alg` of `ES256` and a `crv` of `P-384`. Rejecting on disagreement prevents a key from being used under either of two conflicting interpretations.
+
 Post-quantum signature algorithms are accommodated by this rule without special treatment. For example, the ML-DSA identifiers `ML-DSA-44`, `ML-DSA-65`, and `ML-DSA-87` registered by [@!RFC9964] are fully specified and are used directly as the JWK `alg` value. The requirement is algorithm-agnostic and accommodates additional post-quantum and hybrid algorithms as they are registered.
 
 A verifier that encounters a JWK whose `kty` it does not implement, including the `AKP` key type defined by [@!RFC9964] for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via `unsupported_algorithm` ((#unsupported_algorithm)). Absence of support for a key type is a reason to decline, not a parsing failure.
@@ -1286,6 +1288,7 @@ This document establishes the "Signature Error Code" registry. New values may be
 - draft-hardt-httpbis-signature-key-08
   - Added an Algorithm Determination subsection requiring that any conveyed or referenced JWK carry a present, fully-specified `alg`. Forbade the polymorphic `EdDSA` identifier, requiring the `Ed25519` and `Ed448` identifiers registered by RFC 9864 instead, and required RSA keys to name padding and hash. Reversed the previous hwk constraint that `alg` MUST NOT be present.
   - Required defined rejection of unimplemented JWK key types, including the `AKP` type from RFC 9964, reported via `unsupported_algorithm`.
+  - Required verifiers to check that a JWK's `kty` and `crv` are consistent with its fully-specified `alg`, and to reject the key when they disagree.
   - Noted that ML-DSA identifiers are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.
   - Added a Problem Statement section stating the gaps this document addresses and the invariants that follow.
   - Added assertion caching: the `cached` scheme, the `cache` signal on the jwt scheme, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. Implementation is optional; the degradation behavior is not.
