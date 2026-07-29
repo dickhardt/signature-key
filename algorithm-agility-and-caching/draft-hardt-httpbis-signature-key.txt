@@ -1109,8 +1109,8 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
    When sigkey is present, the keyid parameter ([RFC9421], Section 5)
    SHOULD NOT be included and MUST be ignored by the client.  Key
    identification is handled by the Signature-Key header schemes, not by
-   keyid.  The algs and tag parameters remain applicable alongside
-   sigkey.
+   keyid.  The alg and tag parameters ([RFC9421], Section 5.1) remain
+   applicable alongside sigkey.
 
 5.2.  Label Binding
 
