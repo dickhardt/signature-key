@@ -63,7 +63,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines three HTTP header fields and one Accept-Signature parameter for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The sigkey parameter extends Accept-Signature (RFC 9421 Section 5) to name the Signature-Key scheme the server requires. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header offers a handle by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
+This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header offers a handle by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
 
 .# Discussion Venues
 
@@ -96,7 +96,7 @@ This document defines:
 
   Additional schemes may be defined through the IANA registry established by this document.
 
-- **sigkey** ((#accept-signature-sigkey-parameter)) — a parameter for the Accept-Signature header ([@!RFC9421], Section 5) that names the Signature-Key scheme the server requires. This extends RFC 9421's existing mechanism for requesting signatures rather than defining a new header.
+- **Accept-Signature-Scheme** and **Accept-Signature-Alg** ((#accept-signature-scheme-and-accept-signature-alg-response-headers)) — response headers stating the Signature-Key schemes and the signature algorithms the server accepts. Both are Lists, so a server states its full accepted set and a client selects a scheme and an algorithm before signing.
 
 - **Signature-Error** ((#signature-error-http-response-header)) — a response header that provides structured error information when signature verification fails, enabling clients to diagnose and correct signing issues.
 
@@ -124,7 +124,7 @@ If the keying material or its identifier travels alongside the signature but is 
 
 ## The verifier must be able to state what it will accept
 
-A signer that guesses the wrong key distribution scheme, or the wrong algorithm, learns nothing useful from a bare verification failure. Without a way for the verifier to say what it requires and what it supports, the extension point cannot be exercised or negotiated, and it ossifies. This document defines that feedback in the `sigkey` parameter and the Signature-Error responses, including `unsupported_scheme`.
+A signer that guesses the wrong key distribution scheme, or the wrong algorithm, learns nothing useful from a bare verification failure. Without a way for the verifier to say what it requires and what it supports, the extension point cannot be exercised or negotiated, and it ossifies. This document defines that feedback in the `Accept-Signature-Scheme` and `Accept-Signature-Alg` response headers, which state what the verifier accepts, and in the Signature-Error responses, which state what went wrong.
 
 ## Design Consequences
 
@@ -502,10 +502,10 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 - `jwt` (REQUIRED, String) - Compact-serialized JWT
 
-- `cache` (OPTIONAL, Boolean) - When true, the caller indicates it can present a cached handle on subsequent requests and requests that the verifier return one. Absent or false means the caller does not want a handle. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. See (#signature-key-cache-response-header).
+- `cache` (OPTIONAL, Boolean) - When true, the caller indicates it can present a cached handle on subsequent requests and requests that the verifier return one. Absent means the caller does not want a handle. Boolean true is indicated by omitting the value ([@!RFC8941], Section 4.1.1.2), so the parameter is serialized as `cache` rather than `cache=?1`. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. See (#signature-key-cache-response-header).
 
 ```
-Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache=?1
+Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
 ```
 
 **JWT requirements:**
@@ -718,25 +718,53 @@ A request using the cached scheme MUST carry the per-request HTTP Message Signat
 
 A caller MUST NOT present a cached handle unless a verifier has offered one for that assertion via Signature-Key-Cache ((#signature-key-cache-response-header)). A verifier that does not implement assertion caching treats cached as an unimplemented scheme and returns `unsupported_scheme` ((#unsupported-scheme)); the caller then retries with the full assertion.
 
-# Accept-Signature sigkey Parameter
+# Accept-Signature-Scheme and Accept-Signature-Alg Response Headers {#accept-signature-scheme-and-accept-signature-alg-response-headers}
 
-[@!RFC9421] Section 5 defines the `Accept-Signature` response header for requesting HTTP Message Signatures. This document extends `Accept-Signature` with a `sigkey` parameter that indicates the type of Signature-Key the server requires.
+[@!RFC9421] Section 5 defines the `Accept-Signature` response header for requesting HTTP Message Signatures. Its signature metadata parameters are Item parameters, whose values are bare Items ([@!RFC8941], Section 3.1.2) and cannot be lists. A server therefore cannot use `Accept-Signature` to state that it accepts any of several Signature-Key schemes, nor any of several algorithms: its `alg` parameter names one algorithm.
 
-## Parameter Definition
+This document defines two response header fields that carry those sets. Both are List Structured Fields ([@!RFC8941], Section 3.1) of Tokens, so a server states everything it accepts in one response, and a client selects a scheme and an algorithm before it signs rather than discovering them through a rejection.
 
-The `sigkey` parameter is an Item parameter on each member of the `Accept-Signature` Dictionary. Its value is a Token ([@!RFC8941], Section 3.3.4) naming a scheme registered in the HTTP Signature-Key Scheme registry ((#scheme-registry)). It indicates the Signature-Key scheme the server requires for the signed request.
+Both headers are advisory capability statements, not directives. A server that omits them is not asserting that it accepts everything; a client that cannot satisfy them learns the outcome from `Signature-Error` ((#error-codes)) as before.
 
-A parameter value is a single Item ([@!RFC8941], Section 3.1.2) and cannot be a list. A server that accepts more than one scheme therefore names the single scheme it prefers. A client that presents a scheme the server does not accept receives a `Signature-Error` with `error=unsupported_scheme`, which enumerates the accepted schemes in `supported_schemes` ((#unsupported-scheme)). This keeps the challenge within Structured Fields grammar and defers the full list to the point where it is needed. A verifier's handling of a scheme it does not implement is specified in (#signature-key-http-request-header).
+## Accept-Signature-Scheme {#accept-signature-scheme}
 
-When `sigkey` is present, the `keyid` parameter ([@!RFC9421], Section 5) SHOULD NOT be included and MUST be ignored by the client. Key identification is handled by the Signature-Key header schemes, not by `keyid`. The `alg` and `tag` parameters ([@!RFC9421], Section 5.1) remain applicable alongside `sigkey`.
-
-## Label Binding
-
-The signature label in `Accept-Signature` ties together all four headers on the signed request. When a server requests:
+`Accept-Signature-Scheme` is a List ([@!RFC8941], Section 3.1) of Tokens, each naming a scheme registered in the HTTP Signature-Key Scheme registry ((#scheme-registry)). It states the Signature-Key schemes the server accepts.
 
 ```http
-Accept-Signature: sig1=("@method" "@path" "@authority");
-    alg="ecdsa-p256-sha256";sigkey=jwks_uri
+Accept-Signature-Scheme: hwk, jwks_uri, jwt
+```
+
+Order is significant: a server SHOULD list schemes in descending order of preference, and a client SHOULD choose the earliest listed scheme it can satisfy. A client MUST NOT treat the order as a requirement; any listed scheme is acceptable.
+
+A client MUST ignore tokens it does not recognize, so that a server may list schemes registered after the client was written without breaking it. A client that recognizes no listed scheme SHOULD NOT sign the request, since no scheme it can produce will be accepted.
+
+Listing the `cached` scheme ((#cached-scheme)) states that the server implements assertion caching. A client that sees it can set the `cache` signal ((#jwt-confirmation-key-jwt)) on its first request rather than probing.
+
+## Accept-Signature-Alg {#accept-signature-alg}
+
+`Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each an identifier from the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2). It states the signature algorithms the server accepts.
+
+```http
+Accept-Signature-Alg: ed25519, ecdsa-p256-sha256
+```
+
+Order, unknown-token handling, and the no-recognized-value case are as for `Accept-Signature-Scheme`.
+
+Because a fully-specified algorithm identifier determines the key type and curve ((#algorithm-determination)), this list also tells the client which keys are usable, and so which key to generate or select when it holds more than one.
+
+`Accept-Signature-Alg` states what the server accepts. The `alg` parameter of `Accept-Signature` ([@!RFC9421], Section 5.1) requests one specific algorithm for a specific signature label. Where both are present, `alg` is the more specific instruction and the client SHOULD honor it; `alg` SHOULD name a member of `Accept-Signature-Alg`.
+
+## Relationship to Accept-Signature
+
+`Accept-Signature` continues to carry what is to be signed: the covered components, and the per-label parameters of [@!RFC9421] Section 5.1. The two headers defined here carry what the server will accept in the `Signature-Key` header and in the signature itself. They are independent fields; a response MAY include any combination.
+
+Neither header is keyed by signature label. Both state a server-wide capability, which does not vary per signature. A deployment that genuinely requires different schemes for different labels in one multi-signature message is outside what these headers express, and states the requirement in its own protocol.
+
+```http
+HTTP/1.1 401 Unauthorized
+Accept-Signature: sig1=("@method" "@path" "@authority");created
+Accept-Signature-Scheme: jwks_uri, jwt
+Accept-Signature-Alg: ed25519
 ```
 
 The client responds with matching labels:
@@ -744,56 +772,68 @@ The client responds with matching labels:
 ```
 Signature-Key: sig1=jwks_uri;id="https://client.example";dwk="example-configuration";kid="key-1"
 Signature-Input: sig1=("@method" "@path" "@authority" "signature-key");
-    created=1732210000;keyid="https://client.example"
+    created=1732210000
 Signature: sig1=:MEQCIA5...:
 ```
 
 The `signature-key` covered component is added by the client per this specification's requirement that `signature-key` appear in covered components. The server does not need to list it in `Accept-Signature`.
 
+## Sending on Errors and on Challenges
+
+Both headers MAY be sent on any response. They are useful on two occasions in particular.
+
+On a challenge, before the client has signed anything, they let the client choose correctly the first time.
+
+On a `Signature-Error` response, they say what would have worked. A server returning `unsupported_scheme` ((#unsupported-scheme)) SHOULD include `Accept-Signature-Scheme`, and a server returning `unsupported_algorithm` ((#unsupported_algorithm)) SHOULD include `Accept-Signature-Alg`. The error names what went wrong; the header names what would succeed.
+
+```http
+HTTP/1.1 401 Unauthorized
+Signature-Error: error=unsupported_scheme
+Accept-Signature-Scheme: jwks_uri, jwt
+```
+
 ## Response Status Codes
 
-`Accept-Signature` with a `sigkey` parameter can be set for any response. Below is a list of what it MAY mean on responses with the following status codes:
+These headers can be set on any response. Below is a list of what they MAY mean on responses with the following status codes:
 
 | Status | Meaning | Legacy client behavior | Signature-aware client behavior |
 |--------|---------|----------------------|-------------------------------|
-| `401` | Authentication required | Falls back to WWW-Authenticate | Signs request with appropriate Signature-Key scheme |
+| `401` | Authentication required | Falls back to WWW-Authenticate | Signs request with an accepted Signature-Key scheme |
 | `402` | Payment + authentication required | Processes payment mechanism | Signs request AND processes payment |
 | `429` | Rate limited | Respects Retry-After, slows down | Signs request, gets higher per-key rate limit |
 
-The `429` case is particularly important for incremental adoption: a server can add `Accept-Signature` with `sigkey` to its existing 429 responses with zero risk. Legacy clients ignore the unknown header and respect `Retry-After`. Signature-aware clients sign with a pseudonymous key, giving the server a stable key thumbprint for per-client rate limiting — and the client gets a higher rate limit in return.
+The `429` case is particularly important for incremental adoption: a server can add these headers to its existing 429 responses with zero risk. Legacy clients ignore the unknown header fields and respect `Retry-After`. Signature-aware clients sign with a pseudonymous key, giving the server a stable key thumbprint for per-client rate limiting, and the client gets a higher rate limit in return.
 
 ## Incremental Adoption
 
-`Accept-Signature` with `sigkey` is designed for zero-coordination deployment. The `sigkey` parameter is unknown to legacy clients and ignored per Structured Fields semantics — servers can add it to existing responses without breaking anything.
+These headers are designed for zero-coordination deployment. They are unknown to legacy clients, and an unknown header field is ignored, so servers can add them to existing responses without breaking anything.
 
-**Stage 1 — Rate limiting (429):** A server adds `Accept-Signature` with `sigkey=hwk` to its 429 responses. Legacy clients slow down as before. Signature-aware clients sign requests and get higher per-key rate limits. The server gains per-client rate limiting without requiring registration or API keys.
+**Stage 1 - Rate limiting (429):** A server adds `Accept-Signature-Scheme: hwk` to its 429 responses. Legacy clients slow down as before. Signature-aware clients sign requests and get higher per-key rate limits. The server gains per-client rate limiting without requiring registration or API keys.
 
-**Stage 2 — Authentication (401):** The server starts requiring signatures on some paths, returning 401 with `Accept-Signature` and `sigkey=hwk`. It can include `WWW-Authenticate` alongside for legacy clients that have other auth mechanisms. Signature-aware clients sign; legacy clients fall back to bearer tokens or other schemes.
+**Stage 2 - Authentication (401):** The server starts requiring signatures on some paths, returning 401 with `Accept-Signature-Scheme: hwk`. It can include `WWW-Authenticate` alongside for legacy clients that have other auth mechanisms. Signature-aware clients sign; legacy clients fall back to bearer tokens or other schemes.
 
-**Stage 3 — Identity (401):** The server upgrades from `sigkey=hwk` to `sigkey=jwks_uri` on sensitive paths, requiring verifiable client identity via `jwks_uri`, `jwt`, or `x509` schemes. The server can now make identity-based policy decisions without pre-registration.
-
-A server that accepts more than one scheme at a given stage names its preferred scheme; a client presenting a different accepted scheme still succeeds, and a client presenting an unaccepted scheme learns the full set via `unsupported_scheme`.
+**Stage 3 - Identity (401):** The server advertises `Accept-Signature-Scheme: jwks_uri, jwt, x509` on sensitive paths, requiring verifiable client identity. The server can now make identity-based policy decisions without pre-registration.
 
 Each stage is independently deployable. A server can use stage 1 on all endpoints while using stage 3 on admin endpoints. No bilateral agreements or client coordination required.
 
 ## Coexistence with WWW-Authenticate
 
-`Accept-Signature` and `WWW-Authenticate` ([@!RFC9110], Section 11.6.1) are independent header fields; a response MAY include both. A client that understands Signature-Key processes `Accept-Signature` with `sigkey`; a legacy client processes `WWW-Authenticate`. Neither header's presence invalidates the other.
+These headers and `WWW-Authenticate` ([@!RFC9110], Section 11.6.1) are independent header fields; a response MAY include both. A client that understands Signature-Key processes the `Accept-Signature-*` headers; a legacy client processes `WWW-Authenticate`. Neither header's presence invalidates the other.
 
 ```http
 HTTP/1.1 401 Unauthorized
 WWW-Authenticate: Bearer realm="api"
-Accept-Signature: sig1=("@method" "@path" "@authority");
-    alg="ecdsa-p256-sha256";sigkey=jwks_uri
+Accept-Signature-Scheme: jwks_uri, jwt
+Accept-Signature-Alg: ecdsa-p256-sha256
 ```
 
-A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]) alongside `Accept-Signature` for authentication:
+A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]) alongside a signature challenge:
 
 ```http
 HTTP/1.1 402 Payment Required
 WWW-Authenticate: Payment id="x7Tg2pLq", method="example",
     request="eyJhbW91bnQiOiIxMDAw..."
-Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=hwk
+Accept-Signature-Scheme: hwk
 ```
 
 ## Examples
@@ -802,15 +842,15 @@ Pseudonymous access:
 
 ```http
 HTTP/1.1 401 Unauthorized
-Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=hwk
+Accept-Signature-Scheme: hwk
 ```
 
 Identity with algorithm restriction:
 
 ```http
 HTTP/1.1 401 Unauthorized
-Accept-Signature: sig1=("@method" "@authority" "@path");
-    alg="ecdsa-p256-sha256";sigkey=jwks_uri
+Accept-Signature-Scheme: jwks_uri, jwt
+Accept-Signature-Alg: ecdsa-p256-sha256
 ```
 
 Rate limiting with pseudonymous upgrade:
@@ -818,7 +858,7 @@ Rate limiting with pseudonymous upgrade:
 ```http
 HTTP/1.1 429 Too Many Requests
 Retry-After: 30
-Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=hwk
+Accept-Signature-Scheme: hwk
 ```
 
 Payment with pseudonymous authentication:
@@ -827,22 +867,22 @@ Payment with pseudonymous authentication:
 HTTP/1.1 402 Payment Required
 WWW-Authenticate: Payment id="x7Tg2pLq", method="example",
     request="eyJhbW91bnQiOiIxMDAw..."
-Accept-Signature: sig1=("@method" "@path" "@authority");sigkey=hwk
+Accept-Signature-Scheme: hwk
 ```
 
 ## Client Processing {#client-processing}
 
-When a client receives a response containing an `Accept-Signature` header with a `sigkey` parameter, it MAY retry the request with an HTTP Message Signature using a Signature-Key scheme appropriate for the indicated `sigkey` value.
+When a client receives a response containing `Accept-Signature-Scheme` ((#accept-signature-scheme)), it MAY retry the request with an HTTP Message Signature using any listed Signature-Key scheme it can satisfy, preferring the earliest listed.
 
-[@!RFC9421] Section 5.2 defines the processing of `Accept-Signature` by the client. If the `sigkey` parameter is unsupported, the client MAY ignore it.
+[@!RFC9421] Section 5.2 defines the processing of `Accept-Signature` by the client. A client MAY ignore `Accept-Signature-Scheme` and `Accept-Signature-Alg`, and MUST ignore tokens within them that it does not recognize.
 
-If a client already knows the server's `sigkey` requirement (from a previous interaction or metadata), it MAY sign the initial request directly without waiting for a challenge response.
+If a client already knows which schemes and algorithms the server accepts (from a previous interaction or metadata), it MAY sign the initial request directly without waiting for a challenge response.
 
-A conforming verifier, when presented with a well-formed request bearing an unknown or unregistered scheme, returns `unsupported_scheme` with a populated `supported_schemes`. This exercises the unknown-scheme path as a matter of defined behavior.
+A conforming verifier, when presented with a well-formed request bearing an unknown or unregistered scheme, returns `unsupported_scheme` and an `Accept-Signature-Scheme` header naming what it accepts. This exercises the unknown-scheme path as a matter of defined behavior.
 
-When a `429` response includes both `Retry-After` and `Accept-Signature` with `sigkey`, the client MAY retry one time with a signed request without waiting for the `Retry-After` interval. Signing the request provides a key thumbprint that enables per-client rate limiting, which may result in a higher rate limit for the client.
+When a `429` response includes both `Retry-After` and `Accept-Signature-Scheme`, the client MAY retry one time with a signed request without waiting for the `Retry-After` interval. Signing the request provides a key thumbprint that enables per-client rate limiting, which may result in a higher rate limit for the client.
 
-A server MAY return a `429` response without `Accept-Signature` to a signed request when it wants to rate-limit the client regardless of signing. In this case, the client MUST respect `Retry-After` as usual.
+A server MAY return a `429` response without `Accept-Signature-Scheme` to a signed request when it wants to rate-limit the client regardless of signing. In this case, the client MUST respect `Retry-After` as usual.
 
 > **Open Issue:** Should this specification define a baseline HTTP Message Signatures profile (minimum covered components, timestamp requirements, verification steps), or is that always the responsibility of the protocol using these headers? See [GitHub issue #7](https://github.com/dickhardt/signature-key/issues/7).
 
@@ -859,8 +899,7 @@ The `Signature-Error` header is a Dictionary ([@!RFC8941], Section 3.2) with the
 Additional members are defined per error code. Recipients MUST ignore unknown members.
 
 ```http
-Signature-Error: error=unsupported_algorithm,
-    supported_algorithms=("ed25519" "ecdsa-p256-sha256")
+Signature-Error: error=unsupported_algorithm
 ```
 
 The `Signature-Error` header is the authoritative source for machine-readable error information. The client MUST NOT depend on the response body for error handling.
@@ -878,11 +917,11 @@ Servers SHOULD use Problem Details [@!RFC9457] (`application/problem+json`) for 
 }
 ```
 
-Extension members in the Problem Details object (e.g., `supported_algorithms`) MAY duplicate information from the `Signature-Error` header for convenience. When the header and body conflict, the header takes precedence.
+Extension members in the Problem Details object MAY duplicate information from the `Signature-Error` header for convenience. When the header and body conflict, the header takes precedence.
 
 ## Access Denied
 
-When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns `403 Forbidden`. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an `Accept-Signature` header with `sigkey` or a `Signature-Error` header.
+When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns `403 Forbidden`. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an `Accept-Signature-Scheme` header or a `Signature-Error` header.
 
 ## Error Codes {#error-codes}
 
@@ -890,24 +929,24 @@ When the server successfully verifies the client's signature and identity but de
 
 The signing algorithm used by the client is not supported by the server.
 
-- `supported_algorithms` (REQUIRED): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the algorithms the server accepts, using identifiers from the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2). The registry description for each identifier specifies the corresponding key type and curve. The response MUST include this member.
+The response SHOULD include an `Accept-Signature-Alg` header ((#accept-signature-alg)) naming the algorithms the server accepts.
 
 ```http
-Signature-Error: error=unsupported_algorithm,
-    supported_algorithms=("ed25519" "ecdsa-p256-sha256")
+Signature-Error: error=unsupported_algorithm
+Accept-Signature-Alg: ed25519, ecdsa-p256-sha256
 ```
 
-This error also covers a JWK whose key type the server does not implement ((#algorithm-determination)). Because a fully-specified algorithm identifier determines the key type, `supported_algorithms` tells the client which key types are usable without a separate member: a client offered `ed25519` learns that an OKP key on the Ed25519 curve is accepted.
+This error also covers a JWK whose key type the server does not implement ((#algorithm-determination)). Because a fully-specified algorithm identifier determines the key type, the accompanying `Accept-Signature-Alg` tells the client which key types are usable without a separate list: a client offered `ed25519` learns that an OKP key on the Ed25519 curve is accepted.
 
 ### unsupported_scheme {#unsupported-scheme}
 
 The Signature-Key scheme presented by the client is not supported by the server.
 
-- `supported_schemes` (REQUIRED): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the schemes the server accepts, using scheme names from the HTTP Signature-Key Scheme registry ((#scheme-registry)). The response MUST include this member.
+The response SHOULD include an `Accept-Signature-Scheme` header ((#accept-signature-scheme)) naming the schemes the server accepts.
 
 ```http
-Signature-Error: error=unsupported_scheme,
-    supported_schemes=("jwks_uri" "jwt")
+Signature-Error: error=unsupported_scheme
+Accept-Signature-Scheme: jwks_uri, jwt
 ```
 
 This error is recoverable. A server MAY return it with `401 Unauthorized` so the client can retry with an accepted scheme.
@@ -1201,6 +1240,26 @@ Author/Change controller: IETF
 
 Specification document(s): [this document]
 
+Header field name: Accept-Signature-Scheme
+
+Applicable protocol: http
+
+Status: standard
+
+Author/Change controller: IETF
+
+Specification document(s): [this document]
+
+Header field name: Accept-Signature-Alg
+
+Applicable protocol: http
+
+Status: standard
+
+Author/Change controller: IETF
+
+Specification document(s): [this document]
+
 ## Signature-Key Scheme Registry {#scheme-registry}
 
 This document establishes the "HTTP Signature-Key Scheme" registry. This registry allows for the definition of additional key distribution schemes beyond those defined in this document.
@@ -1235,18 +1294,6 @@ Specification:
 
 Parameters:
 : List of parameters defined for this scheme
-
-## HTTP Signature Metadata Parameters
-
-This document registers the following parameter in the "HTTP Signature Metadata Parameters" registry established by [@!RFC9421], Section 6.3.
-
-Parameter Name: sigkey
-
-Status: standard
-
-Specification document(s): [this document]
-
-Description: Indicates the Signature-Key scheme the server requires. The value is a scheme name from the HTTP Signature-Key Scheme registry ((#scheme-registry)).
 
 ## URN Sub-namespace Registration
 
@@ -1294,8 +1341,9 @@ This document establishes the "Signature Error Code" registry. New values may be
   - Added assertion caching: the `cached` scheme, the `cache` signal on the jwt scheme, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. Implementation is optional; the degradation behavior is not.
 
 - draft-hardt-httpbis-signature-key-07
-  - Replaced the `sigkey` values `jkt`, `uri`, and `x509` with direct Signature-Key scheme names; removed the sigkey-to-scheme mapping table and the per-value semantics subsections. `sigkey` now names a single preferred scheme; the full accepted set is returned in `unsupported_scheme`.
-  - Added the `unsupported_scheme` error code with a `supported_schemes` member, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.
+  - Removed the `sigkey` Accept-Signature parameter and its registration. A Structured Fields parameter value is a bare Item and cannot be a list, so `sigkey` could name only one scheme. Replaced by the `Accept-Signature-Scheme` and `Accept-Signature-Alg` response headers, which are Lists of Tokens and state the server's full accepted set for both dimensions, letting a client select before it signs rather than after a rejection.
+  - Added the `unsupported_scheme` error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.
+  - Removed the `supported_schemes` and `supported_algorithms` members from `Signature-Error`. The accepted sets are now carried by `Accept-Signature-Scheme` and `Accept-Signature-Alg`, which work identically on a challenge and on an error. `Signature-Error` states what went wrong; the Accept headers state what would succeed.
   - Added the `jwks` scheme: a direct JWKS fetch where the HTTPS `url` parameter is both the signer identity and the key location, with the same egress-admission requirements as `jwks_uri`.
   - Added design rationale for a single header with a scheme token rather than a header per scheme, referencing RFC 9170, and recording why grease values are not reserved.
 
@@ -1389,13 +1437,13 @@ A simpler design would define Signature-Key as carrying only a public key (or ke
 
 An alternative design would define a distinct header field per key distribution mechanism (for example `Signature-Key-Hwk`, `Signature-Key-Jwt`) rather than one `Signature-Key` header carrying a scheme token. HTTP field names are the most heavily exercised extension point on the web, and [@?RFC9170] identifies header fields in email and HTTP as the canonical case of an extension point that stays usable because recipients routinely ignore fields they do not understand. A per-mechanism header would ride that established tolerance rather than a scheme registry with little traffic. This document nonetheless uses a single header with a scheme token, for four reasons.
 
-1. **Ignorability is the wrong property for keying material.** Header-name extensibility works because an unknown header can be safely ignored. `Signature-Key` carries mandatory keying material. A verifier that ignores an unknown `Signature-Key-X` header fails verification exactly as if no key were present, and cannot tell the client why. With a scheme token, the verifier knows a key was offered under a scheme it does not implement and returns `unsupported_scheme` with `supported_schemes`. [@?RFC9170] Section 4.4 notes that effective feedback is what keeps the surrounding extension machinery working.
+1. **Ignorability is the wrong property for keying material.** Header-name extensibility works because an unknown header can be safely ignored. `Signature-Key` carries mandatory keying material. A verifier that ignores an unknown `Signature-Key-X` header fails verification exactly as if no key were present, and cannot tell the client why. With a scheme token, the verifier knows a key was offered under a scheme it does not implement and returns `unsupported_scheme` with an `Accept-Signature-Scheme` header naming what it accepts. [@?RFC9170] Section 4.4 notes that effective feedback is what keeps the surrounding extension machinery working.
 
 2. **The covered-component invariant stays fixed.** The scheme substitution and identity substitution attacks in (#signature-key-integrity) depend on `signature-key` being a covered component. With one header, `signature-key` is a single stable identifier in the signature base across every scheme. Per-scheme headers would make the covered component name mechanism-dependent and would require a rule for a request that covers one key header while leaving another uncovered.
 
 3. **Label correlation stays simple.** The dictionary is keyed by signature label so that each signature in a multi-signature message carries its own keying material ((#multiple-signatures)). Resolving a label's key is one dictionary lookup. Across N per-scheme headers it becomes a scan with a cross-header collision policy.
 
-4. **Fewer namespaces.** [@?RFC9170] Section 4.1 observes that a smaller number of widely applicable extension points is exercised more, and ossifies less, than many specialized ones. The scheme is the single namespace for key distribution mechanisms, referenced from both this header and the `Accept-Signature` `sigkey` parameter. Per-scheme header names would add a second namespace for the same axis.
+4. **Fewer namespaces.** [@?RFC9170] Section 4.1 observes that a smaller number of widely applicable extension points is exercised more, and ossifies less, than many specialized ones. The scheme is the single namespace for key distribution mechanisms, referenced from both this header and the `Accept-Signature-Scheme` response header. Per-scheme header names would add a second namespace for the same axis.
 
 To keep the scheme registry usable despite its narrow traffic, this document relies on defined behavior rather than on greasing [@?RFC8701]. Unknown and unregistered schemes have a single mandatory outcome ((#unsupported-scheme)), verifiers dispatch through the registry rather than a fixed branch set, and conformance testing exercises the unknown-scheme path directly ((#client-processing)). Reserving grease values was considered and not adopted: a mandatory, conformance-tested reject path exercises the same handling that grease would provoke, whereas a reserved grease token tends to become a filterable synonym for "unknown" that implementations special-case, the outcome [@?RFC9170] Section 3.3 cautions against.
 
