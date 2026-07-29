@@ -215,7 +215,7 @@ This requirement follows the guidance of [@!RFC9864], which recommends that the 
 
 Post-quantum signature algorithms are accommodated by this rule without special treatment. For example, the ML-DSA identifiers `ML-DSA-44`, `ML-DSA-65`, and `ML-DSA-87` registered by [@!RFC9964] are fully specified and are used directly as the JWK `alg` value. The requirement is algorithm-agnostic and accommodates additional post-quantum and hybrid algorithms as they are registered.
 
-A verifier that encounters a JWK whose `kty` it does not implement, including the `AKP` key type defined by [@!RFC9964] for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via `unsupported_key_type` ((#unsupported_key_type)). Absence of support for a key type is a reason to decline, not a parsing failure.
+A verifier that encounters a JWK whose `kty` it does not implement, including the `AKP` key type defined by [@!RFC9964] for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via `unsupported_algorithm` ((#unsupported_algorithm)). Absence of support for a key type is a reason to decline, not a parsing failure.
 
 ## Header Web Key (hwk)
 
@@ -884,7 +884,7 @@ When the server successfully verifies the client's signature and identity but de
 
 ## Error Codes {#error-codes}
 
-### unsupported_algorithm
+### unsupported_algorithm {#unsupported_algorithm}
 
 The signing algorithm used by the client is not supported by the server.
 
@@ -894,6 +894,8 @@ The signing algorithm used by the client is not supported by the server.
 Signature-Error: error=unsupported_algorithm,
     supported_algorithms=("ed25519" "ecdsa-p256-sha256")
 ```
+
+This error also covers a JWK whose key type the server does not implement ((#algorithm-determination)). Because a fully-specified algorithm identifier determines the key type, `supported_algorithms` tells the client which key types are usable without a separate member: a client offered `ed25519` learns that an OKP key on the Ed25519 curve is accepted.
 
 ### unsupported_scheme {#unsupported-scheme}
 
@@ -907,19 +909,6 @@ Signature-Error: error=unsupported_scheme,
 ```
 
 This error is recoverable. A server MAY return it with `401 Unauthorized` so the client can retry with an accepted scheme.
-
-### unsupported_key_type {#unsupported_key_type}
-
-The key type of the JWK presented by the client is not implemented by the server. This includes the `AKP` key type defined by [@!RFC9964] for post-quantum keys, and any other `kty` the verifier does not implement.
-
-- `supported_key_types` (REQUIRED): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the JWK key types the server accepts, using `kty` values from the JSON Web Key Types registry ([@!RFC7517], Section 6.1). The response MUST include this member.
-
-```http
-Signature-Error: error=unsupported_key_type,
-    supported_key_types=("OKP" "EC")
-```
-
-This error is recoverable and is distinct from `unsupported_algorithm`: an unsupported algorithm may be retried with a different registered algorithm the client also holds for the same key, whereas an unsupported key type means the key itself is unusable and the client must present different key material. A server MAY return it with `401 Unauthorized`.
 
 ### cache_miss {#cache_miss}
 
@@ -1281,7 +1270,6 @@ This document establishes the "Signature Error Code" registry. New values may be
 |-------|-------------|-----------|
 | `unsupported_algorithm` | Signing algorithm not supported | [this document] |
 | `unsupported_scheme` | Signature-Key scheme not supported | [this document] |
-| `unsupported_key_type` | JWK key type not supported | [this document] |
 | `cache_miss` | Cached assertion handle could not be resolved | [this document] |
 | `invalid_signature` | Signature missing, malformed, or verification failed | [this document] |
 | `invalid_input` | Missing required covered components | [this document] |
@@ -1297,7 +1285,7 @@ This document establishes the "Signature Error Code" registry. New values may be
 
 - draft-hardt-httpbis-signature-key-08
   - Added an Algorithm Determination subsection requiring that any conveyed or referenced JWK carry a present, fully-specified `alg`. Forbade the polymorphic `EdDSA` identifier, requiring the `Ed25519` and `Ed448` identifiers registered by RFC 9864 instead, and required RSA keys to name padding and hash. Reversed the previous hwk constraint that `alg` MUST NOT be present.
-  - Required defined rejection of unimplemented JWK key types, including the `AKP` type from RFC 9964, and added the `unsupported_key_type` error code.
+  - Required defined rejection of unimplemented JWK key types, including the `AKP` type from RFC 9964, reported via `unsupported_algorithm`.
   - Noted that ML-DSA identifiers are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.
   - Added a Problem Statement section stating the gaps this document addresses and the invariants that follow.
   - Added assertion caching: the `cached` scheme, the `cache` signal on the jwt scheme, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. Implementation is optional; the degradation behavior is not.
