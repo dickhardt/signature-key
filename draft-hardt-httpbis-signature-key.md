@@ -81,6 +81,16 @@ Source for this draft and an issue tracker can be found at https://github.com/di
 
 HTTP Message Signatures [@!RFC9421] provides a powerful mechanism for creating and verifying digital signatures over HTTP messages. To verify a signature, the verifier needs the signer's public key. While RFC 9421 defines signature creation and verification procedures, it intentionally leaves key distribution to application protocols, recognizing that different deployments have different trust requirements.
 
+Where the signer and verifier have no prior relationship, that gap is usually filled by out-of-band pre-registration or by an application-specific token. This document addresses the cases those two options do not cover.
+
+**A verifier may have no prior relationship with the signer.** Pre-registration assumes the signer is known before the request. Agents, first-contact clients, and cross-domain callers frequently are not. When the first request is also the first contact, there is no registration step in which to have exchanged a key. The key, or a means to obtain it, has to travel with the request.
+
+**The key material and its trust model are separate questions.** "Which key signed this" and "why should the verifier trust that key" are distinct. A raw inline key answers the first and defers the second to the verifier's policy. A key discovered from an origin ties the key to that origin. A delegated key carries an assertion from a third party. A certificate chain carries a PKI trust path. These are different trust models over the same signature primitive, and a mechanism that hard-codes one of them cannot serve the others. This document treats the trust model as a scheme dimension rather than a fixed choice.
+
+**Key conveyance must be covered by the signature it introduces.** If the keying material or its identifier travels alongside the signature but is not itself signed over, an intermediary can substitute a different key or identifier and the signature still verifies against the substituted key. Conveying the key in a covered component closes this. A design that carries the key outside the signature's covered components reopens it. (#signature-key-integrity) describes the scheme-substitution and identity-substitution attacks this prevents.
+
+**The verifier must be able to state what it will accept.** A signer that guesses the wrong key distribution scheme, or the wrong algorithm, learns nothing useful from a bare verification failure. Without a way for the verifier to say what it requires and what it supports, the extension point cannot be exercised or negotiated, and it ossifies.
+
 This document defines:
 
 - **Signature-Key** ((#signature-key-http-request-header)) — a request header that distributes public keys for HTTP Message Signature verification. The header supports seven schemes, each designed for different trust models and operational requirements:
@@ -99,39 +109,17 @@ This document defines:
 
 - **Signature-Error** ((#signature-error-http-response-header)) — a response header that provides structured error information when signature verification fails, enabling clients to diagnose and correct signing issues.
 
-The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.
-
-The mechanisms in this document were designed as general-purpose building blocks and are used by other specifications. In the AAuth protocol [@?I-D.hardt-oauth-aauth-protocol], all parties communicate using Signature-Key to distribute the keys that verify their signed requests. Email Verification [@?I-D.hardt-email-verification] uses the `hwk` scheme to convey the browser's public key so the issuer can bind it into the verification token it issues. Additional protocols can adopt these mechanisms without further coordination.
-
-# Problem Statement
-
-HTTP Message Signatures [@!RFC9421] verify a signature against a key the verifier already has. RFC 9421 deliberately does not say how the verifier obtains that key. In deployments where the signer and verifier have no prior relationship, that gap has to be filled by something, and the something is usually either out-of-band pre-registration or an application-specific token. This document addresses the cases those two options do not cover.
-
-## A verifier may have no prior relationship with the signer
-
-Pre-registration assumes the signer is known before the request. Agents, first-contact clients, and cross-domain callers frequently are not. When the first request is also the first contact, there is no registration step in which to have exchanged a key. The key, or a means to obtain it, has to travel with the request.
-
-## The key material and its trust model are separate questions
-
-"Which key signed this" and "why should the verifier trust that key" are distinct. A raw inline key answers the first and defers the second to the verifier's policy. A key discovered from an origin ties the key to that origin. A delegated key carries an assertion from a third party. A certificate chain carries a PKI trust path. These are different trust models over the same signature primitive, and a mechanism that hard-codes one of them cannot serve the others. This document treats the trust model as a scheme dimension rather than a fixed choice.
-
-## Key conveyance must be covered by the signature it introduces
-
-If the keying material or its identifier travels alongside the signature but is not itself signed over, an intermediary can substitute a different key or identifier and the signature still verifies against the substituted key. Conveying the key in a covered component closes this. A design that carries the key outside the signature's covered components reopens it. (#signature-key-integrity) describes the scheme-substitution and identity-substitution attacks this prevents.
-
-## The verifier must be able to state what it will accept
-
-A signer that guesses the wrong key distribution scheme, or the wrong algorithm, learns nothing useful from a bare verification failure. Without a way for the verifier to say what it requires and what it supports, the extension point cannot be exercised or negotiated, and it ossifies. This document defines that feedback in the `Accept-Signature-Scheme` and `Accept-Signature-Alg` response headers, which state what the verifier accepts, and in the Signature-Error responses, which state what went wrong.
-
-## Design Consequences
-
-Three properties follow from the problem statement and are held as invariants:
+Three properties follow from the gaps above and are held as invariants throughout this document:
 
 1. Keying material or its identifier is conveyed in the Signature-Key header, which is a covered component ((#signature-key-integrity)). The signature protects the key or identifier that introduces it.
 
 2. The trust model is a scheme, not a fixed choice. A single header ((#signature-key-http-request-header)) carries any of an inline key, an origin-discovered key, a delegated key, or a certificate chain, distinguished by a scheme token. The header is one namespace for key conveyance; the trust model varies within it.
 
 3. Unknown schemes and algorithms have defined, mandatory feedback. A verifier that does not implement a presented scheme returns `unsupported_scheme` with the set it supports ((#unsupported-scheme)). The extension point is exercised on ordinary traffic rather than only at the moment a new value is first deployed, per the guidance of [@?RFC9170].
+
+The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.
+
+The mechanisms in this document were designed as general-purpose building blocks and are used by other specifications. In the AAuth protocol [@?I-D.hardt-oauth-aauth-protocol], all parties communicate using Signature-Key to distribute the keys that verify their signed requests. Email Verification [@?I-D.hardt-email-verification] uses the `hwk` scheme to convey the browser's public key so the issuer can bind it into the verification token it issues. Additional protocols can adopt these mechanisms without further coordination.
 
 # Signature-Key HTTP Request Header
 
@@ -1202,7 +1190,7 @@ This document establishes the "Signature Error Code" registry. New values may be
 
   - Added the `jwks` scheme: a direct JWKS fetch where the HTTPS `url` parameter is both the signer identity and the key location, with the same egress-admission requirements as `jwks_uri`.
   - Added the `unsupported_scheme` error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.
-  - Added a Problem Statement section stating the gaps this document addresses and the invariants that follow.
+  - Expanded the Introduction to state the gaps this document addresses and the three invariants that follow from them.
   - Added design rationale for a single header with a scheme token rather than a header per scheme, referencing RFC 9170, and for carrying the accepted sets in response header fields rather than in parameters or error members. Recorded why grease values are not reserved.
   - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
   - Converted internal cross-references to mmark xref syntax so they render as section numbers rather than as literal anchors.
