@@ -2772,28 +2772,47 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-signature-key-cache-respons" class="section-name selfRef">Signature-Key-Cache Response Header</a>
       </h2>
 <p id="section-7-1">A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the <code>cache</code> signal (<a href="#jwt-confirmation-key-jwt" class="auto internal xref">Section 4.8</a>), MAY return the <code>Signature-Key-Cache</code> response header to offer the caller a handle for later reference.<a href="#section-7-1" class="pilcrow">¶</a></p>
-<p id="section-7-2"><code>Signature-Key-Cache</code> is a Dictionary (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 3.2) keyed by the signature label whose assertion was cached. Each member value is the handle, and its parameters describe the cached assertion:<a href="#section-7-2" class="pilcrow">¶</a></p>
+<p id="section-7-2"><code>Signature-Key-Cache</code> is a Dictionary (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 3.2) keyed by the signature label whose assertion was cached.<a href="#section-7-2" class="pilcrow">¶</a></p>
+<p id="section-7-3">The member value is the handle itself, a Byte Sequence. It is not a named parameter. The caller presents this same Byte Sequence back to the verifier as the <code>handle</code> parameter of the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 4.11</a>). The handle is opaque to the caller; a verifier MAY encode self-contained, integrity-protected, encrypted state in it so that any node in a verifier fleet can honor it without shared cache state.<a href="#section-7-3" class="pilcrow">¶</a></p>
+<p id="section-7-4">The member's parameters describe the cached assertion:<a href="#section-7-4" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7-3.1">
-          <p id="section-7-3.1.1">value (Byte Sequence, REQUIRED): The opaque handle. The caller presents it later via the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 4.11</a>). The handle is opaque to the caller; a verifier MAY encode self-contained, integrity-protected, encrypted state in it so that any node in a verifier fleet can honor it without shared cache state.<a href="#section-7-3.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7-5.1">
+          <p id="section-7-5.1.1"><code>jti</code> (String, OPTIONAL): The <code>jti</code> claim of the cached assertion, so the caller can store the handle against the assertion's stable identity rather than the per-request label.<a href="#section-7-5.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-7-3.2">
-          <p id="section-7-3.2.1"><code>jti</code> (String, OPTIONAL): The <code>jti</code> claim of the cached assertion, so the caller can store the handle against the assertion's stable identity rather than the per-request label.<a href="#section-7-3.2.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-7-5.2">
+          <p id="section-7-5.2.1"><code>thumbprint</code> (Byte Sequence, OPTIONAL): A thumbprint of the cached assertion, used as the stable identifier when the assertion has no <code>jti</code>. A verifier SHOULD include <code>jti</code> when the assertion has one and <code>thumbprint</code> otherwise.<a href="#section-7-5.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-7-3.3">
-          <p id="section-7-3.3.1"><code>thumbprint</code> (Byte Sequence, OPTIONAL): A thumbprint of the cached assertion, used as the stable identifier when the assertion has no <code>jti</code>. A verifier SHOULD include <code>jti</code> when the assertion has one and <code>thumbprint</code> otherwise.<a href="#section-7-3.3.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-7-3.4">
-          <p id="section-7-3.4.1"><code>expires</code> (Integer, OPTIONAL): An advisory time, in seconds since the Unix epoch, after which the verifier may no longer honor the handle. When present it MUST NOT be later than the assertion's own expiry. This is advisory; the caller MUST be prepared for a cache miss (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>) at any time regardless of <code>expires</code>.<a href="#section-7-3.4.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-7-5.3">
+          <p id="section-7-5.3.1"><code>expires</code> (Integer, OPTIONAL): An advisory time, in seconds since the Unix epoch, after which the verifier may no longer honor the handle. When present it MUST NOT be later than the assertion's own expiry. This is advisory; the caller MUST be prepared for a cache miss (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>) at any time regardless of <code>expires</code>.<a href="#section-7-5.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-7-4"><strong>Example:</strong><a href="#section-7-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7-5">
+<p id="section-7-6"><strong>Example:</strong><a href="#section-7-6" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7-7">
 <pre>Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
 
-</pre><a href="#section-7-5" class="pilcrow">¶</a>
+</pre><a href="#section-7-7" class="pilcrow">¶</a>
 </div>
-<p id="section-7-6">The handle's validity never exceeds the cached assertion's expiry. Presenting a handle for an assertion that has expired is not a cache condition; the verifier resolves the handle and the assertion then fails validation exactly as an expired assertion presented in full would.<a href="#section-7-6" class="pilcrow">¶</a></p>
+<p id="section-7-8"><strong>Round trip:</strong><a href="#section-7-8" class="pilcrow">¶</a></p>
+<p id="section-7-9">The caller presents the assertion in full and asks for a handle:<a href="#section-7-9" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-7-10">
+<pre>Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
+
+</pre><a href="#section-7-10" class="pilcrow">¶</a>
+</div>
+<p id="section-7-11">The verifier caches the assertion and returns a handle for it:<a href="#section-7-11" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-7-12">
+<pre>Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
+
+</pre><a href="#section-7-12" class="pilcrow">¶</a>
+</div>
+<p id="section-7-13">On subsequent requests the caller presents the handle in place of the assertion, as the <code>handle</code> parameter of the cached scheme. The Byte Sequence is the one the verifier returned, unchanged:<a href="#section-7-13" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-7-14">
+<pre>Signature-Key: sig1=cached;handle=:aGFuZGxlLXZhbHVl:
+
+</pre><a href="#section-7-14" class="pilcrow">¶</a>
+</div>
+<p id="section-7-15">Each request is signed as usual, and <code>signature-key</code> remains a covered component, so the handle is signed over on every request that carries it.<a href="#section-7-15" class="pilcrow">¶</a></p>
+<p id="section-7-16">The handle's validity never exceeds the cached assertion's expiry. Presenting a handle for an assertion that has expired is not a cache condition; the verifier resolves the handle and the assertion then fails validation exactly as an expired assertion presented in full would.<a href="#section-7-16" class="pilcrow">¶</a></p>
 <div id="presenting-and-resolving-a-cached-assertion">
 <section id="section-7.1">
         <h3 id="name-presenting-and-resolving-a-">
