@@ -3298,9 +3298,9 @@ Accept-Signature-Scheme: jwks_uri, jwt
 </li>
         <li class="normal" id="section-10-7.4">Added an Algorithm Determination subsection as the single scheme-independent home for the fully-specified algorithm rules, referenced from each scheme that conveys or references a JWK.<a href="#section-10-7.4" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.5">Required defined rejection of unimplemented JWK key types, including the <code>AKP</code> type from RFC 9964, reported via <code>unsupported_algorithm</code>.<a href="#section-10-7.5" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.5">Required defined rejection of unimplemented JWK key types, including the <code>AKP</code> type from <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span>, reported via <code>unsupported_algorithm</code>.<a href="#section-10-7.5" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.6">Noted that ML-DSA identifiers are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.<a href="#section-10-7.6" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.6">Noted that the ML-DSA identifiers registered by <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span> are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.<a href="#section-10-7.6" class="pilcrow">¶</a>
 </li>
         <li class="normal" id="section-10-7.7">Added assertion caching: the <code>cached</code> scheme carrying a verifier-issued <code>cid</code>, the <code>cache</code> signal on the jwt and jkt-jwt schemes, the <code>Signature-Key-Cache</code> response header, the <code>cache_miss</code> error, and the resolution/validation processing model. A JWT is cacheable only if it carries a <code>jti</code>. The self-jwt scheme is excluded, having no <code>cnf</code> claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not.<a href="#section-10-7.7" class="pilcrow">¶</a>
 </li>

@@ -2191,12 +2191,13 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       referenced from each scheme that conveys or references a JWK.
 
    *  Required defined rejection of unimplemented JWK key types,
-      including the AKP type from RFC 9964, reported via
+      including the AKP type from [RFC9964], reported via
       unsupported_algorithm.
 
-   *  Noted that ML-DSA identifiers are fully specified and satisfy the
-      rule without special treatment; added a deployment consideration
-      on post-quantum key and signature sizes.
+   *  Noted that the ML-DSA identifiers registered by [RFC9964] are
+      fully specified and satisfy the rule without special treatment;
+      added a deployment consideration on post-quantum key and signature
+      sizes.
 
    *  Added assertion caching: the cached scheme carrying a verifier-
       issued cid, the cache signal on the jwt and jkt-jwt schemes, the
