@@ -1333,12 +1333,28 @@ This document establishes the "Signature Error Code" registry. New values may be
 *Note: This section is to be removed before publishing as an RFC.*
 
 - draft-hardt-httpbis-signature-key-08
-  - Added an Algorithm Determination subsection requiring that any conveyed or referenced JWK carry a present, fully-specified `alg`. Forbade the polymorphic `EdDSA` identifier, requiring the `Ed25519` and `Ed448` identifiers registered by RFC 9864 instead, and required RSA keys to name padding and hash. Reversed the previous hwk constraint that `alg` MUST NOT be present.
+
+  This version makes changes that are not backward compatible. An implementation of -07 or earlier requires changes to interoperate. They are listed first.
+
+  Breaking changes:
+
+  - Removed the `sigkey` Accept-Signature parameter and its registration in the HTTP Signature Metadata Parameters registry. A Structured Fields parameter value is a bare Item and cannot be a list, so `sigkey` could name only one scheme. Replaced by the `Accept-Signature-Scheme` and `Accept-Signature-Alg` response headers, which are Lists of Tokens and state the server's full accepted set for both dimensions. A server that sent `sigkey` sends the new headers instead; a client that read `sigkey` reads them instead.
+  - Removed the `supported_algorithms` member of `Signature-Error`, present since -04. The accepted algorithms are now carried by `Accept-Signature-Alg`, which works identically on a challenge and on an error. A client that read `supported_algorithms` reads that header instead.
+  - Removed the `supported_schemes` member of `Signature-Error`, introduced earlier in this series and replaced by `Accept-Signature-Scheme` before it was published.
+  - Reversed the hwk constraint that the `alg` parameter MUST NOT be present. It is now REQUIRED and MUST be fully specified. An hwk key serialized per -07 omits `alg` and is rejected by a -08 verifier.
+  - Forbade the polymorphic `EdDSA` algorithm identifier, which [@!RFC9864] deprecates. Deployments using `alg` of `EdDSA` change to `Ed25519` or `Ed448`.
+  - Required verifiers to take the algorithm from the JWK `alg` rather than deriving it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`. A key that a -07 verifier accepted on the strength of its key type alone is now rejected if its `alg` is absent or inconsistent.
+  - Required RSA keys to name both padding and hash in `alg`, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
+
+  Other changes:
+
+  - Added an Algorithm Determination subsection as the single scheme-independent home for the rules above, referenced from each scheme that conveys or references a JWK.
   - Required defined rejection of unimplemented JWK key types, including the `AKP` type from RFC 9964, reported via `unsupported_algorithm`.
-  - Required verifiers to check that a JWK's `kty` and `crv` are consistent with its fully-specified `alg`, and to reject the key when they disagree.
   - Noted that ML-DSA identifiers are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.
   - Added a Problem Statement section stating the gaps this document addresses and the invariants that follow.
   - Added assertion caching: the `cached` scheme, the `cache` signal on the jwt scheme, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. Implementation is optional; the degradation behavior is not.
+  - Added the `unsupported_scheme` error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.
+  - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
 
 - draft-hardt-httpbis-signature-key-07
   - Removed the `sigkey` Accept-Signature parameter and its registration. A Structured Fields parameter value is a bare Item and cannot be a list, so `sigkey` could name only one scheme. Replaced by the `Accept-Signature-Scheme` and `Accept-Signature-Alg` response headers, which are Lists of Tokens and state the server's full accepted set for both dimensions, letting a client select before it signs rather than after a rejection.
@@ -1446,6 +1462,24 @@ An alternative design would define a distinct header field per key distribution 
 4. **Fewer namespaces.** [@?RFC9170] Section 4.1 observes that a smaller number of widely applicable extension points is exercised more, and ossifies less, than many specialized ones. The scheme is the single namespace for key distribution mechanisms, referenced from both this header and the `Accept-Signature-Scheme` response header. Per-scheme header names would add a second namespace for the same axis.
 
 To keep the scheme registry usable despite its narrow traffic, this document relies on defined behavior rather than on greasing [@?RFC8701]. Unknown and unregistered schemes have a single mandatory outcome ((#unsupported-scheme)), verifiers dispatch through the registry rather than a fixed branch set, and conformance testing exercises the unknown-scheme path directly ((#client-processing)). Reserving grease values was considered and not adopted: a mandatory, conformance-tested reject path exercises the same handling that grease would provoke, whereas a reserved grease token tends to become a filterable synonym for "unknown" that implementations special-case, the outcome [@?RFC9170] Section 3.3 cautions against.
+
+## Why Accept-Signature-Scheme and Accept-Signature-Alg Are Separate Headers
+
+Earlier versions of this document carried the server's scheme requirement in a `sigkey` parameter on `Accept-Signature`, and the accepted sets in `supported_schemes` and `supported_algorithms` members of `Signature-Error`. Both were replaced by two response header fields. The reasons are worth recording, because at first reading a new header field looks like the more invasive choice.
+
+1. **A set cannot be expressed in a parameter.** A Structured Fields parameter value is a bare Item ([@!RFC8941], Section 3.1.2) and cannot be an Inner List. A parameter can therefore name one scheme, never a set. This is not a limitation of `sigkey`: the `alg` parameter of `Accept-Signature` ([@!RFC9421], Section 5.1) is singular for the same structural reason. Any design that puts the accepted set in a parameter slot is constrained to a single value, whatever it is named.
+
+2. **The Accept-Signature member value is already spoken for.** The alternative to a parameter is a Dictionary member value, which may be an Inner List. In `Accept-Signature` that position holds the covered components, so it is unavailable. Carrying the accepted sets there would mean overloading one list with two unrelated kinds of token.
+
+3. **Capability does not vary by signature label.** A new Dictionary keyed by label could carry a list per label, but the schemes and algorithms a verifier accepts are a property of the verifier, not of a particular signature in a particular message. Keying by label would invite the question of what a client should do when two labels disagree, and would create a per-label negotiation surface with no deployment behind it. `Accept-Signature` retains label granularity for what it is for: which components are to be covered, and the per-label parameters of [@!RFC9421] Section 5.1.
+
+4. **One dimension per field is the established HTTP pattern.** HTTP negotiates with `Accept`, `Accept-Encoding`, `Accept-Language`, and `Accept-Charset`: one field per dimension, each a list, each independently ignorable. A single field carrying both dimensions as Dictionary members would be equally valid Structured Fields, but it would depart from that pattern, and it would couple the two: a server with no algorithm constraint could not simply omit the algorithm field.
+
+5. **The same syntax serves the challenge and the error.** This is the property the previous design could not have. `supported_schemes` and `supported_algorithms` lived inside `Signature-Error`, so a client could reach them only by first being rejected. A header field can be sent on an ordinary challenge, before the client has signed anything, and on an error response, and means the same thing in both places. A client selects a scheme and an algorithm before it signs rather than after a failure. [@?RFC9170] Section 4.4 observes that an extension point stays usable when it is exercised routinely; a set that can be learned only through failure is exercised only when something goes wrong.
+
+6. **Removing the error members avoids two ways to say one thing.** Once the headers exist, retaining the members would leave two encodings of the same information, differing only in when they may appear. [@?RFC9170] Section 4.1 notes that redundant, partially-used mechanisms ossify. `Signature-Error` now states what went wrong, and the `Accept-Signature-*` fields state what would succeed.
+
+Adding header fields here does not contradict the argument against per-scheme key headers in (#why-a-scheme-token-instead-of-a-header-per-scheme). That argument turns on ignorability being the wrong property for mandatory keying material: a verifier that silently ignores an unknown `Signature-Key-X` cannot tell the client why verification failed. These fields carry advisory capability rather than keying material, and ignorability is exactly the property wanted. A client that does not understand `Accept-Signature-Scheme` ignores it and behaves as it did before, which is also what a client that cannot satisfy any listed scheme does. Nothing is lost by ignoring a hint, whereas ignoring a key is a silent failure. The two conclusions differ because the requirements differ.
 
 ## Layered Cryptographic Agility
 
