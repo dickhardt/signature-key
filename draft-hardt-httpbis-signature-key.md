@@ -1164,7 +1164,7 @@ Verifiers MUST:
 
 - Reject keys whose type does not match an acceptable algorithm
 
-## Cached Assertion Handles
+## Cache Identifiers
 
 Cache identifiers inherit the request's proof of possession. A cache identifier is presented in the Signature-Key header, which is a covered component, and the request is signed by the agent's confirmation key, so a captured identifier is useless without the corresponding private key, the same property as a captured token. It is covered by the per-request signature and cannot be substituted by an intermediary.
 
