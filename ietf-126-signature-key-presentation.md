@@ -18,12 +18,13 @@ httpbis — IETF 126 Vienna — July 2026
 
 ## Agenda
 
-1. Quick overview: what is Signature-Key?
+1. Quick overview of Signature-Key
 2. What's happened since IETF 125
-3. New mechanisms: `sigkey` parameter, Signature-Error
-4. New schemes: `jkt-jwt`, `self-jwt`
-5. Implementation, adoption & demos
-6. **The bigger picture: client authentication for HTTP**
+  a. `dwk` parameter for `.well-known` value
+  b. New schemes: `jkt-jwt`, `self-jwt`
+  c. New mechanisms: `sigkey` parameter, `Signature-Error`
+  d. Implementations, adoption & demos
+3. **The bigger picture: client authentication for HTTP**
 
 ---
 
@@ -36,27 +37,44 @@ httpbis — IETF 126 Vienna — July 2026
 - **Signature-Key** fills that gap: a header that carries the key — or where to find it — inline with the signed message
 
 ```
-Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1752710000
+Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1784246000
 Signature:       sig=:MEQCIA5...
 Signature-Key:   sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
 ```
 
 ---
 
-## Quick Overview: Schemes for Different Trust Models
+## Schemes for Different Trust Models
 
 | Scheme | Model | Identity |
 |--------|-------|----------|
 | **hwk** | Pseudonymous | Key thumbprint |
 | **jkt-jwt** | Pseudonymous + delegation | Stable enclave key thumbprint |
 | **jwks_uri** | Identified | HTTPS URL + well-known metadata |
-| **jwt** | Delegated | JWT issuer signs for instances |
 | **self-jwt** | Identified + claims | Issuer is the signer |
+| **jwt** | Identified + delegated + claims | JWT issuer signs for instances |
 | **x509** | PKI | Certificate subject |
 
 The scheme tells the verifier the **trust model** and **verification procedure** — extensible via IANA registry
 
 ---
+
+## Scheme Parameters
+
+| Scheme | Parameters |
+|--------|------------|
+| **hwk** | JWK inline:|
+| |  OKP `kty`;`crv`;`x` — EC `kty`;`crv`;`x`;`y` — RSA `kty`;`n`;`e`|
+| **jkt-jwt** | `jwt` — enclave key in JWT header `jwk`, ephemeral key in `cnf` (RFC 7800) |
+| **jwks_uri** | `id` (HTTPS URL); `dwk` (well-known doc); `kid` (key identifier) |
+| **self-jwt** | `jwt` — `iss` + `dwk` claims, `kid` header, no `cnf` |
+| **jwt** | `jwt` — key in `cnf.jwk`, issuer discovery via `iss` + `dwk` |
+| **x509** | `x5u` (cert chain URL); `x5t` (SHA-256 cert thumbprint) |
+
+
+---
+
+
 
 ## Since IETF 125: Five Revisions
 
@@ -68,33 +86,20 @@ The scheme tells the verifier the **trust model** and **verification procedure**
 | -06 | Jul 2 | `self-jwt` scheme |
 | -07 | Jul 4 | Editorial; AAuth & Email Verification cited as users |
 
-Also: presented client identity framing at the **web bot auth interim** (April 13)
-
 ---
 
-## Now Three Mechanisms, Not One
+## `dwk` — Generic Key Discovery via .well-known
 
-The spec grew from a single header to a set of building blocks:
+**Problem:** every protocol defines its own `.well-known` metadata document
+- `openid-configuration`, `oauth-authorization-server`, `aauth-resource`, ...
+- Verifier would need to know *which* document each application uses — per-application code just to verify a signature
 
-1. **Signature-Key** (request) — distributes the verification key, six schemes
+**Solution:** the signed request names its own metadata document
+- `dwk` ("dot well-known") — a parameter in the `jwks_uri` scheme or
+a JWT claim (`jwt`, `self-jwt` schemes)
+- Verifier fetches `{id or iss}/.well-known/{dwk}` and extracts `jwks_uri`
 
-2. **`sigkey` parameter for Accept-Signature** (RFC 9421 §5) — server signals the *type* of key it requires: `jkt` (pseudonymous), `uri` (identified), `x509` (PKI)
-
-3. **Signature-Error** (response) — structured verification errors (`invalid_signature`, `unknown_key`, `expired_jwt`, ...) with an IANA error code registry
-
----
-
-## Incremental Adoption — Zero Coordination
-
-Servers can adopt signatures **without breaking existing clients**:
-
-1. Server responds `429` / `401` / `402` with `Accept-Signature: sig=();sigkey=jkt`
-2. Client retries with a signed request and Signature-Key
-3. Verification failures return **Signature-Error** so clients can self-diagnose
-
-- No pre-registration, no out-of-band setup
-- Unsigned traffic keeps working — signed traffic gets better treatment
-- Rate limit by key thumbprint instead of by IP
+A generic verifier can verify any signed request — **no understanding of the `.well-known` file required** — while applications reuse metadata they already deploy
 
 ---
 
@@ -108,7 +113,7 @@ Previewed at IETF 125, now fully specified in -03:
 
 ---
 
-## New Scheme: self-jwt (-06)
+## New Scheme: `self-jwt` (-06)
 
 - JWT **issuer and HTTP signer are the same party** — no `cnf` claim
 - One key, discovered via `{iss}/.well-known/{dwk}`, verifies both JWT and HTTP signature
@@ -116,27 +121,46 @@ Previewed at IETF 125, now fully specified in -03:
 
 ---
 
-## Hardened by Implementation
+## New Mechanism: `sigkey` Parameter for Accept-Signature
 
-Implementer feedback from Joshua Gay (**sidecat**) drove -05:
+Server signals the *type* of key it requires (RFC 9421 §5):
 
-- **Egress admission checklist** for `jwks_uri` fetches:
-  HTTPS only, size/timeout limits, redirect policy, reject private/loopback addresses, DNS rebinding defense
-- **Caching rules**: once-per-minute fetch floor; one refresh-and-retry on same-`kid` signature failure before returning `unknown_key`
-
-The spec is being shaped by people building it, not just reviewing it
+- `jkt` (pseudonymous: `hwk`, `jkt-jwt`)
+- `uri` (identified: `jwks_uri`, `jwt`, `self-jwt`, `x509` with URI SAN)
+- `x509` (PKI: `x509`)
 
 ---
 
-## Adoption: Specs Building on Signature-Key
+## New Mechanism: `Signature-Error`
+
+Response header with structured verification errors:
+
+- `invalid_signature`, `unknown_key`, `expired_jwt`, ...
+- Extensible with IANA error code registry
+
+---
+
+## Incremental Adoption — Zero Coordination
+
+Servers can adopt signatures **without breaking existing clients**:
+
+1. Server responds `429` / `401` / `402` with `Accept-Signature: sig=();sigkey=jkt`
+2. Client retries with a signed request and Signature-Key
+3. Verification failures return **Signature-Error** so clients can self-diagnose
+
+- No pre-registration, no out-of-band setup
+- Unsigned traffic keeps working — signed traffic gets better treatment
+- Rate limit by key thumbprint or issuer instead of by IP
+
+
+---
+
+
+## Specs Building on Signature-Key
 
 - **AAuth** (draft-hardt-oauth-aauth-protocol) — all parties use Signature-Key to distribute the keys that verify their signed requests
 
 - **Email Verification** (draft-hardt-email-verification, DISPATCH this week) — uses `hwk` to convey the browser's public key so the issuer can bind it into the verification token
-
-- **web bot auth** — architecture uses the same primitives: RFC 9421 signatures + key discovery; Signature-Key discussed at the April interim
-
-Designed as **general-purpose building blocks** — protocols adopt without coordination
 
 ---
 
@@ -152,8 +176,20 @@ Lightning demos at **AAuth Night** (San Francisco, July 1, 2026):
 | **MailChannels** — email sending for AI agents | Ken Simpson |
 | **AAuth Web Agent** — live AAuth protocol demo | Dick Hardt |
 
-Secret managers are moving from **distributing shared secrets** to
-**distributing signature keys** — proof of possession instead of API keys
+Signature-Key enables moving from **API Keys** to **durable identifiers**
+
+---
+
+
+## Hardened by Implementation
+
+Feedback from Joshua Gay, implementing the draft in **sidecat**, drove -05:
+
+- **Egress admission checklist** for `jwks_uri` fetches:
+  HTTPS only, size/timeout limits, redirect policy, reject private/loopback addresses, DNS rebinding defense
+- **Caching rules**: once-per-minute fetch floor; one refresh-and-retry on same-`kid` signature failure before returning `unknown_key`
+
+The spec is being shaped by people building it, not just reviewing it
 
 ---
 
@@ -167,7 +203,7 @@ Secret managers are moving from **distributing shared secrets** to
 - On the open web, every client falls back to **shared secrets**: API keys, passwords
 
 **API keys are bearer tokens — whoever has the key *is* the client**
-- 39M secrets leaked on GitHub in 2024; 90% still valid 5 days later
+- 39M secrets leaked on GitHub in 2024 (GitHub); 90% still valid 5 days later (GitGuardian)
 
 ---
 
@@ -175,14 +211,13 @@ Secret managers are moving from **distributing shared secrets** to
 
 | Client | Solved today with |
 |---|---|
-| Bot / crawler | web bot auth (in progress) |
-| AI agent calling an API | API keys |
+| Bot / crawler | IP address |
+| Client calling an API | API keys |
 | IoT device calling home | Proprietary attestation |
 | Mobile app instance | Platform-specific attestation |
-| CI/CD pipeline | GitHub OIDC, SPIFFE |
-| Server-to-server | mTLS or bearer tokens |
+| Server-to-server | mTLS or SPIFFE or OAuth |
 
-Every answer is **platform-specific, complex, or a shared secret** —
+Every answer is **platform-specific, complex, closed system, or a shared secret** —
 yet all of them reduce to: *sign the request, let the verifier find the key*
 
 ---
@@ -197,15 +232,14 @@ yet all of them reduce to: *sign the request, let the verifier find the key*
 
 ### Asks
 
-- Review the draft — especially `sigkey` negotiation and Signature-Error
-- Implementers: we want more feedback like sidecat's
 - Is there interest in adopting this work in httpbis?
-  — client authentication is bigger than bots
+  — client authentication is bigger than bots or OAuth or SPIFFE 
 
 ---
 
 ## Questions / Discussion
 
-- dick.hardt@gmail.com
+- Dick Hardt dick.hardt@gmail.com
+- Thibault Meunier ot-ietf@thibault.uk 
 - draft-hardt-httpbis-signature-key-07
 - https://github.com/dickhardt/signature-key
