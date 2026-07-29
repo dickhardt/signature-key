@@ -1314,7 +1314,7 @@ svg {
                 <p id="section-toc.1-1.8.2.4.1"><a href="#section-8.4" class="auto internal xref">8.4</a>.  <a href="#name-algorithm-selection" class="internal xref">Algorithm Selection</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.5">
-                <p id="section-toc.1-1.8.2.5.1"><a href="#section-8.5" class="auto internal xref">8.5</a>.  <a href="#name-cached-assertion-handles" class="internal xref">Cached Assertion Handles</a></p>
+                <p id="section-toc.1-1.8.2.5.1"><a href="#section-8.5" class="auto internal xref">8.5</a>.  <a href="#name-cache-identifiers" class="internal xref">Cache Identifiers</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.6">
                 <p id="section-toc.1-1.8.2.6.1"><a href="#section-8.6" class="auto internal xref">8.6</a>.  <a href="#name-post-quantum-key-and-signat" class="internal xref">Post-Quantum Key and Signature Sizes</a></p>
@@ -2970,10 +2970,10 @@ Accept-Signature-Scheme: jwks_uri, jwt
         </ul>
 </section>
 </div>
-<div id="cached-assertion-handles">
+<div id="cache-identifiers">
 <section id="section-8.5">
-        <h3 id="name-cached-assertion-handles">
-<a href="#section-8.5" class="section-number selfRef">8.5. </a><a href="#name-cached-assertion-handles" class="section-name selfRef">Cached Assertion Handles</a>
+        <h3 id="name-cache-identifiers">
+<a href="#section-8.5" class="section-number selfRef">8.5. </a><a href="#name-cache-identifiers" class="section-name selfRef">Cache Identifiers</a>
         </h3>
 <p id="section-8.5-1">Cache identifiers inherit the request's proof of possession. A cache identifier is presented in the Signature-Key header, which is a covered component, and the request is signed by the agent's confirmation key, so a captured identifier is useless without the corresponding private key, the same property as a captured token. It is covered by the per-request signature and cannot be substituted by an intermediary.<a href="#section-8.5-1" class="pilcrow">¶</a></p>
 <p id="section-8.5-2">A verifier MUST NOT treat successful resolution as authentication. Resolution answers only which assertion was referenced. The caller is authenticated by the per-request signature, which the verifier MUST verify against the confirmation key carried in the resolved assertion, exactly as it would had the assertion been presented in full. A caller presenting a cache identifier it did not receive therefore fails signature verification, because it does not hold the corresponding private key. No separate check that the assertion belongs to the caller is required, or possible: possession of the confirmation key is that proof.<a href="#section-8.5-2" class="pilcrow">¶</a></p>

@@ -129,7 +129,7 @@ Table of Contents
      8.2.  Caching and Performance
      8.3.  Scheme-Specific Risks
      8.4.  Algorithm Selection
-     8.5.  Cached Assertion Handles
+     8.5.  Cache Identifiers
      8.6.  Post-Quantum Key and Signature Sizes
      8.7.  Signature-Key Integrity
    9.  Privacy Considerations
@@ -1838,7 +1838,7 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
 
    *  Reject keys whose type does not match an acceptable algorithm
 
-8.5.  Cached Assertion Handles
+8.5.  Cache Identifiers
 
    Cache identifiers inherit the request's proof of possession.  A cache
    identifier is presented in the Signature-Key header, which is a
