@@ -8,7 +8,7 @@
 <meta content="Dick Hardt" name="author">
 <meta content="Thibault Meunier" name="author">
 <meta content="
-       This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header offers a handle by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains. 
+       This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header issues a cache identifier by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains. 
     " name="description">
 <meta content="xml2rfc 3.34.0" name="generator">
 <meta content="http" name="keyword">
@@ -1085,7 +1085,7 @@ svg {
 <h1 id="title">HTTP Signature Keys</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header offers a handle by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header issues a cache identifier by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note" id="section-note.1">
       <h2 id="name-discussion-venues">
@@ -1413,10 +1413,13 @@ svg {
                 <p id="section-toc.1-1.14.2.7.1"><a href="#appendix-A.7" class="auto internal xref">A.7</a>.  <a href="#name-layered-cryptographic-agili" class="internal xref">Layered Cryptographic Agility</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14.2.8">
-                <p id="section-toc.1-1.14.2.8.1"><a href="#appendix-A.8" class="auto internal xref">A.8</a>.  <a href="#name-precedents-for-assertion-ca" class="internal xref">Precedents for Assertion Caching</a></p>
+                <p id="section-toc.1-1.14.2.8.1"><a href="#appendix-A.8" class="auto internal xref">A.8</a>.  <a href="#name-why-the-verifier-issues-the" class="internal xref">Why the Verifier Issues the Cache Identifier</a></p>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14.2.9">
-                <p id="section-toc.1-1.14.2.9.1"><a href="#appendix-A.9" class="auto internal xref">A.9</a>.  <a href="#name-why-strings-instead-of-byte" class="internal xref">Why Strings Instead of Byte Sequences for hwk?</a></p>
+                <p id="section-toc.1-1.14.2.9.1"><a href="#appendix-A.9" class="auto internal xref">A.9</a>.  <a href="#name-precedents-for-assertion-ca" class="internal xref">Precedents for Assertion Caching</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14.2.10">
+                <p id="section-toc.1-1.14.2.10.1"><a href="#appendix-A.10" class="auto internal xref">A.10</a>. <a href="#name-why-strings-instead-of-byte" class="internal xref">Why Strings Instead of Byte Sequences for hwk?</a></p>
 </li>
             </ul>
 </li>
@@ -1482,7 +1485,7 @@ svg {
           <p id="section-2-5.2.1"><strong>Signature-Error</strong> (<a href="#signature-error-http-response-header" class="auto internal xref">Section 6</a>) — a response header that provides structured error information when signature verification fails, enabling clients to diagnose and correct signing issues.<a href="#section-2-5.2.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-2-5.3">
-          <p id="section-2-5.3.1"><strong>Signature-Key-Cache</strong> (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>) — a response header by which a verifier offers the caller an opaque handle for an assertion it has cached, so that later requests can reference the assertion instead of resending it.<a href="#section-2-5.3.1" class="pilcrow">¶</a></p>
+          <p id="section-2-5.3.1"><strong>Signature-Key-Cache</strong> (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>) — a response header by which a verifier issues the caller an opaque cache identifier for an assertion it has cached, so that later requests can reference the assertion instead of resending it.<a href="#section-2-5.3.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
 <p id="section-2-6">The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.<a href="#section-2-6" class="pilcrow">¶</a></p>
@@ -2043,7 +2046,7 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
             <p id="section-4.8-3.1.1"><code>jwt</code> (REQUIRED, String) - Compact-serialized JWT<a href="#section-4.8-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.8-3.2">
-            <p id="section-4.8-3.2.1"><code>cache</code> (OPTIONAL, Boolean) - When true, the caller indicates it can present a cached handle on subsequent requests and requests that the verifier return one. Absent means the caller does not want a handle. Boolean true is indicated by omitting the value (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 4.1.1.2), so the parameter is serialized as <code>cache</code> rather than <code>cache=?1</code>. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. See <a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>.<a href="#section-4.8-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-4.8-3.2.1"><code>cache</code> (OPTIONAL, Boolean) - When true, the caller indicates it can present a cache identifier on subsequent requests and requests that the verifier issue one. Absent means the caller does not want one. Boolean true is indicated by omitting the value (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 4.1.1.2), so the parameter is serialized as <code>cache</code> rather than <code>cache=?1</code>. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. A JWT presented with <code>cache</code> MUST contain a <code>jti</code> claim (<span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span>, Section 4.1.7); a verifier MUST NOT issue a cache identifier for a JWT without one. See <a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>.<a href="#section-4.8-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <div class="alignLeft art-text artwork" id="section-4.8-4">
@@ -2317,21 +2320,21 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
         <h3 id="name-cached-assertion-cached">
 <a href="#section-4.11" class="section-number selfRef">4.11. </a><a href="#name-cached-assertion-cached" class="section-name selfRef">Cached Assertion (cached)</a>
         </h3>
-<p id="section-4.11-1">The cached scheme references an assertion the verifier has previously cached and returned a handle for (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>), in place of presenting the assertion in full.<a href="#section-4.11-1" class="pilcrow">¶</a></p>
+<p id="section-4.11-1">The cached scheme references an assertion the verifier has previously cached and issued a cache identifier for (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>), in place of presenting the assertion in full.<a href="#section-4.11-1" class="pilcrow">¶</a></p>
 <p id="section-4.11-2"><strong>Parameters:</strong><a href="#section-4.11-2" class="pilcrow">¶</a></p>
 <ul class="compact">
 <li class="compact" id="section-4.11-3.1">
-            <code>handle</code> (REQUIRED, Byte Sequence) - The opaque handle previously returned by the verifier for this assertion.<a href="#section-4.11-3.1" class="pilcrow">¶</a>
+            <code>cid</code> (REQUIRED, String) - The cache identifier previously issued by the verifier for this assertion. It is opaque to the caller, which MUST present it exactly as received and MUST NOT parse or construct it.<a href="#section-4.11-3.1" class="pilcrow">¶</a>
 </li>
         </ul>
 <p id="section-4.11-4"><strong>Example:</strong><a href="#section-4.11-4" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.11-5">
-<pre>Signature-Key: sig1=cached;handle=:aGFuZGxlLXZhbHVl:
+<pre>Signature-Key: sig1=cached;cid="2f9c8a1e-a7b3"
 
 </pre><a href="#section-4.11-5" class="pilcrow">¶</a>
 </div>
-<p id="section-4.11-6">A request using the cached scheme MUST carry the per-request HTTP Message Signature as usual. The handle stands in for the assertion, not for the signature. The verifier resolves the handle to the cached assertion (<a href="#presenting-and-resolving-a-cached-assertion" class="auto internal xref">Section 7.1</a>), obtains the assertion's confirmation key, and verifies the per-request signature against that key. The <code>signature-key</code> component is covered by the signature (<a href="#signature-key-integrity" class="auto internal xref">Section 8.7</a>), so the handle is signed over and cannot be substituted by an intermediary.<a href="#section-4.11-6" class="pilcrow">¶</a></p>
-<p id="section-4.11-7">A caller MUST NOT present a cached handle unless a verifier has offered one for that assertion via Signature-Key-Cache (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>). A verifier that does not implement assertion caching treats cached as an unimplemented scheme and returns <code>unsupported_scheme</code> (<a href="#unsupported-scheme" class="auto internal xref">Section 6.4.2</a>); the caller then retries with the full assertion.<a href="#section-4.11-7" class="pilcrow">¶</a></p>
+<p id="section-4.11-6">A request using the cached scheme MUST carry the per-request HTTP Message Signature as usual. The cache identifier stands in for the assertion, not for the signature. The verifier resolves it to the cached assertion (<a href="#presenting-and-resolving-a-cached-assertion" class="auto internal xref">Section 7.1</a>), obtains the assertion's confirmation key, and verifies the per-request signature against that key. The <code>signature-key</code> component is covered by the signature (<a href="#signature-key-integrity" class="auto internal xref">Section 8.7</a>), so the cache identifier is signed over and cannot be substituted by an intermediary.<a href="#section-4.11-6" class="pilcrow">¶</a></p>
+<p id="section-4.11-7">A caller MUST NOT present a cache identifier unless a verifier has issued one for that assertion via Signature-Key-Cache (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>). A verifier that does not implement assertion caching treats cached as an unimplemented scheme and returns <code>unsupported_scheme</code> (<a href="#unsupported-scheme" class="auto internal xref">Section 6.4.2</a>); the caller then retries with the full assertion.<a href="#section-4.11-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2655,13 +2658,13 @@ Accept-Signature-Scheme: jwks_uri, jwt
           <h4 id="name-cache_miss">
 <a href="#section-6.4.3" class="section-number selfRef">6.4.3. </a><a href="#name-cache_miss" class="section-name selfRef">cache_miss</a>
           </h4>
-<p id="section-6.4.3-1">A handle presented with the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 4.11</a>) could not be resolved to a cached assertion. The handle is unknown, has been evicted, or failed integrity or decryption.<a href="#section-6.4.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.4.3-1">A cache identifier presented with the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 4.11</a>) could not be resolved to a cached assertion. It is unknown, has been evicted, or failed integrity or decryption.<a href="#section-6.4.3-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-6.4.3-2">
 <pre>Signature-Error: error=cache_miss
 
 </pre><a href="#section-6.4.3-2" class="pilcrow">¶</a>
 </div>
-<p id="section-6.4.3-3">This error is recoverable and carries no additional members. The caller retries the request presenting the assertion in full (for example via the jwt scheme). A verifier MAY return it with <code>401 Unauthorized</code>. A verifier MUST NOT treat an unresolved handle as an authorization failure, and MUST NOT return <code>cache_miss</code> for an assertion that resolved but failed validation.<a href="#section-6.4.3-3" class="pilcrow">¶</a></p>
+<p id="section-6.4.3-3">This error is recoverable and carries no additional members. The caller retries the request presenting the assertion in full (for example via the jwt scheme). A verifier MAY return it with <code>401 Unauthorized</code>. A verifier MUST NOT treat an unresolved cache identifier as an authorization failure, and MUST NOT return <code>cache_miss</code> for an assertion that resolved but failed validation.<a href="#section-6.4.3-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="invalid-signature">
@@ -2771,48 +2774,46 @@ Accept-Signature-Scheme: jwks_uri, jwt
       <h2 id="name-signature-key-cache-respons">
 <a href="#section-7" class="section-number selfRef">7. </a><a href="#name-signature-key-cache-respons" class="section-name selfRef">Signature-Key-Cache Response Header</a>
       </h2>
-<p id="section-7-1">A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the <code>cache</code> signal (<a href="#jwt-confirmation-key-jwt" class="auto internal xref">Section 4.8</a>), MAY return the <code>Signature-Key-Cache</code> response header to offer the caller a handle for later reference.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-1">A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the <code>cache</code> signal (<a href="#jwt-confirmation-key-jwt" class="auto internal xref">Section 4.8</a>), MAY return the <code>Signature-Key-Cache</code> response header to issue the caller a cache identifier for later reference.<a href="#section-7-1" class="pilcrow">¶</a></p>
 <p id="section-7-2"><code>Signature-Key-Cache</code> is a Dictionary (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 3.2) keyed by the signature label whose assertion was cached.<a href="#section-7-2" class="pilcrow">¶</a></p>
-<p id="section-7-3">The member value is the handle itself, a Byte Sequence. It is not a named parameter. The caller presents this same Byte Sequence back to the verifier as the <code>handle</code> parameter of the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 4.11</a>). The handle is opaque to the caller; a verifier MAY encode self-contained, integrity-protected, encrypted state in it so that any node in a verifier fleet can honor it without shared cache state.<a href="#section-7-3" class="pilcrow">¶</a></p>
-<p id="section-7-4">The member's parameters describe the cached assertion:<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-3">The member value is the cache identifier itself, a String. It is not a named parameter. The caller presents this same String back to the verifier as the <code>cid</code> parameter of the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 4.11</a>).<a href="#section-7-3" class="pilcrow">¶</a></p>
+<p id="section-7-4">The cache identifier is opaque to the caller. A verifier chooses its own form: a random value indexed in a cache, or a self-contained, integrity-protected, encrypted value that any node in a verifier fleet can resolve without shared cache state. A verifier using the self-contained form SHOULD choose a compact textual encoding, since the identifier is carried on every request that uses it. See <a href="#why-the-verifier-issues-the-cache-identifier" class="auto internal xref">Appendix A.8</a>.<a href="#section-7-4" class="pilcrow">¶</a></p>
+<p id="section-7-5">The member's parameters describe the cached assertion:<a href="#section-7-5" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-7-5.1">
-          <p id="section-7-5.1.1"><code>jti</code> (String, OPTIONAL): The <code>jti</code> claim of the cached assertion, so the caller can store the handle against the assertion's stable identity rather than the per-request label.<a href="#section-7-5.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-7-6.1">
+          <p id="section-7-6.1.1"><code>jti</code> (String, OPTIONAL): The <code>jti</code> claim of the cached assertion (<span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span>, Section 4.1.7), echoed so the caller can associate the cache identifier with the assertion's own identity rather than with the per-request signature label. A JWT is cacheable only if it carries a <code>jti</code> (<a href="#jwt-confirmation-key-jwt" class="auto internal xref">Section 4.8</a>), so this value always exists; a verifier SHOULD include it when a caller may have more than one assertion in flight.<a href="#section-7-6.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li class="normal" id="section-7-5.2">
-          <p id="section-7-5.2.1"><code>thumbprint</code> (Byte Sequence, OPTIONAL): A thumbprint of the cached assertion, used as the stable identifier when the assertion has no <code>jti</code>. A verifier SHOULD include <code>jti</code> when the assertion has one and <code>thumbprint</code> otherwise.<a href="#section-7-5.2.1" class="pilcrow">¶</a></p>
-</li>
-        <li class="normal" id="section-7-5.3">
-          <p id="section-7-5.3.1"><code>expires</code> (Integer, OPTIONAL): An advisory time, in seconds since the Unix epoch, after which the verifier may no longer honor the handle. When present it MUST NOT be later than the assertion's own expiry. This is advisory; the caller MUST be prepared for a cache miss (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>) at any time regardless of <code>expires</code>.<a href="#section-7-5.3.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-7-6.2">
+          <p id="section-7-6.2.1"><code>expires</code> (Integer, OPTIONAL): An advisory time, in seconds since the Unix epoch, after which the verifier may no longer honor the cache identifier. When present it MUST NOT be later than the assertion's own expiry. This is advisory; the caller MUST be prepared for a cache miss (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>) at any time regardless of <code>expires</code>.<a href="#section-7-6.2.1" class="pilcrow">¶</a></p>
 </li>
       </ul>
-<p id="section-7-6"><strong>Example:</strong><a href="#section-7-6" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7-7">
-<pre>Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
+<p id="section-7-7"><strong>Example:</strong><a href="#section-7-7" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7-8">
+<pre>Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
 
-</pre><a href="#section-7-7" class="pilcrow">¶</a>
+</pre><a href="#section-7-8" class="pilcrow">¶</a>
 </div>
-<p id="section-7-8"><strong>Round trip:</strong><a href="#section-7-8" class="pilcrow">¶</a></p>
-<p id="section-7-9">The caller presents the assertion in full and asks for a handle:<a href="#section-7-9" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="section-7-10">
+<p id="section-7-9"><strong>Round trip:</strong><a href="#section-7-9" class="pilcrow">¶</a></p>
+<p id="section-7-10">The caller presents the assertion in full and asks for a cache identifier. The JWT carries a <code>jti</code>, without which it is not cacheable:<a href="#section-7-10" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-7-11">
 <pre>Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
 
-</pre><a href="#section-7-10" class="pilcrow">¶</a>
+</pre><a href="#section-7-11" class="pilcrow">¶</a>
 </div>
-<p id="section-7-11">The verifier caches the assertion and returns a handle for it:<a href="#section-7-11" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="section-7-12">
-<pre>Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
+<p id="section-7-12">The verifier caches the assertion and issues a cache identifier for it:<a href="#section-7-12" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-7-13">
+<pre>Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
 
-</pre><a href="#section-7-12" class="pilcrow">¶</a>
+</pre><a href="#section-7-13" class="pilcrow">¶</a>
 </div>
-<p id="section-7-13">On subsequent requests the caller presents the handle in place of the assertion, as the <code>handle</code> parameter of the cached scheme. The Byte Sequence is the one the verifier returned, unchanged:<a href="#section-7-13" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="section-7-14">
-<pre>Signature-Key: sig1=cached;handle=:aGFuZGxlLXZhbHVl:
+<p id="section-7-14">On subsequent requests the caller presents the cache identifier in place of the assertion, as the <code>cid</code> parameter of the cached scheme. The String is the one the verifier issued, unchanged:<a href="#section-7-14" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-7-15">
+<pre>Signature-Key: sig1=cached;cid="2f9c8a1e-a7b3"
 
-</pre><a href="#section-7-14" class="pilcrow">¶</a>
+</pre><a href="#section-7-15" class="pilcrow">¶</a>
 </div>
-<p id="section-7-15">Each request is signed as usual, and <code>signature-key</code> remains a covered component, so the handle is signed over on every request that carries it.<a href="#section-7-15" class="pilcrow">¶</a></p>
-<p id="section-7-16">The handle's validity never exceeds the cached assertion's expiry. Presenting a handle for an assertion that has expired is not a cache condition; the verifier resolves the handle and the assertion then fails validation exactly as an expired assertion presented in full would.<a href="#section-7-16" class="pilcrow">¶</a></p>
+<p id="section-7-16">Each request is signed as usual, and <code>signature-key</code> remains a covered component, so the cache identifier is signed over on every request that carries it.<a href="#section-7-16" class="pilcrow">¶</a></p>
+<p id="section-7-17">The cache identifier's validity never exceeds the cached assertion's expiry. Presenting a cache identifier for an assertion that has expired is not a cache condition; the verifier resolves it and the assertion then fails validation exactly as an expired assertion presented in full would.<a href="#section-7-17" class="pilcrow">¶</a></p>
 <div id="presenting-and-resolving-a-cached-assertion">
 <section id="section-7.1">
         <h3 id="name-presenting-and-resolving-a-">
@@ -2821,10 +2822,10 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <p id="section-7.1-1">A receiver processes a request bearing the cached scheme in two stages, which MUST remain distinct:<a href="#section-7.1-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-7.1-2">
 <li id="section-7.1-2.1">
-            <p id="section-7.1-2.1.1">Resolution. The signature-verification layer resolves the handle to the cached assertion. If the handle is unknown, expired from the cache, or (for a self-contained handle) fails integrity or decryption, resolution fails and the verifier returns <code>cache_miss</code> (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>). On success, the verifier obtains the assertion and its confirmation key and verifies the per-request signature against that key. This stage answers cache hit or cache miss.<a href="#section-7.1-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-7.1-2.1.1">Resolution. The signature-verification layer resolves the cache identifier to the cached assertion. If it is unknown, expired from the cache, or (for a self-contained identifier) fails integrity or decryption, resolution fails and the verifier returns <code>cache_miss</code> (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>). On success, the verifier obtains the assertion and its confirmation key and verifies the per-request signature against that key. This stage answers cache hit or cache miss.<a href="#section-7.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-7.1-2.2">
-            <p id="section-7.1-2.2.1">Validation. The resolved assertion is validated by the consuming authorization layer identically to an assertion presented in full, including expiry and any other claim checks. Resolution by handle does not move, replace, or defer this validation. This stage answers valid or invalid, and an expired assertion here produces the same error as an expired assertion presented in full.<a href="#section-7.1-2.2.1" class="pilcrow">¶</a></p>
+            <p id="section-7.1-2.2.1">Validation. The resolved assertion is validated by the consuming authorization layer identically to an assertion presented in full, including expiry and any other claim checks. Resolution by cache identifier does not move, replace, or defer this validation. This stage answers valid or invalid, and an expired assertion here produces the same error as an expired assertion presented in full.<a href="#section-7.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
         </ol>
 <p id="section-7.1-3">These two outcomes MUST NOT be conflated. A cache miss (stage 1) means the assertion could not be reconstructed and is recovered by resending it in full. An invalid assertion (stage 2) means the assertion was reconstructed and failed validation and is not recovered by resending it. A verifier MUST NOT report a validation failure as a cache miss, nor a cache miss as an authorization failure.<a href="#section-7.1-3" class="pilcrow">¶</a></p>
@@ -2837,7 +2838,7 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <a href="#section-7.2" class="section-number selfRef">7.2. </a><a href="#name-degradation-and-interoperab" class="section-name selfRef">Degradation and Interoperability</a>
         </h3>
 <p id="section-7.2-1">Implementation of assertion caching is OPTIONAL. The degradation behavior in this subsection is not.<a href="#section-7.2-1" class="pilcrow">¶</a></p>
-<p id="section-7.2-2">A verifier that does not implement assertion caching MUST NOT emit <code>Signature-Key-Cache</code>, and MUST reject a request using the cached scheme with <code>unsupported_scheme</code> (<a href="#unsupported-scheme" class="auto internal xref">Section 6.4.2</a>). A caller MUST NOT present the cached scheme unless a verifier has offered a handle for that assertion. A verifier that implements caching MUST implement the <code>cache_miss</code> path (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>). These rules allow a caching caller and a non-caching verifier, and the reverse, to interoperate without prior negotiation: a caller always falls back to presenting the assertion in full.<a href="#section-7.2-2" class="pilcrow">¶</a></p>
+<p id="section-7.2-2">A verifier that does not implement assertion caching MUST NOT emit <code>Signature-Key-Cache</code>, and MUST reject a request using the cached scheme with <code>unsupported_scheme</code> (<a href="#unsupported-scheme" class="auto internal xref">Section 6.4.2</a>). A caller MUST NOT present the cached scheme unless a verifier has issued a cache identifier for that assertion. A verifier that implements caching MUST implement the <code>cache_miss</code> path (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>). These rules allow a caching caller and a non-caching verifier, and the reverse, to interoperate without prior negotiation: a caller always falls back to presenting the assertion in full.<a href="#section-7.2-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2964,9 +2965,10 @@ Accept-Signature-Scheme: jwks_uri, jwt
         <h3 id="name-cached-assertion-handles">
 <a href="#section-8.5" class="section-number selfRef">8.5. </a><a href="#name-cached-assertion-handles" class="section-name selfRef">Cached Assertion Handles</a>
         </h3>
-<p id="section-8.5-1">Cached-assertion handles inherit the request's proof of possession. A handle is presented in the Signature-Key header, which is a covered component, and the request is signed by the agent's confirmation key, so a captured handle is useless without the corresponding private key, the same property as a captured token. A handle is covered by the per-request signature and cannot be substituted by an intermediary.<a href="#section-8.5-1" class="pilcrow">¶</a></p>
-<p id="section-8.5-2">A handle is a stable reference to one assertion and is therefore a correlator across the requests that use it, for the life of the assertion. This exposes no more to the verifier than the assertion already does, since the verifier holds the assertion; a verifier concerned with correlation by intermediaries MAY issue and rotate distinct handles.<a href="#section-8.5-2" class="pilcrow">¶</a></p>
-<p id="section-8.5-3">A self-contained handle carries verifier state to itself across a fleet. Such a handle MUST be integrity-protected and encrypted under keys known only to the verifier fleet, so that it cannot be forged or read by any other party, and a handle that fails integrity or decryption MUST be treated as a cache miss (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>).<a href="#section-8.5-3" class="pilcrow">¶</a></p>
+<p id="section-8.5-1">Cache identifiers inherit the request's proof of possession. A cache identifier is presented in the Signature-Key header, which is a covered component, and the request is signed by the agent's confirmation key, so a captured identifier is useless without the corresponding private key, the same property as a captured token. It is covered by the per-request signature and cannot be substituted by an intermediary.<a href="#section-8.5-1" class="pilcrow">¶</a></p>
+<p id="section-8.5-2">Because the verifier issues the identifier, it controls the namespace. A verifier MUST generate cache identifiers that are unpredictable to any party other than itself, so that one caller cannot construct or guess an identifier that resolves to another caller's assertion, and MUST verify that a resolved assertion is the one the presenting caller may use rather than treating successful resolution as sufficient. An identifier is a lookup key supplied by a remote party and is untrusted input to the cache.<a href="#section-8.5-2" class="pilcrow">¶</a></p>
+<p id="section-8.5-3">A cache identifier is a stable reference to one assertion and is therefore a correlator across the requests that use it, for the life of the assertion. This exposes no more to the verifier than the assertion already does, since the verifier holds the assertion; a verifier concerned with correlation by intermediaries MAY issue and rotate distinct identifiers for the same assertion.<a href="#section-8.5-3" class="pilcrow">¶</a></p>
+<p id="section-8.5-4">A self-contained cache identifier carries verifier state to itself across a fleet. Such an identifier MUST be integrity-protected and encrypted under keys known only to the verifier fleet, so that it cannot be forged or read by any other party, and one that fails integrity or decryption MUST be treated as a cache miss (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>).<a href="#section-8.5-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="pqc-sizes">
@@ -3251,7 +3253,7 @@ Accept-Signature-Scheme: jwks_uri, jwt
                 <td class="text-left" rowspan="1" colspan="1">
                   <code>cache_miss</code>
 </td>
-                <td class="text-left" rowspan="1" colspan="1">Cached assertion handle could not be resolved</td>
+                <td class="text-left" rowspan="1" colspan="1">Cache identifier could not be resolved</td>
                 <td class="text-left" rowspan="1" colspan="1">[this document]</td>
               </tr>
               <tr>
@@ -3349,7 +3351,7 @@ Accept-Signature-Scheme: jwks_uri, jwt
 </li>
         <li class="normal" id="section-11-7.4">Added a Problem Statement section stating the gaps this document addresses and the invariants that follow.<a href="#section-11-7.4" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-11-7.5">Added assertion caching: the <code>cached</code> scheme, the <code>cache</code> signal on the jwt scheme, the <code>Signature-Key-Cache</code> response header, the <code>cache_miss</code> error, and the resolution/validation processing model. Implementation is optional; the degradation behavior is not.<a href="#section-11-7.5" class="pilcrow">¶</a>
+        <li class="normal" id="section-11-7.5">Added assertion caching: the <code>cached</code> scheme carrying a verifier-issued <code>cid</code>, the <code>cache</code> signal on the jwt scheme, the <code>Signature-Key-Cache</code> response header, the <code>cache_miss</code> error, and the resolution/validation processing model. A JWT is cacheable only if it carries a <code>jti</code>. Implementation is optional; the degradation behavior is not.<a href="#section-11-7.5" class="pilcrow">¶</a>
 </li>
         <li class="normal" id="section-11-7.6">Added the <code>unsupported_scheme</code> error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.<a href="#section-11-7.6" class="pilcrow">¶</a>
 </li>
@@ -3724,23 +3726,46 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <p id="appendix-A.7-2">Long-term non-repudiation is out of scope for this layer and is provided above it. The per-request signature is not the durable evidentiary record. Where long-term, tamper-evident proof of what an agent did is required, it is provided by a transparency ledger that records actions and is itself protected for the long term, not by retaining and later trusting individual per-request signatures. Because durable evidence lives in the ledger, the per-request signature has no long-term evidentiary value to protect, and the classical hot path needs no post-quantum sealing at this layer. The ledger, being the durable artifact, is where post-quantum protection is applied for audit. The ledger itself is outside the scope of this document.<a href="#appendix-A.7-2" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="precedents-for-assertion-caching">
+<div id="why-the-verifier-issues-the-cache-identifier">
 <section id="appendix-A.8">
-        <h3 id="name-precedents-for-assertion-ca">
-<a href="#appendix-A.8" class="section-number selfRef">A.8. </a><a href="#name-precedents-for-assertion-ca" class="section-name selfRef">Precedents for Assertion Caching</a>
+        <h3 id="name-why-the-verifier-issues-the">
+<a href="#appendix-A.8" class="section-number selfRef">A.8. </a><a href="#name-why-the-verifier-issues-the" class="section-name selfRef">Why the Verifier Issues the Cache Identifier</a>
         </h3>
-<p id="appendix-A.8-1">The reference-and-fallback shape of the cached scheme follows established practice.<a href="#appendix-A.8-1" class="pilcrow">¶</a></p>
-<p id="appendix-A.8-2">The TLS Cached Information Extension <span>[<a href="#RFC7924" class="cite xref">RFC7924</a>]</span> lets a client tell the server it already holds an object and reference it, with a defined fallback when the server's copy does not match. The cached scheme has the same shape: a reference in place of the object, and a defined miss path back to sending it in full.<a href="#appendix-A.8-2" class="pilcrow">¶</a></p>
-<p id="appendix-A.8-3">TLS session tickets (<span>[<a href="#RFC5077" class="cite xref">RFC5077</a>]</span>; <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, Section 4.6.1) are server-minted, optionally self-contained encrypted handles that any node in a fleet can honor without shared state. This is the precedent for permitting a self-contained handle (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>) and for the fleet case in which a handle minted by one node is presented to another that cannot resolve it (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>).<a href="#appendix-A.8-3" class="pilcrow">¶</a></p>
-<p id="appendix-A.8-4">These are cited as context for the design, not as normative dependencies.<a href="#appendix-A.8-4" class="pilcrow">¶</a></p>
+<p id="appendix-A.8-1">The cache identifier is issued by the verifier, not chosen by the caller. The caller already has an identifier for the assertion, its <code>jti</code>, so it is worth stating why that one is not used and why the naming is the verifier's.<a href="#appendix-A.8-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="appendix-A.8-2">
+<li id="appendix-A.8-2.1">
+            <p id="appendix-A.8-2.1.1"><strong>The cache is the verifier's.</strong> The identifier is a lookup key into storage the verifier owns and evicts from. Only the verifier knows its namespace, its eviction policy, and whether an entry survives. A caller-chosen key would name something the caller cannot observe.<a href="#appendix-A.8-2.1.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="appendix-A.8-2.2">
+            <p id="appendix-A.8-2.2.1"><strong>A <code>jti</code> is unique per issuer, not per verifier.</strong> The <code>jti</code> claim is unique within the scope of its issuer (<span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span>, Section 4.1.7). A verifier accepting assertions from many issuers can be presented with the same <code>jti</code> by unrelated callers, so <code>jti</code> alone is not a key. A verifier could key on issuer and <code>jti</code> together, but that is a compound the caller would have to reconstruct exactly, and it fixes the key's form for every verifier rather than letting each choose.<a href="#appendix-A.8-2.2.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="appendix-A.8-2.3">
+            <p id="appendix-A.8-2.3.1"><strong>A caller-chosen identifier is attacker-chosen input to a lookup.</strong> If callers named their own entries, one caller could name an entry another caller had created, and cache lookup would become a probe for whether a given assertion is held. Verifier-issued identifiers keep the namespace under the verifier's control, which is what allows the unpredictability requirement in Security Considerations to mean anything.<a href="#appendix-A.8-2.3.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="appendix-A.8-2.4">
+            <p id="appendix-A.8-2.4.1"><strong>Only the verifier can make the identifier self-contained.</strong> A verifier that encodes the assertion's state into the identifier, encrypted to itself, can resolve it on any node without shared cache state. That is possible only if the verifier constructs it. TLS session tickets take the same approach for the same reason (<a href="#precedents-for-assertion-caching" class="auto internal xref">Appendix A.9</a>).<a href="#appendix-A.8-2.4.1" class="pilcrow">¶</a></p>
+</li>
+        </ol>
+<p id="appendix-A.8-3">The <code>jti</code> is still useful to the caller, and is echoed in <code>Signature-Key-Cache</code> so that a caller with several assertions in flight can associate the identifier it receives with the assertion it sent. It identifies the assertion; the cache identifier identifies the verifier's cached copy of it.<a href="#appendix-A.8-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="precedents-for-assertion-caching">
+<section id="appendix-A.9">
+        <h3 id="name-precedents-for-assertion-ca">
+<a href="#appendix-A.9" class="section-number selfRef">A.9. </a><a href="#name-precedents-for-assertion-ca" class="section-name selfRef">Precedents for Assertion Caching</a>
+        </h3>
+<p id="appendix-A.9-1">The reference-and-fallback shape of the cached scheme follows established practice.<a href="#appendix-A.9-1" class="pilcrow">¶</a></p>
+<p id="appendix-A.9-2">The TLS Cached Information Extension <span>[<a href="#RFC7924" class="cite xref">RFC7924</a>]</span> lets a client tell the server it already holds an object and reference it, with a defined fallback when the server's copy does not match. The cached scheme has the same shape: a reference in place of the object, and a defined miss path back to sending it in full.<a href="#appendix-A.9-2" class="pilcrow">¶</a></p>
+<p id="appendix-A.9-3">TLS session tickets (<span>[<a href="#RFC5077" class="cite xref">RFC5077</a>]</span>; <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, Section 4.6.1) are server-minted, optionally self-contained encrypted references that any node in a fleet can honor without shared state. This is the precedent for permitting a self-contained cache identifier (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 7</a>) and for the fleet case in which an identifier minted by one node is presented to another that cannot resolve it (<a href="#cache_miss" class="auto internal xref">Section 6.4.3</a>).<a href="#appendix-A.9-3" class="pilcrow">¶</a></p>
+<p id="appendix-A.9-4">These are cited as context for the design, not as normative dependencies.<a href="#appendix-A.9-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="why-strings-instead-of-byte-sequences-for-hwk">
-<section id="appendix-A.9">
+<section id="appendix-A.10">
         <h3 id="name-why-strings-instead-of-byte">
-<a href="#appendix-A.9" class="section-number selfRef">A.9. </a><a href="#name-why-strings-instead-of-byte" class="section-name selfRef">Why Strings Instead of Byte Sequences for hwk?</a>
+<a href="#appendix-A.10" class="section-number selfRef">A.10. </a><a href="#name-why-strings-instead-of-byte" class="section-name selfRef">Why Strings Instead of Byte Sequences for hwk?</a>
         </h3>
-<p id="appendix-A.9-1">The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>, while structured field byte sequences use base64 encoding per <span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.<a href="#appendix-A.9-1" class="pilcrow">¶</a></p>
+<p id="appendix-A.10-1">The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>, while structured field byte sequences use base64 encoding per <span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.<a href="#appendix-A.10-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
