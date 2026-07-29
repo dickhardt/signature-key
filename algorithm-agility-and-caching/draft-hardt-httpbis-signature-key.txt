@@ -110,15 +110,14 @@ Table of Contents
      6.4.  Error Codes
        6.4.1.  unsupported_algorithm
        6.4.2.  unsupported_scheme
-       6.4.3.  unsupported_key_type
-       6.4.4.  cache_miss
-       6.4.5.  invalid_signature
-       6.4.6.  invalid_input
-       6.4.7.  invalid_request
-       6.4.8.  invalid_key
-       6.4.9.  unknown_key
-       6.4.10. invalid_jwt
-       6.4.11. expired_jwt
+       6.4.3.  cache_miss
+       6.4.4.  invalid_signature
+       6.4.5.  invalid_input
+       6.4.6.  invalid_request
+       6.4.7.  invalid_key
+       6.4.8.  unknown_key
+       6.4.9.  invalid_jwt
+       6.4.10. expired_jwt
    7.  Signature-Key-Cache Response Header
      7.1.  Presenting and Resolving a Cached Assertion
      7.2.  Degradation and Interoperability
@@ -444,7 +443,7 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
    keys, MUST reject the key with defined error feedback and MUST NOT
    fail in an undefined manner.  Unrecognized key material is handled on
    the same defined path as an unsupported algorithm, via
-   unsupported_key_type (Section 6.4.3).  Absence of support for a key
+   unsupported_algorithm (Section 6.4.1).  Absence of support for a key
    type is a reason to decline, not a parsing failure.
 
 4.4.  Header Web Key (hwk)
@@ -1345,6 +1344,13 @@ Signature: sig1=:MEQCIA5...:
    Signature-Error: error=unsupported_algorithm,
        supported_algorithms=("ed25519" "ecdsa-p256-sha256")
 
+   This error also covers a JWK whose key type the server does not
+   implement (Section 4.3).  Because a fully-specified algorithm
+   identifier determines the key type, supported_algorithms tells the
+   client which key types are usable without a separate member: a client
+   offered ed25519 learns that an OKP key on the Ed25519 curve is
+   accepted.
+
 6.4.2.  unsupported_scheme
 
    The Signature-Key scheme presented by the client is not supported by
@@ -1361,28 +1367,7 @@ Signature: sig1=:MEQCIA5...:
    This error is recoverable.  A server MAY return it with 401
    Unauthorized so the client can retry with an accepted scheme.
 
-6.4.3.  unsupported_key_type
-
-   The key type of the JWK presented by the client is not implemented by
-   the server.  This includes the AKP key type defined by [RFC9964] for
-   post-quantum keys, and any other kty the verifier does not implement.
-
-   *  supported_key_types (REQUIRED): An Inner List of String
-      ([RFC8941], Section 3.1.1) listing the JWK key types the server
-      accepts, using kty values from the JSON Web Key Types registry
-      ([RFC7517], Section 6.1).  The response MUST include this member.
-
-   Signature-Error: error=unsupported_key_type,
-       supported_key_types=("OKP" "EC")
-
-   This error is recoverable and is distinct from unsupported_algorithm:
-   an unsupported algorithm may be retried with a different registered
-   algorithm the client also holds for the same key, whereas an
-   unsupported key type means the key itself is unusable and the client
-   must present different key material.  A server MAY return it with 401
-   Unauthorized.
-
-6.4.4.  cache_miss
+6.4.3.  cache_miss
 
    A handle presented with the cached scheme (Section 4.11) could not be
    resolved to a cached assertion.  The handle is unknown, has been
@@ -1397,7 +1382,7 @@ Signature: sig1=:MEQCIA5...:
    authorization failure, and MUST NOT return cache_miss for an
    assertion that resolved but failed validation.
 
-6.4.5.  invalid_signature
+6.4.4.  invalid_signature
 
    The HTTP Message Signature is missing, malformed, or cryptographic
    verification failed.  This includes missing Signature, Signature-
@@ -1406,7 +1391,7 @@ Signature: sig1=:MEQCIA5...:
 
    Signature-Error: error=invalid_signature
 
-6.4.6.  invalid_input
+6.4.5.  invalid_input
 
    The Signature-Input is missing required covered components.
 
@@ -1418,7 +1403,7 @@ Signature: sig1=:MEQCIA5...:
        required_input=("@method" "@authority" "@path"
        "signature-key" "content-digest")
 
-6.4.7.  invalid_request
+6.4.6.  invalid_request
 
    The request is malformed or missing required information unrelated to
    signature verification — such as missing query parameters or an
@@ -1426,14 +1411,14 @@ Signature: sig1=:MEQCIA5...:
 
    Signature-Error: error=invalid_request
 
-6.4.8.  invalid_key
+6.4.7.  invalid_key
 
    The public key in Signature-Key could not be parsed, is expired, or
    does not meet the server's trust requirements.
 
    Signature-Error: error=invalid_key
 
-6.4.9.  unknown_key
+6.4.8.  unknown_key
 
    The public key from Signature-Key does not match any key at the
    client's jwks_uri (applicable when the client uses scheme=jwks_uri).
@@ -1442,14 +1427,14 @@ Signature: sig1=:MEQCIA5...:
 
    Signature-Error: error=unknown_key
 
-6.4.10.  invalid_jwt
+6.4.9.  invalid_jwt
 
    The JWT in the Signature-Key header (when using scheme=jwt or
    scheme=jkt-jwt) is malformed or its signature verification failed.
 
    Signature-Error: error=invalid_jwt
 
-6.4.11.  expired_jwt
+6.4.10.  expired_jwt
 
    The JWT in the Signature-Key header (when using scheme=jwt or
    scheme=jkt-jwt) has expired (exp claim is in the past).
@@ -1486,7 +1471,7 @@ Signature: sig1=:MEQCIA5...:
       the Unix epoch, after which the verifier may no longer honor the
       handle.  When present it MUST NOT be later than the assertion's
       own expiry.  This is advisory; the caller MUST be prepared for a
-      cache miss (Section 6.4.4) at any time regardless of expires.
+      cache miss (Section 6.4.3) at any time regardless of expires.
 
    *Example:*
 
@@ -1507,7 +1492,7 @@ Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
        to the cached assertion.  If the handle is unknown, expired from
        the cache, or (for a self-contained handle) fails integrity or
        decryption, resolution fails and the verifier returns cache_miss
-       (Section 6.4.4).  On success, the verifier obtains the assertion
+       (Section 6.4.3).  On success, the verifier obtains the assertion
        and its confirmation key and verifies the per-request signature
        against that key.  This stage answers cache hit or cache miss.
 
@@ -1543,7 +1528,7 @@ Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
    scheme with unsupported_scheme (Section 6.4.2).  A caller MUST NOT
    present the cached scheme unless a verifier has offered a handle for
    that assertion.  A verifier that implements caching MUST implement
-   the cache_miss path (Section 6.4.4).  These rules allow a caching
+   the cache_miss path (Section 6.4.3).  These rules allow a caching
    caller and a non-caching verifier, and the reverse, to interoperate
    without prior negotiation: a caller always falls back to presenting
    the assertion in full.
@@ -1734,7 +1719,7 @@ Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
    fleet.  Such a handle MUST be integrity-protected and encrypted under
    keys known only to the verifier fleet, so that it cannot be forged or
    read by any other party, and a handle that fails integrity or
-   decryption MUST be treated as a cache miss (Section 6.4.4).
+   decryption MUST be treated as a cache miss (Section 6.4.3).
 
 8.6.  Post-Quantum Key and Signature Sizes
 
@@ -1970,9 +1955,6 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    | unsupported_scheme    | Signature-Key scheme          | [this     |
    |                       | not supported                 | document] |
    +-----------------------+-------------------------------+-----------+
-   | unsupported_key_type  | JWK key type not              | [this     |
-   |                       | supported                     | document] |
-   +-----------------------+-------------------------------+-----------+
    | cache_miss            | Cached assertion handle       | [this     |
    |                       | could not be resolved         | document] |
    +-----------------------+-------------------------------+-----------+
@@ -2016,8 +1998,8 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
          and required RSA keys to name padding and hash.  Reversed the
          previous hwk constraint that alg MUST NOT be present.
       -  Required defined rejection of unimplemented JWK key types,
-         including the AKP type from RFC 9964, and added the
-         unsupported_key_type error code.
+         including the AKP type from RFC 9964, reported via
+         unsupported_algorithm.
       -  Noted that ML-DSA identifiers are fully specified and satisfy
          the rule without special treatment; added a deployment
          consideration on post-quantum key and signature sizes.
@@ -2464,7 +2446,7 @@ A.7.  Precedents for Assertion Caching
    a fleet can honor without shared state.  This is the precedent for
    permitting a self-contained handle (Section 7) and for the fleet case
    in which a handle minted by one node is presented to another that
-   cannot resolve it (Section 6.4.4).
+   cannot resolve it (Section 6.4.3).
 
    These are cited as context for the design, not as normative
    dependencies.
