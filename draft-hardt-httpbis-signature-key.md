@@ -728,7 +728,7 @@ The `sigkey` parameter is an Item parameter on each member of the `Accept-Signat
 
 A parameter value is a single Item ([@!RFC8941], Section 3.1.2) and cannot be a list. A server that accepts more than one scheme therefore names the single scheme it prefers. A client that presents a scheme the server does not accept receives a `Signature-Error` with `error=unsupported_scheme`, which enumerates the accepted schemes in `supported_schemes` ((#unsupported-scheme)). This keeps the challenge within Structured Fields grammar and defers the full list to the point where it is needed. A verifier's handling of a scheme it does not implement is specified in (#signature-key-http-request-header).
 
-When `sigkey` is present, the `keyid` parameter ([@!RFC9421], Section 5) SHOULD NOT be included and MUST be ignored by the client. Key identification is handled by the Signature-Key header schemes, not by `keyid`. The `algs` and `tag` parameters remain applicable alongside `sigkey`.
+When `sigkey` is present, the `keyid` parameter ([@!RFC9421], Section 5) SHOULD NOT be included and MUST be ignored by the client. Key identification is handled by the Signature-Key header schemes, not by `keyid`. The `alg` and `tag` parameters ([@!RFC9421], Section 5.1) remain applicable alongside `sigkey`.
 
 ## Label Binding
 
