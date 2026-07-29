@@ -1815,14 +1815,26 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    is covered by the per-request signature and cannot be substituted by
    an intermediary.
 
-   Because the verifier issues the identifier, it controls the
-   namespace.  A verifier MUST generate cache identifiers that are
-   unpredictable to any party other than itself, so that one caller
-   cannot construct or guess an identifier that resolves to another
-   caller's assertion, and MUST verify that a resolved assertion is the
-   one the presenting caller may use rather than treating successful
-   resolution as sufficient.  An identifier is a lookup key supplied by
-   a remote party and is untrusted input to the cache.
+   A verifier MUST NOT treat successful resolution as authentication.
+   Resolution answers only which assertion was referenced.  The caller
+   is authenticated by the per-request signature, which the verifier
+   MUST verify against the confirmation key carried in the resolved
+   assertion, exactly as it would had the assertion been presented in
+   full.  A caller presenting a cache identifier it did not receive
+   therefore fails signature verification, because it does not hold the
+   corresponding private key.  No separate check that the assertion
+   belongs to the caller is required, or possible: possession of the
+   confirmation key is that proof.
+
+   Cache identifiers MUST be unpredictable to any party other than the
+   verifier.  A guessable identifier does not by itself permit
+   impersonation, since the request signature must still verify against
+   the resolved assertion's confirmation key.  It does allow an
+   unrelated party to distinguish a cache miss from a signature failure
+   and so learn whether a verifier currently holds a given assertion,
+   and it removes the second line of defence against a verifier that
+   resolves without verifying.  An identifier is a lookup key supplied
+   by a remote party and is untrusted input to the cache.
 
    A cache identifier is a stable reference to one assertion and is
    therefore a correlator across the requests that use it, for the life
