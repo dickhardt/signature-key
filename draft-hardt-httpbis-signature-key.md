@@ -83,7 +83,7 @@ HTTP Message Signatures [@!RFC9421] provides a powerful mechanism for creating a
 
 This document defines:
 
-- **Signature-Key** ([Signature-Key HTTP Request Header](#signature-key-http-request-header)) — a request header that distributes public keys for HTTP Message Signature verification. The header supports seven schemes, each designed for different trust models and operational requirements:
+- **Signature-Key** ((#signature-key-http-request-header)) — a request header that distributes public keys for HTTP Message Signature verification. The header supports seven schemes, each designed for different trust models and operational requirements:
 
   1. **Header Web Key (hwk)** - Self-contained public keys for pseudonymous verification
   2. **JKT JWT (jkt-jwt)** - Self-issued key delegation via JWK Thumbprint JWTs ("jacket jot")
@@ -95,9 +95,9 @@ This document defines:
 
   Additional schemes may be defined through the IANA registry established by this document.
 
-- **sigkey** ([Accept-Signature sigkey Parameter](#accept-signature-sigkey-parameter)) — a parameter for the Accept-Signature header ([@!RFC9421], Section 5) that names the Signature-Key scheme the server requires. This extends RFC 9421's existing mechanism for requesting signatures rather than defining a new header.
+- **sigkey** ((#accept-signature-sigkey-parameter)) — a parameter for the Accept-Signature header ([@!RFC9421], Section 5) that names the Signature-Key scheme the server requires. This extends RFC 9421's existing mechanism for requesting signatures rather than defining a new header.
 
-- **Signature-Error** ([Signature-Error HTTP Response Header](#signature-error-http-response-header)) — a response header that provides structured error information when signature verification fails, enabling clients to diagnose and correct signing issues.
+- **Signature-Error** ((#signature-error-http-response-header)) — a response header that provides structured error information when signature verification fails, enabling clients to diagnose and correct signing issues.
 
 The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.
 
@@ -164,7 +164,7 @@ Signature: sig1=:...:, sig2=:...:
 Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk="eg-config";kid="k1"
 ```
 
-Most deployments SHOULD use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See [Signature-Key Integrity](#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
+Most deployments SHOULD use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See (#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
 
 ## Header Web Key (hwk)
 
@@ -917,7 +917,7 @@ Verifiers MAY cache keys to improve performance but MUST implement appropriate c
 
 Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.
 
-When the `Signature-Key` scheme is `jwks_uri` and a cached key matching the JWT `kid` fails signature verification, the verifier SHOULD refresh the issuer's JWKS once and retry verification before returning `unknown_key` (if the key is then absent) or `invalid_jwt` (if verification still fails), subject to the once-per-minute fetch floor and egress admission (§Scheme-Specific Risks) that apply to unknown-`kid` refreshes. This covers silent re-keying where the issuer replaces key material under the same `kid` without changing the identifier.
+When the `Signature-Key` scheme is `jwks_uri` and a cached key matching the JWT `kid` fails signature verification, the verifier SHOULD refresh the issuer's JWKS once and retry verification before returning `unknown_key` (if the key is then absent) or `invalid_jwt` (if verification still fails), subject to the once-per-minute fetch floor and egress admission ((#scheme-specific-risks)) that apply to unknown-`kid` refreshes. This covers silent re-keying where the issuer replaces key material under the same `kid` without changing the identifier.
 
 ## Scheme-Specific Risks {#scheme-specific-risks}
 
