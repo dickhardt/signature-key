@@ -1025,9 +1025,11 @@ Signature-Error: error=expired_jwt
 
 A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal ((#jwt-confirmation-key-jwt)), MAY return the `Signature-Key-Cache` response header to offer the caller a handle for later reference.
 
-`Signature-Key-Cache` is a Dictionary ([@!RFC8941], Section 3.2) keyed by the signature label whose assertion was cached. Each member value is the handle, and its parameters describe the cached assertion:
+`Signature-Key-Cache` is a Dictionary ([@!RFC8941], Section 3.2) keyed by the signature label whose assertion was cached.
 
-- value (Byte Sequence, REQUIRED): The opaque handle. The caller presents it later via the cached scheme ((#cached-scheme)). The handle is opaque to the caller; a verifier MAY encode self-contained, integrity-protected, encrypted state in it so that any node in a verifier fleet can honor it without shared cache state.
+The member value is the handle itself, a Byte Sequence. It is not a named parameter. The caller presents this same Byte Sequence back to the verifier as the `handle` parameter of the cached scheme ((#cached-scheme)). The handle is opaque to the caller; a verifier MAY encode self-contained, integrity-protected, encrypted state in it so that any node in a verifier fleet can honor it without shared cache state.
+
+The member's parameters describe the cached assertion:
 
 - `jti` (String, OPTIONAL): The `jti` claim of the cached assertion, so the caller can store the handle against the assertion's stable identity rather than the per-request label.
 
@@ -1040,6 +1042,28 @@ A verifier that has cached an assertion presented in a signed request, and that 
 ```
 Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
 ```
+
+**Round trip:**
+
+The caller presents the assertion in full and asks for a handle:
+
+```http
+Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
+```
+
+The verifier caches the assertion and returns a handle for it:
+
+```http
+Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
+```
+
+On subsequent requests the caller presents the handle in place of the assertion, as the `handle` parameter of the cached scheme. The Byte Sequence is the one the verifier returned, unchanged:
+
+```http
+Signature-Key: sig1=cached;handle=:aGFuZGxlLXZhbHVl:
+```
+
+Each request is signed as usual, and `signature-key` remains a covered component, so the handle is signed over on every request that carries it.
 
 The handle's validity never exceeds the cached assertion's expiry. Presenting a handle for an assertion that has expired is not a cache condition; the verifier resolves the handle and the assertion then fails validation exactly as an expired assertion presented in full would.
 
