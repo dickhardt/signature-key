@@ -1377,8 +1377,8 @@ This document establishes the "Signature Error Code" registry. New values may be
   - Added the `unsupported_scheme` error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.
   - Expanded the Introduction to state the gaps this document addresses and the three invariants that follow from them.
   - Added an Algorithm Determination subsection as the single scheme-independent home for the fully-specified algorithm rules, referenced from each scheme that conveys or references a JWK.
-  - Required defined rejection of unimplemented JWK key types, including the `AKP` type from RFC 9964, reported via `unsupported_algorithm`.
-  - Noted that ML-DSA identifiers are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.
+  - Required defined rejection of unimplemented JWK key types, including the `AKP` type from [@!RFC9964], reported via `unsupported_algorithm`.
+  - Noted that the ML-DSA identifiers registered by [@!RFC9964] are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.
   - Added assertion caching: the `cached` scheme carrying a verifier-issued `cid`, the `cache` signal on the jwt and jkt-jwt schemes, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. A JWT is cacheable only if it carries a `jti`. The self-jwt scheme is excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not.
   - Added design rationale for a single header with a scheme token rather than a header per scheme, referencing RFC 9170, for carrying the accepted sets in response header fields, for layered cryptographic agility, and for the verifier issuing the cache identifier. Recorded why grease values are not reserved.
   - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
