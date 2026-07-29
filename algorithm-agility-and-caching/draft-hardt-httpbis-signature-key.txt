@@ -431,6 +431,18 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
    with the algorithm intended, and which deprecates polymorphic
    algorithm identifiers in the JOSE registry.
 
+   A JWK also carries key-structure members: kty, which [RFC7517]
+   requires, and crv where the key type has one.  Because a fully-
+   specified alg determines the key type and the curve, these members
+   are redundant with it.  They remain present, since the schemes in
+   this document convey ordinary JWKs, and the redundancy is used as a
+   check rather than ignored: a verifier MUST verify that kty and, where
+   present, crv are consistent with alg, and MUST reject the key if they
+   are not.  A JWK with an alg of ES256 and a kty of RSA is inconsistent
+   and MUST be rejected, as is one with an alg of ES256 and a crv of
+   P-384.  Rejecting on disagreement prevents a key from being used
+   under either of two conflicting interpretations.
+
    Post-quantum signature algorithms are accommodated by this rule
    without special treatment.  For example, the ML-DSA identifiers ML-
    DSA-44, ML-DSA-65, and ML-DSA-87 registered by [RFC9964] are fully
@@ -2000,6 +2012,9 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       -  Required defined rejection of unimplemented JWK key types,
          including the AKP type from RFC 9964, reported via
          unsupported_algorithm.
+      -  Required verifiers to check that a JWK's kty and crv are
+         consistent with its fully-specified alg, and to reject the key
+         when they disagree.
       -  Noted that ML-DSA identifiers are fully specified and satisfy
          the rule without special treatment; added a deployment
          consideration on post-quantum key and signature sizes.
