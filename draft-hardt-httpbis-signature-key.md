@@ -63,7 +63,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header offers a handle by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
+This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header issues a cache identifier by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
 
 .# Discussion Venues
 
@@ -100,7 +100,7 @@ This document defines:
 
 - **Signature-Error** ((#signature-error-http-response-header)) — a response header that provides structured error information when signature verification fails, enabling clients to diagnose and correct signing issues.
 
-- **Signature-Key-Cache** ((#signature-key-cache-response-header)) — a response header by which a verifier offers the caller an opaque handle for an assertion it has cached, so that later requests can reference the assertion instead of resending it.
+- **Signature-Key-Cache** ((#signature-key-cache-response-header)) — a response header by which a verifier issues the caller an opaque cache identifier for an assertion it has cached, so that later requests can reference the assertion instead of resending it.
 
 The Signature-Key header works in conjunction with the Signature-Input and Signature headers defined in RFC 9421, using matching labels to correlate signature metadata with keying material.
 
@@ -502,7 +502,7 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 - `jwt` (REQUIRED, String) - Compact-serialized JWT
 
-- `cache` (OPTIONAL, Boolean) - When true, the caller indicates it can present a cached handle on subsequent requests and requests that the verifier return one. Absent means the caller does not want a handle. Boolean true is indicated by omitting the value ([@!RFC8941], Section 4.1.1.2), so the parameter is serialized as `cache` rather than `cache=?1`. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. See (#signature-key-cache-response-header).
+- `cache` (OPTIONAL, Boolean) - When true, the caller indicates it can present a cache identifier on subsequent requests and requests that the verifier issue one. Absent means the caller does not want one. Boolean true is indicated by omitting the value ([@!RFC8941], Section 4.1.1.2), so the parameter is serialized as `cache` rather than `cache=?1`. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. A JWT presented with `cache` MUST contain a `jti` claim ([@!RFC7519], Section 4.1.7); a verifier MUST NOT issue a cache identifier for a JWT without one. See (#signature-key-cache-response-header).
 
 ```
 Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
@@ -702,21 +702,21 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
 
 ## Cached Assertion (cached) {#cached-scheme}
 
-The cached scheme references an assertion the verifier has previously cached and returned a handle for ((#signature-key-cache-response-header)), in place of presenting the assertion in full.
+The cached scheme references an assertion the verifier has previously cached and issued a cache identifier for ((#signature-key-cache-response-header)), in place of presenting the assertion in full.
 
 **Parameters:**
 
-- `handle` (REQUIRED, Byte Sequence) - The opaque handle previously returned by the verifier for this assertion.
+- `cid` (REQUIRED, String) - The cache identifier previously issued by the verifier for this assertion. It is opaque to the caller, which MUST present it exactly as received and MUST NOT parse or construct it.
 
 **Example:**
 
 ```
-Signature-Key: sig1=cached;handle=:aGFuZGxlLXZhbHVl:
+Signature-Key: sig1=cached;cid="2f9c8a1e-a7b3"
 ```
 
-A request using the cached scheme MUST carry the per-request HTTP Message Signature as usual. The handle stands in for the assertion, not for the signature. The verifier resolves the handle to the cached assertion ((#presenting-and-resolving-a-cached-assertion)), obtains the assertion's confirmation key, and verifies the per-request signature against that key. The `signature-key` component is covered by the signature ((#signature-key-integrity)), so the handle is signed over and cannot be substituted by an intermediary.
+A request using the cached scheme MUST carry the per-request HTTP Message Signature as usual. The cache identifier stands in for the assertion, not for the signature. The verifier resolves it to the cached assertion ((#presenting-and-resolving-a-cached-assertion)), obtains the assertion's confirmation key, and verifies the per-request signature against that key. The `signature-key` component is covered by the signature ((#signature-key-integrity)), so the cache identifier is signed over and cannot be substituted by an intermediary.
 
-A caller MUST NOT present a cached handle unless a verifier has offered one for that assertion via Signature-Key-Cache ((#signature-key-cache-response-header)). A verifier that does not implement assertion caching treats cached as an unimplemented scheme and returns `unsupported_scheme` ((#unsupported-scheme)); the caller then retries with the full assertion.
+A caller MUST NOT present a cache identifier unless a verifier has issued one for that assertion via Signature-Key-Cache ((#signature-key-cache-response-header)). A verifier that does not implement assertion caching treats cached as an unimplemented scheme and returns `unsupported_scheme` ((#unsupported-scheme)); the caller then retries with the full assertion.
 
 # Accept-Signature-Scheme and Accept-Signature-Alg Response Headers {#accept-signature-scheme-and-accept-signature-alg-response-headers}
 
@@ -953,13 +953,13 @@ This error is recoverable. A server MAY return it with `401 Unauthorized` so the
 
 ### cache_miss {#cache_miss}
 
-A handle presented with the cached scheme ((#cached-scheme)) could not be resolved to a cached assertion. The handle is unknown, has been evicted, or failed integrity or decryption.
+A cache identifier presented with the cached scheme ((#cached-scheme)) could not be resolved to a cached assertion. It is unknown, has been evicted, or failed integrity or decryption.
 
 ```http
 Signature-Error: error=cache_miss
 ```
 
-This error is recoverable and carries no additional members. The caller retries the request presenting the assertion in full (for example via the jwt scheme). A verifier MAY return it with `401 Unauthorized`. A verifier MUST NOT treat an unresolved handle as an authorization failure, and MUST NOT return `cache_miss` for an assertion that resolved but failed validation.
+This error is recoverable and carries no additional members. The caller retries the request presenting the assertion in full (for example via the jwt scheme). A verifier MAY return it with `401 Unauthorized`. A verifier MUST NOT treat an unresolved cache identifier as an authorization failure, and MUST NOT return `cache_miss` for an assertion that resolved but failed validation.
 
 ### invalid_signature
 
@@ -1023,57 +1023,57 @@ Signature-Error: error=expired_jwt
 
 # Signature-Key-Cache Response Header {#signature-key-cache-response-header}
 
-A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal ((#jwt-confirmation-key-jwt)), MAY return the `Signature-Key-Cache` response header to offer the caller a handle for later reference.
+A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal ((#jwt-confirmation-key-jwt)), MAY return the `Signature-Key-Cache` response header to issue the caller a cache identifier for later reference.
 
 `Signature-Key-Cache` is a Dictionary ([@!RFC8941], Section 3.2) keyed by the signature label whose assertion was cached.
 
-The member value is the handle itself, a Byte Sequence. It is not a named parameter. The caller presents this same Byte Sequence back to the verifier as the `handle` parameter of the cached scheme ((#cached-scheme)). The handle is opaque to the caller; a verifier MAY encode self-contained, integrity-protected, encrypted state in it so that any node in a verifier fleet can honor it without shared cache state.
+The member value is the cache identifier itself, a String. It is not a named parameter. The caller presents this same String back to the verifier as the `cid` parameter of the cached scheme ((#cached-scheme)).
+
+The cache identifier is opaque to the caller. A verifier chooses its own form: a random value indexed in a cache, or a self-contained, integrity-protected, encrypted value that any node in a verifier fleet can resolve without shared cache state. A verifier using the self-contained form SHOULD choose a compact textual encoding, since the identifier is carried on every request that uses it. See (#why-the-verifier-issues-the-cache-identifier).
 
 The member's parameters describe the cached assertion:
 
-- `jti` (String, OPTIONAL): The `jti` claim of the cached assertion, so the caller can store the handle against the assertion's stable identity rather than the per-request label.
+- `jti` (String, OPTIONAL): The `jti` claim of the cached assertion ([@!RFC7519], Section 4.1.7), echoed so the caller can associate the cache identifier with the assertion's own identity rather than with the per-request signature label. A JWT is cacheable only if it carries a `jti` ((#jwt-confirmation-key-jwt)), so this value always exists; a verifier SHOULD include it when a caller may have more than one assertion in flight.
 
-- `thumbprint` (Byte Sequence, OPTIONAL): A thumbprint of the cached assertion, used as the stable identifier when the assertion has no `jti`. A verifier SHOULD include `jti` when the assertion has one and `thumbprint` otherwise.
-
-- `expires` (Integer, OPTIONAL): An advisory time, in seconds since the Unix epoch, after which the verifier may no longer honor the handle. When present it MUST NOT be later than the assertion's own expiry. This is advisory; the caller MUST be prepared for a cache miss ((#cache_miss)) at any time regardless of `expires`.
+- `expires` (Integer, OPTIONAL): An advisory time, in seconds since the Unix epoch, after which the verifier may no longer honor the cache identifier. When present it MUST NOT be later than the assertion's own expiry. This is advisory; the caller MUST be prepared for a cache miss ((#cache_miss)) at any time regardless of `expires`.
 
 **Example:**
 
 ```
-Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
+Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
 ```
 
 **Round trip:**
 
-The caller presents the assertion in full and asks for a handle:
+The caller presents the assertion in full and asks for a cache identifier. The JWT carries a `jti`, without which it is not cacheable:
 
 ```http
 Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
 ```
 
-The verifier caches the assertion and returns a handle for it:
+The verifier caches the assertion and issues a cache identifier for it:
 
 ```http
-Signature-Key-Cache: sig1=:aGFuZGxlLXZhbHVl:;jti="2f9c8a1e";expires=1730000000
+Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
 ```
 
-On subsequent requests the caller presents the handle in place of the assertion, as the `handle` parameter of the cached scheme. The Byte Sequence is the one the verifier returned, unchanged:
+On subsequent requests the caller presents the cache identifier in place of the assertion, as the `cid` parameter of the cached scheme. The String is the one the verifier issued, unchanged:
 
 ```http
-Signature-Key: sig1=cached;handle=:aGFuZGxlLXZhbHVl:
+Signature-Key: sig1=cached;cid="2f9c8a1e-a7b3"
 ```
 
-Each request is signed as usual, and `signature-key` remains a covered component, so the handle is signed over on every request that carries it.
+Each request is signed as usual, and `signature-key` remains a covered component, so the cache identifier is signed over on every request that carries it.
 
-The handle's validity never exceeds the cached assertion's expiry. Presenting a handle for an assertion that has expired is not a cache condition; the verifier resolves the handle and the assertion then fails validation exactly as an expired assertion presented in full would.
+The cache identifier's validity never exceeds the cached assertion's expiry. Presenting a cache identifier for an assertion that has expired is not a cache condition; the verifier resolves it and the assertion then fails validation exactly as an expired assertion presented in full would.
 
 ## Presenting and Resolving a Cached Assertion {#presenting-and-resolving-a-cached-assertion}
 
 A receiver processes a request bearing the cached scheme in two stages, which MUST remain distinct:
 
-1. Resolution. The signature-verification layer resolves the handle to the cached assertion. If the handle is unknown, expired from the cache, or (for a self-contained handle) fails integrity or decryption, resolution fails and the verifier returns `cache_miss` ((#cache_miss)). On success, the verifier obtains the assertion and its confirmation key and verifies the per-request signature against that key. This stage answers cache hit or cache miss.
+1. Resolution. The signature-verification layer resolves the cache identifier to the cached assertion. If it is unknown, expired from the cache, or (for a self-contained identifier) fails integrity or decryption, resolution fails and the verifier returns `cache_miss` ((#cache_miss)). On success, the verifier obtains the assertion and its confirmation key and verifies the per-request signature against that key. This stage answers cache hit or cache miss.
 
-2. Validation. The resolved assertion is validated by the consuming authorization layer identically to an assertion presented in full, including expiry and any other claim checks. Resolution by handle does not move, replace, or defer this validation. This stage answers valid or invalid, and an expired assertion here produces the same error as an expired assertion presented in full.
+2. Validation. The resolved assertion is validated by the consuming authorization layer identically to an assertion presented in full, including expiry and any other claim checks. Resolution by cache identifier does not move, replace, or defer this validation. This stage answers valid or invalid, and an expired assertion here produces the same error as an expired assertion presented in full.
 
 These two outcomes MUST NOT be conflated. A cache miss (stage 1) means the assertion could not be reconstructed and is recovered by resending it in full. An invalid assertion (stage 2) means the assertion was reconstructed and failed validation and is not recovered by resending it. A verifier MUST NOT report a validation failure as a cache miss, nor a cache miss as an authorization failure.
 
@@ -1083,7 +1083,7 @@ Because assertions are short-lived, expiry at stage 2 is the freshness check and
 
 Implementation of assertion caching is OPTIONAL. The degradation behavior in this subsection is not.
 
-A verifier that does not implement assertion caching MUST NOT emit `Signature-Key-Cache`, and MUST reject a request using the cached scheme with `unsupported_scheme` ((#unsupported-scheme)). A caller MUST NOT present the cached scheme unless a verifier has offered a handle for that assertion. A verifier that implements caching MUST implement the `cache_miss` path ((#cache_miss)). These rules allow a caching caller and a non-caching verifier, and the reverse, to interoperate without prior negotiation: a caller always falls back to presenting the assertion in full.
+A verifier that does not implement assertion caching MUST NOT emit `Signature-Key-Cache`, and MUST reject a request using the cached scheme with `unsupported_scheme` ((#unsupported-scheme)). A caller MUST NOT present the cached scheme unless a verifier has issued a cache identifier for that assertion. A verifier that implements caching MUST implement the `cache_miss` path ((#cache_miss)). These rules allow a caching caller and a non-caching verifier, and the reverse, to interoperate without prior negotiation: a caller always falls back to presenting the assertion in full.
 
 # Security Considerations
 
@@ -1168,11 +1168,13 @@ Verifiers MUST:
 
 ## Cached Assertion Handles
 
-Cached-assertion handles inherit the request's proof of possession. A handle is presented in the Signature-Key header, which is a covered component, and the request is signed by the agent's confirmation key, so a captured handle is useless without the corresponding private key, the same property as a captured token. A handle is covered by the per-request signature and cannot be substituted by an intermediary.
+Cache identifiers inherit the request's proof of possession. A cache identifier is presented in the Signature-Key header, which is a covered component, and the request is signed by the agent's confirmation key, so a captured identifier is useless without the corresponding private key, the same property as a captured token. It is covered by the per-request signature and cannot be substituted by an intermediary.
 
-A handle is a stable reference to one assertion and is therefore a correlator across the requests that use it, for the life of the assertion. This exposes no more to the verifier than the assertion already does, since the verifier holds the assertion; a verifier concerned with correlation by intermediaries MAY issue and rotate distinct handles.
+Because the verifier issues the identifier, it controls the namespace. A verifier MUST generate cache identifiers that are unpredictable to any party other than itself, so that one caller cannot construct or guess an identifier that resolves to another caller's assertion, and MUST verify that a resolved assertion is the one the presenting caller may use rather than treating successful resolution as sufficient. An identifier is a lookup key supplied by a remote party and is untrusted input to the cache.
 
-A self-contained handle carries verifier state to itself across a fleet. Such a handle MUST be integrity-protected and encrypted under keys known only to the verifier fleet, so that it cannot be forged or read by any other party, and a handle that fails integrity or decryption MUST be treated as a cache miss ((#cache_miss)).
+A cache identifier is a stable reference to one assertion and is therefore a correlator across the requests that use it, for the life of the assertion. This exposes no more to the verifier than the assertion already does, since the verifier holds the assertion; a verifier concerned with correlation by intermediaries MAY issue and rotate distinct identifiers for the same assertion.
+
+A self-contained cache identifier carries verifier state to itself across a fleet. Such an identifier MUST be integrity-protected and encrypted under keys known only to the verifier fleet, so that it cannot be forged or read by any other party, and one that fails integrity or decryption MUST be treated as a cache miss ((#cache_miss)).
 
 ## Post-Quantum Key and Signature Sizes {#pqc-sizes}
 
@@ -1343,7 +1345,7 @@ This document establishes the "Signature Error Code" registry. New values may be
 |-------|-------------|-----------|
 | `unsupported_algorithm` | Signing algorithm not supported | [this document] |
 | `unsupported_scheme` | Signature-Key scheme not supported | [this document] |
-| `cache_miss` | Cached assertion handle could not be resolved | [this document] |
+| `cache_miss` | Cache identifier could not be resolved | [this document] |
 | `invalid_signature` | Signature missing, malformed, or verification failed | [this document] |
 | `invalid_input` | Missing required covered components | [this document] |
 | `invalid_request` | Missing required info unrelated to signature | [this document] |
@@ -1376,7 +1378,7 @@ This document establishes the "Signature Error Code" registry. New values may be
   - Required defined rejection of unimplemented JWK key types, including the `AKP` type from RFC 9964, reported via `unsupported_algorithm`.
   - Noted that ML-DSA identifiers are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.
   - Added a Problem Statement section stating the gaps this document addresses and the invariants that follow.
-  - Added assertion caching: the `cached` scheme, the `cache` signal on the jwt scheme, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. Implementation is optional; the degradation behavior is not.
+  - Added assertion caching: the `cached` scheme carrying a verifier-issued `cid`, the `cache` signal on the jwt scheme, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. A JWT is cacheable only if it carries a `jti`. Implementation is optional; the degradation behavior is not.
   - Added the `unsupported_scheme` error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.
   - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
 
@@ -1511,13 +1513,27 @@ Post-quantum protection is applied to artifacts whose authenticity must survive 
 
 Long-term non-repudiation is out of scope for this layer and is provided above it. The per-request signature is not the durable evidentiary record. Where long-term, tamper-evident proof of what an agent did is required, it is provided by a transparency ledger that records actions and is itself protected for the long term, not by retaining and later trusting individual per-request signatures. Because durable evidence lives in the ledger, the per-request signature has no long-term evidentiary value to protect, and the classical hot path needs no post-quantum sealing at this layer. The ledger, being the durable artifact, is where post-quantum protection is applied for audit. The ledger itself is outside the scope of this document.
 
-## Precedents for Assertion Caching
+## Why the Verifier Issues the Cache Identifier {#why-the-verifier-issues-the-cache-identifier}
+
+The cache identifier is issued by the verifier, not chosen by the caller. The caller already has an identifier for the assertion, its `jti`, so it is worth stating why that one is not used and why the naming is the verifier's.
+
+1. **The cache is the verifier's.** The identifier is a lookup key into storage the verifier owns and evicts from. Only the verifier knows its namespace, its eviction policy, and whether an entry survives. A caller-chosen key would name something the caller cannot observe.
+
+2. **A `jti` is unique per issuer, not per verifier.** The `jti` claim is unique within the scope of its issuer ([@!RFC7519], Section 4.1.7). A verifier accepting assertions from many issuers can be presented with the same `jti` by unrelated callers, so `jti` alone is not a key. A verifier could key on issuer and `jti` together, but that is a compound the caller would have to reconstruct exactly, and it fixes the key's form for every verifier rather than letting each choose.
+
+3. **A caller-chosen identifier is attacker-chosen input to a lookup.** If callers named their own entries, one caller could name an entry another caller had created, and cache lookup would become a probe for whether a given assertion is held. Verifier-issued identifiers keep the namespace under the verifier's control, which is what allows the unpredictability requirement in Security Considerations to mean anything.
+
+4. **Only the verifier can make the identifier self-contained.** A verifier that encodes the assertion's state into the identifier, encrypted to itself, can resolve it on any node without shared cache state. That is possible only if the verifier constructs it. TLS session tickets take the same approach for the same reason ((#precedents-for-assertion-caching)).
+
+The `jti` is still useful to the caller, and is echoed in `Signature-Key-Cache` so that a caller with several assertions in flight can associate the identifier it receives with the assertion it sent. It identifies the assertion; the cache identifier identifies the verifier's cached copy of it.
+
+## Precedents for Assertion Caching {#precedents-for-assertion-caching}
 
 The reference-and-fallback shape of the cached scheme follows established practice.
 
 The TLS Cached Information Extension [@?RFC7924] lets a client tell the server it already holds an object and reference it, with a defined fallback when the server's copy does not match. The cached scheme has the same shape: a reference in place of the object, and a defined miss path back to sending it in full.
 
-TLS session tickets ([@?RFC5077]; [@?RFC8446], Section 4.6.1) are server-minted, optionally self-contained encrypted handles that any node in a fleet can honor without shared state. This is the precedent for permitting a self-contained handle ((#signature-key-cache-response-header)) and for the fleet case in which a handle minted by one node is presented to another that cannot resolve it ((#cache_miss)).
+TLS session tickets ([@?RFC5077]; [@?RFC8446], Section 4.6.1) are server-minted, optionally self-contained encrypted references that any node in a fleet can honor without shared state. This is the precedent for permitting a self-contained cache identifier ((#signature-key-cache-response-header)) and for the fleet case in which an identifier minted by one node is presented to another that cannot resolve it ((#cache_miss)).
 
 These are cited as context for the design, not as normative dependencies.
 
