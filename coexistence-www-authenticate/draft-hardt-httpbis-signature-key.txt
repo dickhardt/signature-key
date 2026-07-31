@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 30 January 2027                                      Cloudflare
-                                                            29 July 2026
+Expires: 1 February 2027                                      Cloudflare
+                                                            31 July 2026
 
 
                           HTTP Signature Keys
@@ -53,7 +53,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 January 2027.
+   This Internet-Draft will expire on 1 February 2027.
 
 Copyright Notice
 
@@ -1106,28 +1106,17 @@ Signature: sig1=:MEQCIA5...:
 
    *  Where the challenge is an authentication or authorization
       challenge, such as Basic or Bearer, the two are alternatives and
-      either satisfies the server.  The client SHOULD sign the request
+      either satisfies the server.  The client MUST sign the request
       rather than present the credential.  A signature demonstrates
       possession of a private key over this request, whereas a bearer
       credential authenticates whoever holds it; signing also puts no
       credential on the wire that the exchange did not require.
 
    *  Where the challenge is not an authentication or authorization
-      challenge, such as a payment challenge, the two are complements
-      and satisfying one does not satisfy the other.  The client SHOULD
-      satisfy both.
-
-   A client that does not understand the auth-scheme in a WWW-
-   Authenticate challenge can neither classify it nor satisfy it.  Such
-   a client signs the request and relies on the server to challenge
-   again if a requirement remains outstanding.
-
-   The presence of both fields in one response does not by itself
-   indicate which case applies.  A server that requires both MUST, on
-   receiving a request that satisfies only one, respond with a challenge
-   naming only what is still outstanding, so that a client converges
-   without guessing.  A client SHOULD retry at most once per distinct
-   challenge.
+      challenge, such as the payment challenge defined by the
+      Micropayment Protocol ([I-D.ryan-httpauth-payment]), the two are
+      complements and satisfying one does not satisfy the other.  The
+      client MUST satisfy both.
 
    A 402 response MAY include a payment mechanism such as x402 [x402] or
    the Micropayment Protocol ([I-D.ryan-httpauth-payment]) alongside a
@@ -1775,9 +1764,10 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
    *  Specified client behaviour when a response carries both WWW-
       Authenticate and a signature challenge: alternatives where the
-      auth-scheme authenticates, in which case the client prefers the
-      signature, and complements where it does not, in which case the
-      client satisfies both.  Addresses issue #17.
+      auth-scheme authenticates, in which case the client signs rather
+      than presenting the credential, and complements where it does not,
+      such as a payment challenge, in which case the client satisfies
+      both.  Addresses issue #17.
 
    *  Added design rationale for a single header with a scheme token
       rather than a header per scheme, referencing RFC 9170, and for

@@ -1050,7 +1050,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hardt &amp; Meunier</td>
-<td class="center">Expires 30 January 2027</td>
+<td class="center">Expires 1 February 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1063,12 @@ svg {
 <dd class="internet-draft">draft-hardt-httpbis-signature-key-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-07-29" class="published">29 July 2026</time>
+<time datetime="2026-07-31" class="published">31 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-01-30">30 January 2027</time></dd>
+<dd class="expires"><time datetime="2027-02-01">1 February 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1113,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 30 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 1 February 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -2326,22 +2326,20 @@ Accept-Signature-Alg: ecdsa-p256-sha256
 <p id="section-4.7-3">A client that understands both mechanisms distinguishes two cases by the <code>WWW-Authenticate</code> auth-scheme. Because the rule applies only where the client understands the scheme, the client knows what that scheme does.<a href="#section-4.7-3" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7-4.1">
-            <p id="section-4.7-4.1.1">Where the challenge is an authentication or authorization challenge, such as <code>Basic</code> or <code>Bearer</code>, the two are alternatives and either satisfies the server. The client SHOULD sign the request rather than present the credential. A signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it; signing also puts no credential on the wire that the exchange did not require.<a href="#section-4.7-4.1.1" class="pilcrow">¶</a></p>
+            <p id="section-4.7-4.1.1">Where the challenge is an authentication or authorization challenge, such as <code>Basic</code> or <code>Bearer</code>, the two are alternatives and either satisfies the server. The client MUST sign the request rather than present the credential. A signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it; signing also puts no credential on the wire that the exchange did not require.<a href="#section-4.7-4.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.7-4.2">
-            <p id="section-4.7-4.2.1">Where the challenge is not an authentication or authorization challenge, such as a payment challenge, the two are complements and satisfying one does not satisfy the other. The client SHOULD satisfy both.<a href="#section-4.7-4.2.1" class="pilcrow">¶</a></p>
+            <p id="section-4.7-4.2.1">Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol (<span>[<a href="#I-D.ryan-httpauth-payment" class="cite xref">I-D.ryan-httpauth-payment</a>]</span>), the two are complements and satisfying one does not satisfy the other. The client MUST satisfy both.<a href="#section-4.7-4.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-4.7-5">A client that does not understand the auth-scheme in a <code>WWW-Authenticate</code> challenge can neither classify it nor satisfy it. Such a client signs the request and relies on the server to challenge again if a requirement remains outstanding.<a href="#section-4.7-5" class="pilcrow">¶</a></p>
-<p id="section-4.7-6">The presence of both fields in one response does not by itself indicate which case applies. A server that requires both MUST, on receiving a request that satisfies only one, respond with a challenge naming only what is still outstanding, so that a client converges without guessing. A client SHOULD retry at most once per distinct challenge.<a href="#section-4.7-6" class="pilcrow">¶</a></p>
-<p id="section-4.7-7">A <code>402</code> response MAY include a payment mechanism such as x402 <span>[<a href="#x402" class="cite xref">x402</a>]</span> or the Micropayment Protocol (<span>[<a href="#I-D.ryan-httpauth-payment" class="cite xref">I-D.ryan-httpauth-payment</a>]</span>) alongside a signature challenge. Payment is not authentication, so this is the complementary case and a client satisfies both:<a href="#section-4.7-7" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="section-4.7-8">
+<p id="section-4.7-5">A <code>402</code> response MAY include a payment mechanism such as x402 <span>[<a href="#x402" class="cite xref">x402</a>]</span> or the Micropayment Protocol (<span>[<a href="#I-D.ryan-httpauth-payment" class="cite xref">I-D.ryan-httpauth-payment</a>]</span>) alongside a signature challenge. Payment is not authentication, so this is the complementary case and a client satisfies both:<a href="#section-4.7-5" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-4.7-6">
 <pre>HTTP/1.1 402 Payment Required
 WWW-Authenticate: Payment id="x7Tg2pLq", method="example",
     request="eyJhbW91bnQiOiIxMDAw..."
 Accept-Signature-Scheme: hwk
 
-</pre><a href="#section-4.7-8" class="pilcrow">¶</a>
+</pre><a href="#section-4.7-6" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
@@ -3052,7 +3050,7 @@ Accept-Signature-Scheme: jwks_uri, jwt
 </li>
         <li class="normal" id="section-9-7.3">Expanded the Introduction to state the gaps this document addresses and the three invariants that follow from them.<a href="#section-9-7.3" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-9-7.4">Specified client behaviour when a response carries both <code>WWW-Authenticate</code> and a signature challenge: alternatives where the auth-scheme authenticates, in which case the client prefers the signature, and complements where it does not, in which case the client satisfies both. Addresses issue #17.<a href="#section-9-7.4" class="pilcrow">¶</a>
+        <li class="normal" id="section-9-7.4">Specified client behaviour when a response carries both <code>WWW-Authenticate</code> and a signature challenge: alternatives where the auth-scheme authenticates, in which case the client signs rather than presenting the credential, and complements where it does not, such as a payment challenge, in which case the client satisfies both. Addresses issue #17.<a href="#section-9-7.4" class="pilcrow">¶</a>
 </li>
         <li class="normal" id="section-9-7.5">Added design rationale for a single header with a scheme token rather than a header per scheme, referencing RFC 9170, and for carrying the accepted sets in response header fields rather than in parameters or error members. Recorded why grease values are not reserved.<a href="#section-9-7.5" class="pilcrow">¶</a>
 </li>
