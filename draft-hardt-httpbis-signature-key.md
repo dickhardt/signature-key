@@ -199,11 +199,15 @@ In particular:
 
 - The JOSE ECDSA identifiers `ES256`, `ES384`, and `ES512` are already fully specified and are used as-is.
 
+- Symmetric algorithms MUST NOT be used. The `oct` key type, the JOSE MAC identifiers `HS256`, `HS384`, and `HS512`, and the `hmac-sha256` identifier of the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2) all name a shared secret rather than a public key. A verifier MUST reject a Signature-Key scheme that conveys or references such a key, and a server MUST NOT list a symmetric algorithm in `Accept-Signature-Alg` ((#accept-signature-alg)). See (#symmetric-algorithms).
+
 This requirement follows the guidance of [@!RFC9864], which recommends that the algorithm of a JWK be present so that a key is used only with the algorithm intended, and which deprecates polymorphic algorithm identifiers in the JOSE registry.
 
 A JWK also carries key-structure members: `kty`, which [@!RFC7517] requires, and `crv` where the key type has one. Because a fully-specified `alg` determines the key type and the curve, these members are redundant with it. They remain present, since the schemes in this document convey ordinary JWKs, and the redundancy is used as a check rather than ignored: a verifier MUST verify that `kty` and, where present, `crv` are consistent with `alg`, and MUST reject the key if they are not. A JWK with an `alg` of `ES256` and a `kty` of `RSA` is inconsistent and MUST be rejected, as is one with an `alg` of `ES256` and a `crv` of `P-384`. Rejecting on disagreement prevents a key from being used under either of two conflicting interpretations.
 
 Post-quantum signature algorithms are accommodated by this rule without special treatment. For example, the ML-DSA identifiers `ML-DSA-44`, `ML-DSA-65`, and `ML-DSA-87` registered by [@!RFC9964] are fully specified and are used directly as the JWK `alg` value. The requirement is algorithm-agnostic and accommodates additional post-quantum and hybrid algorithms as they are registered.
+
+> **Note:** [@!RFC9964] registers the ML-DSA identifiers for JOSE. At the time of writing no corresponding identifier is registered in the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2), so an ML-DSA key can be the key of an assertion this document conveys, such as the signing key of a JWT, but ML-DSA cannot yet be named as the algorithm of an HTTP Message Signature itself. Per-request signing with ML-DSA awaits that registration. This is a gap in the algorithm registries rather than in this document: Algorithm Determination applies to whichever identifiers are registered.
 
 A verifier that encounters a JWK whose `kty` it does not implement, including the `AKP` key type defined by [@!RFC9964] for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via `unsupported_algorithm` ((#unsupported_algorithm)). Absence of support for a key type is a reason to decline, not a parsing failure.
 
@@ -400,7 +404,7 @@ The stable (enclave) key algorithm in the JWT `alg` header is determined by what
 
 **Caching:**
 
-A jkt-jwt carries the enclave public key in its header and is signed by that key, so it is the largest assertion this document defines when the enclave key is post-quantum, and the most expensive to verify. Caching it ((#signature-key-cache-response-header)) removes both costs from the steady state: the key and its signature are transmitted once, and the thumbprint computation and JWT signature verification are performed once rather than on every request. The per-request signature continues to use the ephemeral `cnf.jwk` key.
+Caching ((#signature-key-cache-response-header)) removes an assertion's transmission and verification cost from the steady state, and the saving grows with the size of the keys and signatures the assertion carries ((#pqc-sizes)). This applies to any cacheable assertion, not only to jkt-jwt. What is specific to jkt-jwt is that the assertion carries a public key in its header and is signed by that key, so caching it also removes the thumbprint computation and the verification of that signature, which the jwt scheme does not perform. The per-request signature continues to use the ephemeral `cnf.jwk` key.
 
 **Use cases:**
 
@@ -699,6 +703,8 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
 - Regulated industries requiring certificate-based authentication
 
 ## Cached Assertion (cached) {#cached-scheme}
+
+> **Editor's Note:** Assertion caching, comprising this scheme, the `cache` signal on the jwt and jkt-jwt schemes, the `Signature-Key-Cache` response header ((#signature-key-cache-response-header)), and the `cache_miss` error ((#cache_miss)), is a strawman offered as a starting point for discussion, not a settled design. Caching is hard, and this may not be the right layer for it: an equivalent saving might be had at the HTTP layer, at the transport layer, or by a mechanism that does not require the verifier to hold per-caller state at all. The problem is real and grows with post-quantum assertion sizes ((#pqc-sizes)); the shape of the answer is open. Feedback on whether this belongs in this document is specifically sought.
 
 The cached scheme references an assertion the verifier has previously cached and issued a cache identifier for ((#signature-key-cache-response-header)), in place of presenting the assertion in full.
 
@@ -1164,7 +1170,13 @@ Verifiers MUST:
 
 - Reject keys whose type does not match an acceptable algorithm
 
-## Cache Identifiers
+## Symmetric Algorithms {#symmetric-algorithms}
+
+Every scheme in this document distributes a public key or a reference to one, and every verification it describes is a public-key operation. A symmetric algorithm has no public key: verifying a MAC requires the same secret used to produce it. Distributing that secret in a request header would hand the verifying party the ability to forge the signature it is checking, and any intermediary that saw the header the same ability. The proof of possession this document relies on would then prove nothing, since possession would no longer be exclusive to the signer.
+
+For this reason symmetric algorithms MUST NOT be used with Signature-Key ((#algorithm-determination)). A verifier MUST reject a JWK whose `kty` is `oct` or whose `alg` is a MAC identifier such as `HS256`, and MUST NOT accept `hmac-sha256` as the algorithm of a signature whose key was conveyed by this document, even though that identifier is registered for HTTP Message Signatures ([@!RFC9421], Section 6.2). A shared-secret MAC remains available to deployments that have a pre-shared key and use `keyid` as [@!RFC9421] describes; it is out of scope here precisely because it needs no key distribution.
+
+## Cache Identifiers {#cache-identifiers}
 
 Cache identifiers inherit the request's proof of possession. A cache identifier is presented in the Signature-Key header, which is a covered component, and the request is signed by the agent's confirmation key, so a captured identifier is useless without the corresponding private key, the same property as a captured token. It is covered by the per-request signature and cannot be substituted by an intermediary.
 
@@ -1172,7 +1184,7 @@ A verifier MUST NOT treat successful resolution as authentication. Resolution an
 
 Cache identifiers MUST be unpredictable to any party other than the verifier. A guessable identifier does not by itself permit impersonation, since the request signature must still verify against the resolved assertion's confirmation key. It does allow an unrelated party to distinguish a cache miss from a signature failure and so learn whether a verifier currently holds a given assertion, and it removes the second line of defence against a verifier that resolves without verifying. An identifier is a lookup key supplied by a remote party and is untrusted input to the cache.
 
-A cache identifier is a stable reference to one assertion and is therefore a correlator across the requests that use it, for the life of the assertion. This exposes no more to the verifier than the assertion already does, since the verifier holds the assertion; a verifier concerned with correlation by intermediaries MAY issue and rotate distinct identifiers for the same assertion.
+A cache identifier is a stable reference to one assertion and is therefore a correlator across the requests that use it, for the life of the assertion, in the same way that a repeated `ETag` or session ticket is. It is a fingerprinting surface, but not a new one: it replaces an assertion that carries the confirmation key itself, and a repeated key is at least as strong a correlator as a repeated identifier. Any party that can observe the identifier could have observed the assertion it stands in for. The exposure is therefore bounded above by what the assertion already discloses, and it is bounded below only by the identifier's lifetime: a verifier concerned with correlation by intermediaries MAY issue and rotate distinct identifiers for the same assertion, which the caller cannot detect and need not act on, since it presents whatever it was last issued.
 
 A self-contained cache identifier carries verifier state to itself across a fleet. Such an identifier MUST be integrity-protected and encrypted under keys known only to the verifier fleet, so that it cannot be forged or read by any other party, and one that fails integrity or decryption MUST be treated as a cache miss ((#cache_miss)).
 
@@ -1370,6 +1382,7 @@ This document establishes the "Signature Error Code" registry. New values may be
   - Forbade the polymorphic `EdDSA` algorithm identifier, which [@!RFC9864] deprecates. Deployments using `alg` of `EdDSA` change to `Ed25519` or `Ed448`.
   - Required verifiers to take the algorithm from the JWK `alg` rather than deriving it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`. A key that a -06 verifier accepted on the strength of its key type alone is now rejected if its `alg` is absent or inconsistent.
   - Required RSA keys to name both padding and hash in `alg`, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
+  - Forbade symmetric algorithms. The `oct` key type, the JOSE MAC identifiers, and `hmac-sha256` MUST NOT be used with Signature-Key, and a server MUST NOT list a symmetric algorithm in `Accept-Signature-Alg`. Every scheme here distributes a public key; a shared secret handed to the verifier is not a proof of possession.
 
   Other changes:
 
@@ -1378,9 +1391,9 @@ This document establishes the "Signature Error Code" registry. New values may be
   - Expanded the Introduction to state the gaps this document addresses and the three invariants that follow from them.
   - Added an Algorithm Determination subsection as the single scheme-independent home for the fully-specified algorithm rules, referenced from each scheme that conveys or references a JWK.
   - Required defined rejection of unimplemented JWK key types, including the `AKP` type from [@!RFC9964], reported via `unsupported_algorithm`.
-  - Noted that the ML-DSA identifiers registered by [@!RFC9964] are fully specified and satisfy the rule without special treatment; added a deployment consideration on post-quantum key and signature sizes.
-  - Added assertion caching: the `cached` scheme carrying a verifier-issued `cid`, the `cache` signal on the jwt and jkt-jwt schemes, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. A JWT is cacheable only if it carries a `jti`. The self-jwt scheme is excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not.
-  - Added design rationale for a single header with a scheme token rather than a header per scheme, referencing RFC 9170, for carrying the accepted sets in response header fields, for layered cryptographic agility, and for the verifier issuing the cache identifier. Recorded why grease values are not reserved.
+  - Noted that the ML-DSA identifiers registered by [@!RFC9964] are fully specified and satisfy the rule without special treatment, and that no ML-DSA identifier is yet registered for HTTP Message Signatures, so ML-DSA can sign an assertion but not yet the per-request signature; added a deployment consideration on post-quantum key and signature sizes.
+  - Added assertion caching as a strawman for discussion: the `cached` scheme carrying a verifier-issued `cid`, the `cache` signal on the jwt and jkt-jwt schemes, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. A JWT is cacheable only if it carries a `jti`. The self-jwt scheme is excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not. Whether this layer is the right home for caching is an open question, flagged in the section itself.
+  - Added design rationale for a single header with a scheme token rather than a header per scheme, referencing RFC 9170, for carrying the accepted sets in response header fields, for layered cryptographic agility, for the verifier issuing the cache identifier, and for why the cache identifier is verifier-minted rather than derived from the assertion as an entity tag would be. Recorded why grease values are not reserved.
   - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
   - Converted internal cross-references to mmark xref syntax so they render as section numbers rather than as literal anchors.
 
@@ -1531,6 +1544,10 @@ The reference-and-fallback shape of the cached scheme follows established practi
 The TLS Cached Information Extension [@?RFC7924] lets a client tell the server it already holds an object and reference it, with a defined fallback when the server's copy does not match. The cached scheme has the same shape: a reference in place of the object, and a defined miss path back to sending it in full.
 
 TLS session tickets ([@?RFC5077]; [@?RFC8446], Section 4.6.1) are server-minted, optionally self-contained encrypted references that any node in a fleet can honor without shared state. This is the precedent for permitting a self-contained cache identifier ((#signature-key-cache-response-header)) and for the fleet case in which an identifier minted by one node is presented to another that cannot resolve it ((#cache_miss)).
+
+Entity tags ([@!RFC9110], Section 8.8.3) are the closest HTTP precedent and the source of three properties adopted here. An entity tag is opaque to the recipient, which echoes it back unmodified; it is issued by the party that holds the thing it names; and a recipient that does not recognize one falls back to the full representation rather than failing. A cache identifier behaves the same way: opaque, verifier-issued, and recoverable by resending the assertion ((#cache_miss)).
+
+One property of entity tags is deliberately not adopted. A strong entity tag is commonly derived from the representation, so two parties holding the same bytes compute the same tag. Applying that to assertions, by using a thumbprint of the assertion as the cache identifier, would make the identifier computable by anyone who has seen the assertion, including any intermediary it passed through. Cache lookup would then become a probe any such party could run to learn whether a verifier currently holds a given assertion, and the identifier would no longer be unpredictable ((#cache-identifiers)). A content-derived identifier also fixes one construction for every verifier, foreclosing the self-contained encrypted form that the session-ticket precedent supports. The cache identifier is therefore verifier-minted and unpredictable rather than derived from the assertion, and the assertion's own identity is carried separately by the `jti` echoed in `Signature-Key-Cache` ((#why-the-verifier-issues-the-cache-identifier)).
 
 These are cited as context for the design, not as normative dependencies.
 
