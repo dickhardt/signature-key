@@ -1372,68 +1372,62 @@ This document establishes the "Signature Error Code" registry. New values may be
 
 - draft-hardt-httpbis-signature-key-07
 
-  This version makes changes that are not backward compatible. An implementation of -06 or earlier requires changes to interoperate. They are listed first.
+  Not backward compatible with -06. Breaking changes are listed first.
 
   Breaking changes:
 
-  - Removed the `sigkey` Accept-Signature parameter and its registration in the HTTP Signature Metadata Parameters registry. A Structured Fields parameter value is a bare Item and cannot be a list, so `sigkey` could name only one scheme. Replaced by the `Accept-Signature-Scheme` and `Accept-Signature-Alg` response headers, which are Lists of Tokens and state the server's full accepted set for both dimensions, letting a client select before it signs rather than after a rejection. A server that sent `sigkey` sends the new headers instead; a client that read `sigkey` reads them instead.
-  - Removed the `supported_algorithms` member of `Signature-Error`, present since -04. The accepted algorithms are now carried by `Accept-Signature-Alg`, which works identically on a challenge and on an error. A client that read `supported_algorithms` reads that header instead.
-  - Reversed the hwk constraint that the `alg` parameter MUST NOT be present. It is now REQUIRED and MUST be fully specified. An hwk key serialized per -06 omits `alg` and is rejected by a -07 verifier.
-  - Forbade the polymorphic `EdDSA` algorithm identifier, which [@!RFC9864] deprecates. Deployments using `alg` of `EdDSA` change to `Ed25519` or `Ed448`.
-  - Required verifiers to take the algorithm from the JWK `alg` rather than deriving it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`. A key that a -06 verifier accepted on the strength of its key type alone is now rejected if its `alg` is absent or inconsistent.
-  - Required RSA keys to name both padding and hash in `alg`, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
-  - Forbade symmetric algorithms. The `oct` key type, the JOSE MAC identifiers, and `hmac-sha256` MUST NOT be used with Signature-Key, and a server MUST NOT list a symmetric algorithm in `Accept-Signature-Alg`. Every scheme here distributes a public key; a shared secret handed to the verifier is not a proof of possession.
+  - Removed the `sigkey` Accept-Signature parameter and its registry entry. A parameter value is a bare Item and cannot be a list, so `sigkey` could name only one scheme. Use `Accept-Signature-Scheme` and `Accept-Signature-Alg`, which are Lists of Tokens and let a client select before it signs rather than after a rejection.
+  - Removed the `supported_algorithms` member of `Signature-Error`, added in -04. Use `Accept-Signature-Alg`, which works on a challenge and on an error alike.
+  - Made the hwk `alg` parameter REQUIRED and fully specified. It was forbidden in -06, so an hwk key serialized per -06 is rejected by a -07 verifier.
+  - Forbade the polymorphic `EdDSA` identifier, deprecated by [@!RFC9864]. Use `Ed25519` or `Ed448`.
+  - Required verifiers to take the algorithm from the JWK `alg` rather than derive it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`.
+  - Required RSA `alg` to name both padding and hash, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
+  - Forbade symmetric algorithms: the `oct` key type, the JOSE MAC identifiers, and `hmac-sha256`. Every scheme here distributes a public key, and a shared secret handed to the verifier proves nothing.
 
   Other changes:
 
-  - Added the `jwks` scheme: a direct JWKS fetch where the HTTPS `url` parameter is both the signer identity and the key location, with the same egress-admission requirements as `jwks_uri`.
-  - Added the `unsupported_scheme` error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.
-  - Expanded the Introduction to state the gaps this document addresses and the three invariants that follow from them.
-  - Added an Algorithm Determination subsection as the single scheme-independent home for the fully-specified algorithm rules, referenced from each scheme that conveys or references a JWK.
-  - Required defined rejection of unimplemented JWK key types, including the `AKP` type from [@!RFC9964], reported via `unsupported_algorithm`.
-  - Noted that the ML-DSA identifiers registered by [@!RFC9964] are fully specified and satisfy the rule without special treatment, and that no ML-DSA identifier is yet registered for HTTP Message Signatures, so ML-DSA can sign an assertion but not yet the per-request signature; added a deployment consideration on post-quantum key and signature sizes.
-  - Added assertion caching as a strawman for discussion: the `cached` scheme carrying a verifier-issued `cid`, the `cache` signal on the jwt and jkt-jwt schemes, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution/validation processing model. A JWT is cacheable only if it carries a `jti`. The self-jwt scheme is excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not. Whether this layer is the right home for caching is an open question, flagged in the section itself.
-  - Added design rationale for a single header with a scheme token rather than a header per scheme, referencing RFC 9170, for carrying the accepted sets in response header fields, for layered cryptographic agility, for the verifier issuing the cache identifier, and for why the cache identifier is verifier-minted rather than derived from the assertion as an entity tag would be. Recorded why grease values are not reserved.
+  - Added the `jwks` scheme: a direct JWKS fetch whose HTTPS `url` is both the signer identity and the key location, under the same egress-admission rules as `jwks_uri`.
+  - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable.
+  - Added an Algorithm Determination section as the single home for the fully-specified algorithm rules, referenced from every scheme that conveys or references a JWK.
+  - Required defined rejection of unimplemented JWK key types, including `AKP` [@!RFC9964], reported as `unsupported_algorithm`.
+  - Noted that the ML-DSA identifiers of [@!RFC9964] satisfy the rule without special treatment, and that none is yet registered for HTTP Message Signatures, so ML-DSA can sign an assertion but not the per-request signature. Added a deployment consideration on post-quantum key and signature sizes.
+  - Added assertion caching as a strawman for discussion: the `cached` scheme, the `cache` signal on jwt and jkt-jwt, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution and validation model. A JWT is cacheable only if it carries a `jti`, and self-jwt is excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not. Whether this is the right layer for caching is an open question.
+  - Expanded the Introduction to state the gaps this document addresses and the invariants that follow.
+  - Added rationale for a scheme token rather than a header per scheme, for carrying the accepted sets in header fields rather than in parameters or error members, for layered cryptographic agility, for the verifier issuing the cache identifier rather than deriving it from the assertion as an entity tag would be, and for not reserving grease values.
   - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
-  - Converted internal cross-references to mmark xref syntax so they render as section numbers rather than as literal anchors.
+  - Converted internal cross-references to mmark xref syntax so they render as section numbers.
 
 - draft-hardt-httpbis-signature-key-06
-  - Added `self-jwt` as a new standalone scheme for self-issued JWTs where the signer and JWT issuer are the same party. The JWT signing key (discovered via `{iss}/.well-known/{dwk}`) is reused as the HTTP signing key; no `cnf` claim is present.
+  - Added the `self-jwt` scheme for self-issued JWTs where the signer and the JWT issuer are the same party. The JWT signing key, discovered via `{iss}/.well-known/{dwk}`, is reused as the HTTP signing key, and no `cnf` claim is present.
 
 - draft-hardt-httpbis-signature-key-05
-  - Incorporated implementer feedback from Joshua Gay (sidecat).
-  - SSRF / egress admission: extended the `jwks_uri` risk bullet with a mandatory egress-admission checklist covering HTTPS, size/timeout limits, redirect policy, private/loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.
-  - Caching: added once-per-minute fetch floor to the `jwks_uri` cache bullet; added same-`kid` signature-failure refresh rule — one JWKS refresh and retry before returning `unknown_key` or `invalid_jwt`, subject to the same floor and egress-admission policy as unknown-`kid` refreshes.
-  - `jkt-jwt`: added algorithm note after the worked example — the stable (enclave) key algorithm is enclave-determined; deployments supporting Ed25519 or other stable-key algorithms SHOULD document this explicitly.
-  - Added Joshua Gay to acknowledgments.
+  - Incorporated implementer feedback from Joshua Gay (sidecat), and added him to the acknowledgments.
+  - Added a mandatory egress-admission checklist to the `jwks_uri` SSRF risk bullet: HTTPS, size and timeout limits, redirect policy, private and loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.
+  - Added a once-per-minute JWKS fetch floor, and a same-`kid` refresh rule allowing one refresh and retry before returning `unknown_key` or `invalid_jwt`, subject to that floor and to egress-admission policy.
+  - Noted that the stable (enclave) key algorithm in `jkt-jwt` is enclave-determined, and that deployments supporting Ed25519 or other stable-key algorithms SHOULD document this.
 
 - draft-hardt-httpbis-signature-key-04
-  - Renamed spec from "HTTP Signature-Key Header" to "HTTP Signature Keys"
-  - Added `sigkey` parameter for Accept-Signature (RFC 9421 Section 5) with three values: `jkt` (pseudonymous), `uri` (URI-identified), `x509` (PKI certificate)
-  - Added Signature-Error response header for structured signature verification error responses
-  - Added incremental adoption section describing zero-coordination deployment via 429/401/402 status codes
-  - Added privacy considerations for key thumbprint tracking, agent identity disclosure, and JWKS fetch side channel
-  - Registered `sigkey` in the HTTP Signature Metadata Parameters registry (RFC 9421 Section 6.3)
-  - Established Signature Error Code Registry
+  - Renamed the specification from "HTTP Signature-Key Header" to "HTTP Signature Keys".
+  - Added the `sigkey` parameter to Accept-Signature ([@!RFC9421], Section 5) with three values: `jkt` (pseudonymous), `uri` (URI-identified), and `x509` (PKI certificate), and registered it in the HTTP Signature Metadata Parameters registry.
+  - Added the Signature-Error response header and established the Signature Error Code registry.
+  - Added an incremental adoption section describing zero-coordination deployment via 429, 401, and 402 responses.
+  - Added privacy considerations for key thumbprint tracking, agent identity disclosure, and the JWKS fetch side channel.
 
 - draft-hardt-httpbis-signature-key-03
-  - Added jkt-jwt scheme for self-issued key delegation
-  - Renamed `well-known` parameter to `dwk` (dot well-known)
-  - Added `iss` and `dwk` claims to jwt scheme (SHOULD) for issuer key discovery
-  - Added early validation step to jwt verification procedure (format, typ, exp checks before network fetches)
-  - Added TOFU reference (RFC 7435) to jkt-jwt scheme
-  - Added design rationale for jwks_uri vs inline JWKS
-  - Moved hwk string vs byte sequence design note to rationale appendix
-  - Reordered schemes
-  - Added acknowledgments
+  - Added the `jkt-jwt` scheme for self-issued key delegation, with a TOFU reference to [@?RFC7435].
+  - Renamed the `well-known` parameter to `dwk` (dot well-known).
+  - Added `iss` and `dwk` claims to the jwt scheme (SHOULD) for issuer key discovery.
+  - Added an early validation step to jwt verification: format, `typ`, and `exp` checks before any network fetch.
+  - Added design rationale for `jwks_uri` rather than an inline JWKS, and moved the hwk string versus byte sequence note to the rationale appendix.
+  - Reordered the schemes and added acknowledgments.
 
 - draft-hardt-httpbis-signature-key-02
-  - Changed x5t parameter to byte sequence per reviewer feedback
-  - Added structured field types to all parameters
-  - Added design note explaining string vs byte sequence choice for hwk
+  - Changed the `x5t` parameter to a byte sequence, per reviewer feedback.
+  - Added structured field types to all parameters.
+  - Added a design note on the string versus byte sequence choice for hwk.
 
 - draft-hardt-httpbis-signature-key-01
-  - Initial public draft with four schemes: hwk, jwks_uri, x509, jwt
+  - Initial public draft, with four schemes: hwk, jwks_uri, x509, and jwt.
 
 # Acknowledgments
 
