@@ -1050,7 +1050,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hardt &amp; Meunier</td>
-<td class="center">Expires 30 January 2027</td>
+<td class="center">Expires 1 February 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1063,12 @@ svg {
 <dd class="internet-draft">draft-hardt-httpbis-signature-key-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-07-29" class="published">29 July 2026</time>
+<time datetime="2026-07-31" class="published">31 July 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-01-30">30 January 2027</time></dd>
+<dd class="expires"><time datetime="2027-02-01">1 February 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1113,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 30 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 1 February 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -3025,109 +3025,96 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <li class="compact" id="section-9-2.1">draft-hardt-httpbis-signature-key-07<a href="#section-9-2.1" class="pilcrow">¶</a>
 </li>
       </ul>
-<p id="section-9-3">This version makes changes that are not backward compatible. An implementation of -06 or earlier requires changes to interoperate. They are listed first.<a href="#section-9-3" class="pilcrow">¶</a></p>
+<p id="section-9-3">Not backward compatible with -06. Breaking changes are listed first.<a href="#section-9-3" class="pilcrow">¶</a></p>
 <p id="section-9-4">Breaking changes:<a href="#section-9-4" class="pilcrow">¶</a></p>
 <ul class="compact">
-<li class="compact" id="section-9-5.1">Removed the <code>sigkey</code> Accept-Signature parameter and its registration in the HTTP Signature Metadata Parameters registry. A Structured Fields parameter value is a bare Item and cannot be a list, so <code>sigkey</code> could name only one scheme. Replaced by the <code>Accept-Signature-Scheme</code> and <code>Accept-Signature-Alg</code> response headers, which are Lists of Tokens and state the server's full accepted set for both dimensions, letting a client select before it signs rather than after a rejection. A server that sent <code>sigkey</code> sends the new headers instead; a client that read <code>sigkey</code> reads them instead.<a href="#section-9-5.1" class="pilcrow">¶</a>
+<li class="compact" id="section-9-5.1">Removed the <code>sigkey</code> Accept-Signature parameter and its registry entry. A parameter value is a bare Item and cannot be a list, so <code>sigkey</code> could name only one scheme. Use <code>Accept-Signature-Scheme</code> and <code>Accept-Signature-Alg</code>, which are Lists of Tokens and let a client select before it signs rather than after a rejection.<a href="#section-9-5.1" class="pilcrow">¶</a>
 </li>
-        <li class="compact" id="section-9-5.2">Removed the <code>supported_algorithms</code> member of <code>Signature-Error</code>, present since -04. The accepted algorithms are now carried by <code>Accept-Signature-Alg</code>, which works identically on a challenge and on an error. A client that read <code>supported_algorithms</code> reads that header instead.<a href="#section-9-5.2" class="pilcrow">¶</a>
+        <li class="compact" id="section-9-5.2">Removed the <code>supported_algorithms</code> member of <code>Signature-Error</code>, added in -04. Use <code>Accept-Signature-Alg</code>, which works on a challenge and on an error alike.<a href="#section-9-5.2" class="pilcrow">¶</a>
 </li>
       </ul>
 <p id="section-9-6">Other changes:<a href="#section-9-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-9-7.1">Added the <code>jwks</code> scheme: a direct JWKS fetch where the HTTPS <code>url</code> parameter is both the signer identity and the key location, with the same egress-admission requirements as <code>jwks_uri</code>.<a href="#section-9-7.1" class="pilcrow">¶</a>
+<li class="normal" id="section-9-7.1">Added the <code>jwks</code> scheme: a direct JWKS fetch whose HTTPS <code>url</code> is both the signer identity and the key location, under the same egress-admission rules as <code>jwks_uri</code>.<a href="#section-9-7.1" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-9-7.2">Added the <code>unsupported_scheme</code> error code, registered it in the Signature Error Code registry, and made unknown-scheme rejection mandatory and conformance-testable.<a href="#section-9-7.2" class="pilcrow">¶</a>
+        <li class="normal" id="section-9-7.2">Added the <code>unsupported_scheme</code> error code and made unknown-scheme rejection mandatory and conformance-testable.<a href="#section-9-7.2" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-9-7.3">Expanded the Introduction to state the gaps this document addresses and the three invariants that follow from them.<a href="#section-9-7.3" class="pilcrow">¶</a>
+        <li class="normal" id="section-9-7.3">Expanded the Introduction to state the gaps this document addresses and the invariants that follow.<a href="#section-9-7.3" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-9-7.4">Added design rationale for a single header with a scheme token rather than a header per scheme, referencing RFC 9170, and for carrying the accepted sets in response header fields rather than in parameters or error members. Recorded why grease values are not reserved.<a href="#section-9-7.4" class="pilcrow">¶</a>
+        <li class="normal" id="section-9-7.4">Added rationale for a scheme token rather than a header per scheme, for carrying the accepted sets in header fields rather than in parameters or error members, and for not reserving grease values.<a href="#section-9-7.4" class="pilcrow">¶</a>
 </li>
         <li class="normal" id="section-9-7.5">Corrected the Accept-Signature parameter name from <code>algs</code> to <code>alg</code>, per <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5.1.<a href="#section-9-7.5" class="pilcrow">¶</a>
 </li>
         <li class="normal" id="section-9-7.6">
-          <p id="section-9-7.6.1">Converted internal cross-references to mmark xref syntax so they render as section numbers rather than as literal anchors.<a href="#section-9-7.6.1" class="pilcrow">¶</a></p>
+          <p id="section-9-7.6.1">Converted internal cross-references to mmark xref syntax so they render as section numbers.<a href="#section-9-7.6.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-9-7.7">
           <p id="section-9-7.7.1">draft-hardt-httpbis-signature-key-06<a href="#section-9-7.7.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-9-7.7.2.1">Added <code>self-jwt</code> as a new standalone scheme for self-issued JWTs where the signer and JWT issuer are the same party. The JWT signing key (discovered via <code>{iss}/.well-known/{dwk}</code>) is reused as the HTTP signing key; no <code>cnf</code> claim is present.<a href="#section-9-7.7.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-9-7.7.2.1">Added the <code>self-jwt</code> scheme for self-issued JWTs where the signer and the JWT issuer are the same party. The JWT signing key, discovered via <code>{iss}/.well-known/{dwk}</code>, is reused as the HTTP signing key, and no <code>cnf</code> claim is present.<a href="#section-9-7.7.2.1" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-9-7.8">
           <p id="section-9-7.8.1">draft-hardt-httpbis-signature-key-05<a href="#section-9-7.8.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-9-7.8.2.1">Incorporated implementer feedback from Joshua Gay (sidecat).<a href="#section-9-7.8.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-9-7.8.2.1">Incorporated implementer feedback from Joshua Gay (sidecat), and added him to the acknowledgments.<a href="#section-9-7.8.2.1" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.8.2.2">SSRF / egress admission: extended the <code>jwks_uri</code> risk bullet with a mandatory egress-admission checklist covering HTTPS, size/timeout limits, redirect policy, private/loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.<a href="#section-9-7.8.2.2" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.8.2.2">Added a mandatory egress-admission checklist to the <code>jwks_uri</code> SSRF risk bullet: HTTPS, size and timeout limits, redirect policy, private and loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.<a href="#section-9-7.8.2.2" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.8.2.3">Caching: added once-per-minute fetch floor to the <code>jwks_uri</code> cache bullet; added same-<code>kid</code> signature-failure refresh rule — one JWKS refresh and retry before returning <code>unknown_key</code> or <code>invalid_jwt</code>, subject to the same floor and egress-admission policy as unknown-<code>kid</code> refreshes.<a href="#section-9-7.8.2.3" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.8.2.3">Added a once-per-minute JWKS fetch floor, and a same-<code>kid</code> refresh rule allowing one refresh and retry before returning <code>unknown_key</code> or <code>invalid_jwt</code>, subject to that floor and to egress-admission policy.<a href="#section-9-7.8.2.3" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.8.2.4">
-              <code>jkt-jwt</code>: added algorithm note after the worked example — the stable (enclave) key algorithm is enclave-determined; deployments supporting Ed25519 or other stable-key algorithms SHOULD document this explicitly.<a href="#section-9-7.8.2.4" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-9-7.8.2.5">Added Joshua Gay to acknowledgments.<a href="#section-9-7.8.2.5" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.8.2.4">Noted that the stable (enclave) key algorithm in <code>jkt-jwt</code> is enclave-determined, and that deployments supporting Ed25519 or other stable-key algorithms SHOULD document this.<a href="#section-9-7.8.2.4" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-9-7.9">
           <p id="section-9-7.9.1">draft-hardt-httpbis-signature-key-04<a href="#section-9-7.9.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-9-7.9.2.1">Renamed spec from "HTTP Signature-Key Header" to "HTTP Signature Keys"<a href="#section-9-7.9.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-9-7.9.2.1">Renamed the specification from "HTTP Signature-Key Header" to "HTTP Signature Keys".<a href="#section-9-7.9.2.1" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.9.2.2">Added <code>sigkey</code> parameter for Accept-Signature (RFC 9421 Section 5) with three values: <code>jkt</code> (pseudonymous), <code>uri</code> (URI-identified), <code>x509</code> (PKI certificate)<a href="#section-9-7.9.2.2" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.9.2.2">Added the <code>sigkey</code> parameter to Accept-Signature (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5) with three values: <code>jkt</code> (pseudonymous), <code>uri</code> (URI-identified), and <code>x509</code> (PKI certificate), and registered it in the HTTP Signature Metadata Parameters registry.<a href="#section-9-7.9.2.2" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.9.2.3">Added Signature-Error response header for structured signature verification error responses<a href="#section-9-7.9.2.3" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.9.2.3">Added the Signature-Error response header and established the Signature Error Code registry.<a href="#section-9-7.9.2.3" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.9.2.4">Added incremental adoption section describing zero-coordination deployment via 429/401/402 status codes<a href="#section-9-7.9.2.4" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.9.2.4">Added an incremental adoption section describing zero-coordination deployment via 429, 401, and 402 responses.<a href="#section-9-7.9.2.4" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.9.2.5">Added privacy considerations for key thumbprint tracking, agent identity disclosure, and JWKS fetch side channel<a href="#section-9-7.9.2.5" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-9-7.9.2.6">Registered <code>sigkey</code> in the HTTP Signature Metadata Parameters registry (RFC 9421 Section 6.3)<a href="#section-9-7.9.2.6" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-9-7.9.2.7">Established Signature Error Code Registry<a href="#section-9-7.9.2.7" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.9.2.5">Added privacy considerations for key thumbprint tracking, agent identity disclosure, and the JWKS fetch side channel.<a href="#section-9-7.9.2.5" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-9-7.10">
           <p id="section-9-7.10.1">draft-hardt-httpbis-signature-key-03<a href="#section-9-7.10.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-9-7.10.2.1">Added jkt-jwt scheme for self-issued key delegation<a href="#section-9-7.10.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-9-7.10.2.1">Added the <code>jkt-jwt</code> scheme for self-issued key delegation, with a TOFU reference to <span>[<a href="#RFC7435" class="cite xref">RFC7435</a>]</span>.<a href="#section-9-7.10.2.1" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.10.2.2">Renamed <code>well-known</code> parameter to <code>dwk</code> (dot well-known)<a href="#section-9-7.10.2.2" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.10.2.2">Renamed the <code>well-known</code> parameter to <code>dwk</code> (dot well-known).<a href="#section-9-7.10.2.2" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.10.2.3">Added <code>iss</code> and <code>dwk</code> claims to jwt scheme (SHOULD) for issuer key discovery<a href="#section-9-7.10.2.3" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.10.2.3">Added <code>iss</code> and <code>dwk</code> claims to the jwt scheme (SHOULD) for issuer key discovery.<a href="#section-9-7.10.2.3" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.10.2.4">Added early validation step to jwt verification procedure (format, typ, exp checks before network fetches)<a href="#section-9-7.10.2.4" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.10.2.4">Added an early validation step to jwt verification: format, <code>typ</code>, and <code>exp</code> checks before any network fetch.<a href="#section-9-7.10.2.4" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.10.2.5">Added TOFU reference (RFC 7435) to jkt-jwt scheme<a href="#section-9-7.10.2.5" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.10.2.5">Added design rationale for <code>jwks_uri</code> rather than an inline JWKS, and moved the hwk string versus byte sequence note to the rationale appendix.<a href="#section-9-7.10.2.5" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.10.2.6">Added design rationale for jwks_uri vs inline JWKS<a href="#section-9-7.10.2.6" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-9-7.10.2.7">Moved hwk string vs byte sequence design note to rationale appendix<a href="#section-9-7.10.2.7" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-9-7.10.2.8">Reordered schemes<a href="#section-9-7.10.2.8" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-9-7.10.2.9">Added acknowledgments<a href="#section-9-7.10.2.9" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.10.2.6">Reordered the schemes and added acknowledgments.<a href="#section-9-7.10.2.6" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-9-7.11">
           <p id="section-9-7.11.1">draft-hardt-httpbis-signature-key-02<a href="#section-9-7.11.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-9-7.11.2.1">Changed x5t parameter to byte sequence per reviewer feedback<a href="#section-9-7.11.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-9-7.11.2.1">Changed the <code>x5t</code> parameter to a byte sequence, per reviewer feedback.<a href="#section-9-7.11.2.1" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.11.2.2">Added structured field types to all parameters<a href="#section-9-7.11.2.2" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.11.2.2">Added structured field types to all parameters.<a href="#section-9-7.11.2.2" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-9-7.11.2.3">Added design note explaining string vs byte sequence choice for hwk<a href="#section-9-7.11.2.3" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-9-7.11.2.3">Added a design note on the string versus byte sequence choice for hwk.<a href="#section-9-7.11.2.3" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-9-7.12">
           <p id="section-9-7.12.1">draft-hardt-httpbis-signature-key-01<a href="#section-9-7.12.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-9-7.12.2.1">Initial public draft with four schemes: hwk, jwks_uri, x509, jwt<a href="#section-9-7.12.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-9-7.12.2.1">Initial public draft, with four schemes: hwk, jwks_uri, x509, and jwt.<a href="#section-9-7.12.2.1" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
