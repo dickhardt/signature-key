@@ -191,7 +191,11 @@ Most deployments use a single signature. When multiple signatures are required, 
 
 Several schemes in this document convey or reference a JSON Web Key [@!RFC7517]. For any such JWK, the signature algorithm MUST be fully determined by the key, meaning the JWK carries an `alg` member whose value is a fully-specified algorithm identifier: one that determines the signature operation completely, including curve and hash where applicable. A verifier MUST reject a JWK whose `alg` member is absent or whose `alg` is a polymorphic identifier, and MUST NOT select an algorithm for it by inspecting other key parameters. This requirement applies identically regardless of how the JWK was obtained.
 
+Algorithm identifiers in this document are values from the "JSON Web Signature and Encryption Algorithms" registry established by [@!RFC7518]. This document uses the JOSE signing algorithms of [@!RFC9421], Section 3.3.7, under which the signature base is used directly as the JWS Signing Input, the JOSE header is not used, and the algorithm is signaled by the key rather than on the wire. That section states that JWA values are not registered in the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2), and that the `alg` signature parameter is not used at all with JOSE signing algorithms. This document therefore does not use that registry; see (#algorithm-selection).
+
 In particular:
+
+- The `none` algorithm MUST NOT be used, nor any algorithm whose JOSE Implementation Requirement is `Prohibited`. [@!RFC9421], Section 3.3.7 requires this of any JWS algorithm used for an HTTP Message Signature.
 
 - The polymorphic `EdDSA` identifier MUST NOT be used. Use the fully-specified `Ed25519` or `Ed448` identifiers registered by [@!RFC9864] instead.
 
@@ -199,7 +203,7 @@ In particular:
 
 - The JOSE ECDSA identifiers `ES256`, `ES384`, and `ES512` are already fully specified and are used as-is.
 
-- Symmetric algorithms MUST NOT be used. The `oct` key type, the JOSE MAC identifiers `HS256`, `HS384`, and `HS512`, and the `hmac-sha256` identifier of the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2) all name a shared secret rather than a public key. A verifier MUST reject a Signature-Key scheme that conveys or references such a key, and a server MUST NOT list a symmetric algorithm in `Accept-Signature-Alg` ((#accept-signature-alg)). See (#symmetric-algorithms).
+- Symmetric algorithms MUST NOT be used. The `oct` key type and the JOSE MAC identifiers `HS256`, `HS384`, and `HS512` name a shared secret rather than a public key. A verifier MUST reject a Signature-Key scheme that conveys or references such a key, and a server MUST NOT list a symmetric algorithm in `Accept-Signature-Alg` ((#accept-signature-alg)). See (#symmetric-algorithms).
 
 [@!RFC9864] states the rule this rests on — that a key be used with only a single algorithm, unless using one key with several is proven secure — and from it RECOMMENDS that the `alg` member of a JWK be present, unless some other mechanism ensures the key is used as intended. It also deprecates the polymorphic identifiers in the JOSE registry, which is what the first bullet above applies.
 
@@ -210,8 +214,6 @@ Nor can the key's other members substitute for it. An RSA key has no `crv`, and 
 A JWK also carries key-structure members: `kty`, which [@!RFC7517] requires, and `crv` where the key type has one. Because a fully-specified `alg` determines the key type and the curve, these members are redundant with it. They remain present, since the schemes in this document convey ordinary JWKs, and the redundancy is used as a check rather than ignored: a verifier MUST verify that `kty` and, where present, `crv` are consistent with `alg`, and MUST reject the key if they are not. A JWK with an `alg` of `ES256` and a `kty` of `RSA` is inconsistent and MUST be rejected, as is one with an `alg` of `ES256` and a `crv` of `P-384`. Rejecting on disagreement prevents a key from being used under either of two conflicting interpretations.
 
 Post-quantum signature algorithms are accommodated by this rule without special treatment. For example, the ML-DSA identifiers `ML-DSA-44`, `ML-DSA-65`, and `ML-DSA-87` registered by [@!RFC9964] are fully specified and are used directly as the JWK `alg` value. The requirement is algorithm-agnostic and accommodates additional post-quantum and hybrid algorithms as they are registered.
-
-> **Editor's Note:** This paragraph is valid only once ML-DSA is registered for HTTP Message Signatures. [@!RFC9964] registers the ML-DSA identifiers for JOSE, but at the time of writing no corresponding identifier appears in the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2): an entry was added and then withdrawn, and re-registration is in progress. Until it completes, an ML-DSA key can be the key of an assertion this document conveys, such as the signing key of a JWT, but ML-DSA cannot be named as the algorithm of an HTTP Message Signature itself. The gap is in the registry rather than in this document, and Algorithm Determination applies to whichever identifiers are registered. This note is to be removed once the registration lands.
 
 A verifier that encounters a JWK whose `kty` it does not implement, including the `AKP` key type defined by [@!RFC9964] for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via `unsupported_algorithm` ((#unsupported_algorithm)). Absence of support for a key type is a reason to decline, not a parsing failure.
 
@@ -754,7 +756,7 @@ Listing the `cached` scheme ((#cached-scheme)) states that the server implements
 
 ## Accept-Signature-Alg {#accept-signature-alg}
 
-`Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each an identifier from the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2). It states the signature algorithms the server accepts.
+`Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each a fully-specified identifier from the "JSON Web Signature and Encryption Algorithms" registry ([@!RFC7518]), the same identifiers a conveyed key carries in its `alg` member ((#algorithm-determination)). It states the signature algorithms the server accepts. Naming them in the same registry the key uses is what lets a client compare what a server accepts against the keys it holds.
 
 ```http
 Accept-Signature-Alg: ed25519, ecdsa-p256-sha256
@@ -1170,9 +1172,11 @@ Because the JWKS location (and, for `jwks_uri`, the metadata document that yield
 
 ## Algorithm Selection
 
-The signature algorithm is determined by the key material in Signature-Key, not by the optional `alg` parameter in Signature-Input ([@!RFC9421], Section 2.3). For JWK-based schemes (hwk, jkt-jwt, jwks_uri, jwks, jwt, self-jwt), the algorithm is the fully-specified identifier carried in the JWK `alg` member, per Algorithm Determination ((#algorithm-determination)); verifiers MUST NOT derive it from the key type and curve. For the x509 scheme, the algorithm is determined by the certificate's public key type.
+The signature algorithm is determined by the key material in Signature-Key. For JWK-based schemes (hwk, jkt-jwt, jwks_uri, jwks, jwt, self-jwt), the algorithm is the fully-specified identifier carried in the JWK `alg` member, per Algorithm Determination ((#algorithm-determination)); verifiers MUST NOT derive it from the key type and curve. For the x509 scheme, the algorithm is determined by the certificate's public key type.
 
-If the `alg` parameter is present in Signature-Input, verifiers MUST verify it is consistent with the key material.
+[@!RFC9421], Section 1.4 offers three ways for an application to establish the algorithm: state it in the `alg` signature parameter, derive it from the key material, or agree it out of band. This document takes the second, which [@!RFC9421], Section 3.3.7 develops for JOSE signing algorithms: the algorithm is signaled by the key, and "the explicit `alg` signature parameter is not used at all when using JOSE signing algorithms".
+
+Signers therefore MUST NOT include the `alg` parameter in Signature-Input ([@!RFC9421], Section 2.3), and verifiers MUST ignore it if present and MUST NOT use it to select or validate the algorithm. One source of truth is the point. The two identifier spaces do not correspond — [@!RFC9421], Section 3.3.7 notes that JWA values are not registered in the HTTP Signature Algorithms registry — so a rule requiring the parameter to agree with the key would have no defined meaning to test against. Ignoring the parameter also forecloses the confused-verifier condition in which one verifier takes the algorithm from the parameter and another from the key.
 
 Algorithm agility depends on the verifier selecting exactly one signature algorithm for a given key. A key whose algorithm is not fully determined by its identifier invites downgrade and confused-verifier conditions, where two verifiers disagree on the operation a signature represents. For this reason this document requires a present, fully-specified `alg` for conveyed JWKs ((#algorithm-determination)). This aligns with [@!RFC9864], which states that a key is to be used with only a single algorithm unless the use of that key with multiple algorithms has been proven secure, and recommends that the algorithm parameter of a JWK be present.
 
@@ -1188,7 +1192,7 @@ Verifiers MUST:
 
 Every scheme in this document distributes a public key or a reference to one, and every verification it describes is a public-key operation. A symmetric algorithm has no public key: verifying a MAC requires the same secret used to produce it. Distributing that secret in a request header would hand the verifying party the ability to forge the signature it is checking, and any intermediary that saw the header the same ability. The proof of possession this document relies on would then prove nothing, since possession would no longer be exclusive to the signer.
 
-For this reason symmetric algorithms MUST NOT be used with Signature-Key ((#algorithm-determination)). A verifier MUST reject a JWK whose `kty` is `oct` or whose `alg` is a MAC identifier such as `HS256`, and MUST NOT accept `hmac-sha256` as the algorithm of a signature whose key was conveyed by this document, even though that identifier is registered for HTTP Message Signatures ([@!RFC9421], Section 6.2). A shared-secret MAC remains available to deployments that have a pre-shared key and use `keyid` as [@!RFC9421] describes; it is out of scope here precisely because it needs no key distribution.
+For this reason symmetric algorithms MUST NOT be used with Signature-Key ((#algorithm-determination)). A verifier MUST reject a JWK whose `kty` is `oct` or whose `alg` is a MAC identifier such as `HS256`. A shared-secret MAC remains available to deployments that have a pre-shared key and use `keyid` as [@!RFC9421] describes; it is out of scope here precisely because it needs no key distribution.
 
 ## Cache Identifiers {#cache-identifiers}
 
@@ -1430,7 +1434,12 @@ For the Signature Error Code registry, the expert should additionally verify tha
   - Forbade the polymorphic `EdDSA` identifier, deprecated by [@!RFC9864]. Use `Ed25519` or `Ed448`.
   - Required verifiers to take the algorithm from the JWK `alg` rather than derive it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`.
   - Required RSA `alg` to name both padding and hash, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
-  - Forbade symmetric algorithms: the `oct` key type, the JOSE MAC identifiers, and `hmac-sha256`. Every scheme here distributes a public key, and a shared secret handed to the verifier proves nothing.
+  - Forbade symmetric algorithms: the `oct` key type and the JOSE MAC identifiers. Every scheme here distributes a public key, and a shared secret handed to the verifier proves nothing.
+  - Forbade the `none` algorithm and any algorithm whose JOSE Implementation Requirement is `Prohibited`, as [@!RFC9421], Section 3.3.7 requires of a JWS algorithm used for an HTTP Message Signature.
+  - Named the registry these identifiers come from: the "JSON Web Signature and Encryption Algorithms" registry of [@!RFC7518]. This document uses the JOSE signing algorithms of [@!RFC9421], Section 3.3.7 and does not use the HTTP Signature Algorithms registry.
+  - Corrected `Accept-Signature-Alg` to carry identifiers from that same JOSE registry rather than from the HTTP Signature Algorithms registry. A server has to advertise algorithms in the namespace a conveyed key uses, or a client cannot compare what the server accepts against the keys it holds.
+  - Replaced the requirement that a Signature-Input `alg` parameter be "consistent with the key material" with the rule of [@!RFC9421], Section 3.3.7: signers MUST NOT send it and verifiers MUST ignore it. The consistency rule had no testable meaning, since Section 3.3.7 states that JWA values are not registered in the HTTP Signature Algorithms registry and so no mapping between the two namespaces exists. Cited Section 1.4, which names deriving the algorithm from the key material as one of the three approaches an application may take.
+  - Removed the Editor's Note that made the post-quantum paragraph contingent on ML-DSA being registered for HTTP Message Signatures. Under [@!RFC9421], Section 3.3.7 the JOSE path never consults that registry, so the pending registration does not gate ML-DSA here: [@!RFC9964] registers ML-DSA in the JOSE registry, which is the one that applies.
   - Raised `signature-key` coverage from SHOULD to MUST on both sides: signers MUST include it as a covered component and verifiers MUST reject requests where it is not covered. The scheme-substitution and identity-substitution attacks in (#signature-key-integrity) succeed against any verifier that accepts an uncovered header, so no valid reason to ignore the requirement exists. This also removes an internal contradiction, since (#accept-signature-scheme) already described coverage as a requirement of this specification.
   - Raised `exp` from a member of the "standard claims" SHOULD list to MUST in the jwt and self-jwt schemes. For jwt, `exp` is what bounds acceptance of the confirmation key the assertion carries.
   - Raised the hwk `kid` prohibition from SHOULD NOT to MUST NOT. The key is inline, so a `kid` selects nothing and a disagreeing `kid` has no defined resolution.
@@ -1452,7 +1461,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
   - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable.
   - Added an Algorithm Determination section as the single home for the fully-specified algorithm rules, referenced from every scheme that conveys or references a JWK.
   - Required defined rejection of unimplemented JWK key types, including `AKP` [@!RFC9964], reported as `unsupported_algorithm`.
-  - Noted that the ML-DSA identifiers of [@!RFC9964] satisfy the rule without special treatment, and that none is yet registered for HTTP Message Signatures, so ML-DSA can sign an assertion but not the per-request signature. Added a deployment consideration on post-quantum key and signature sizes.
+  - Noted that the ML-DSA identifiers of [@!RFC9964] satisfy the rule without special treatment. Added a deployment consideration on post-quantum key and signature sizes.
   - Added assertion caching as a strawman for discussion: the `cached` scheme, the `cache` signal on jwt and jkt-jwt, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution and validation model. A JWT is cacheable only if it carries a `jti`, and self-jwt is excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not. Whether this is the right layer for caching is an open question.
   - Specified client behaviour when a response carries both `WWW-Authenticate` and a signature challenge: alternatives where the auth-scheme authenticates, in which case the client signs rather than presenting the credential, and complements where it does not, such as a payment challenge, in which case the client satisfies both. Addresses issue #17.
   - Expanded the Introduction to state the gaps this document addresses and the invariants that follow.
