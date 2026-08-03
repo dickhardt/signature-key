@@ -1422,15 +1422,15 @@ For the Signature Error Code registry, the expert should additionally verify tha
 
 *Note: This section is to be removed before publishing as an RFC.*
 
-- draft-hardt-httpbis-signature-key-07
+- draft-hardt-httpbis-signature-key-08
 
-  Not backward compatible with -06. Breaking changes are listed first.
+  Not backward compatible with -07. Breaking changes are listed first.
 
   Breaking changes:
 
   - Removed the `sigkey` Accept-Signature parameter and its registry entry. A parameter value is a bare Item and cannot be a list, so `sigkey` could name only one scheme. Use `Accept-Signature-Scheme` and `Accept-Signature-Alg`, which are Lists of Tokens and let a client select before it signs rather than after a rejection.
   - Removed the `supported_algorithms` member of `Signature-Error`, added in -04. Use `Accept-Signature-Alg`, which works on a challenge and on an error alike.
-  - Made the hwk `alg` parameter REQUIRED and fully specified. It was forbidden in -06, so an hwk key serialized per -06 is rejected by a -07 verifier.
+  - Made the hwk `alg` parameter REQUIRED and fully specified. It was forbidden in -06 and -07, so an hwk key serialized per -07 is rejected by a -08 verifier, and one serialized per -08 is rejected by a -07 verifier. There is nothing to negotiate over, so both ends of a deployment move together.
   - Forbade the polymorphic `EdDSA` identifier, deprecated by [@!RFC9864]. Use `Ed25519` or `Ed448`.
   - Required verifiers to take the algorithm from the JWK `alg` rather than derive it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`.
   - Required RSA `alg` to name both padding and hash, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
@@ -1472,6 +1472,9 @@ For the Signature Error Code registry, the expert should additionally verify tha
   - IANA review feedback: added Designated Expert Instructions for the HTTP Signature-Key Scheme and Signature Error Code registries per RFC 8126 Section 4.5.
   - Changed the Signature Error Code registry policy from Specification Required to Expert Review.
   - Added a registration template to the Signature Error Code registry.
+
+- draft-hardt-httpbis-signature-key-07
+  - Editorial. Noted in the Introduction that the mechanisms defined here are used by other specifications, citing the AAuth protocol [@?I-D.hardt-oauth-aauth-protocol] and Email Verification [@?I-D.hardt-email-verification]. No normative change.
 
 - draft-hardt-httpbis-signature-key-06
   - Added the `self-jwt` scheme for self-issued JWTs where the signer and the JWT issuer are the same party. The JWT signing key, discovered via `{iss}/.well-known/{dwk}`, is reused as the HTTP signing key, and no `cnf` claim is present.
