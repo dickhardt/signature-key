@@ -185,7 +185,7 @@ Signature: sig1=:...:, sig2=:...:
 Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk="eg-config";kid="k1"
 ```
 
-Most deployments SHOULD use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See (#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
+Most deployments use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See (#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
 
 ## Algorithm Determination {#algorithm-determination}
 
@@ -265,7 +265,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
 - The `alg` parameter MUST be present and fully specified. The inline JWK is subject to Algorithm Determination ((#algorithm-determination)).
 
-- The `kid` parameter SHOULD NOT be used
+- The `kid` parameter MUST NOT be used. The key is carried inline, so there is nothing for an identifier to select, and a `kid` that disagrees with the inline key has no defined resolution.
 
 **Use cases:**
 
@@ -376,7 +376,7 @@ JWT payload:
 
 In this example, the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software). The identity is `urn:jkt:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs`.
 
-The stable (enclave) key algorithm in the JWT `alg` header is determined by what the enclave hardware supports. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; deployments whose enclaves support Ed25519 (or other) stable-key algorithms SHOULD document this explicitly. The `cnf.jwk` request key algorithm is likewise enclave-determined.
+The stable (enclave) key algorithm in the JWT `alg` header is determined by what the enclave hardware supports. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; deployments whose enclaves support Ed25519 (or other) stable-key algorithms should document this explicitly. The `cnf.jwk` request key algorithm is likewise enclave-determined.
 
 **Verification procedure:**
 
@@ -516,9 +516,11 @@ Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
 
 - SHOULD contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`. Using SHOULD allows deployments where the verifier already knows the issuer's keys.
 
-- SHOULD contain standard claims: `sub`, `exp`, `iat`
+- MUST contain `exp` claim. The assertion carries a confirmation key, and `exp` is what bounds how long that key is accepted; without it the key remains acceptable indefinitely. See (#layered-cryptographic-agility).
 
-- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+- SHOULD contain standard claims: `sub`, `iat`
+
+- Verifiers MAY verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
@@ -592,17 +594,19 @@ The self-jwt scheme carries a signed JWT where the JWT issuer and the HTTP reque
 
 - MUST NOT contain `cnf` claim
 
-- SHOULD contain standard claims: `sub`, `aud`, `exp`, `iat`
+- MUST contain `exp` claim, bounding how long the assertion is accepted
+
+- SHOULD contain standard claims: `sub`, `aud`, `iat`
 
 The self-jwt scheme does not support the `cache` parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. Assertion caching resolves a cache identifier to an assertion and takes the confirmation key from it ((#cached-scheme)); a self-jwt has no `cnf` claim, and its signing key is discovered from the issuer's JWKS rather than carried in the assertion, so there is no key to recover by resolution alone. A self-jwt is also small, carrying no embedded key, and typically carries claims specific to the request it accompanies, so there is little to be saved by referencing it instead of sending it.
 
-- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+- Verifiers MAY verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
 **Verification procedure:**
 
-1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Verifiers SHOULD reject if the value is not a well-formed JWT. This and subsequent pre-signature checks allow the verifier to fail early without expensive cryptographic operations or network fetches.
+1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Verifiers MUST reject if the value is not a well-formed JWT. Performing this and the subsequent pre-signature checks first lets the verifier fail early, without expensive cryptographic operations or network fetches.
 
 2. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
 
@@ -898,7 +902,7 @@ A server MAY return a `429` response without `Accept-Signature-Scheme` to a sign
 
 # Signature-Error HTTP Response Header
 
-When a server rejects a signed request due to a signature-related error, the response SHOULD include the `Signature-Error` header. The response status code is typically `400 Bad Request`, since the signature or keying material is malformed or invalid. A server MAY use `401 Unauthorized` for recoverable errors (e.g., `unsupported_algorithm`, `unsupported_scheme`, `invalid_input`) where the client can retry with corrected parameters.
+When a server rejects a signed request due to a signature-related error, the response SHOULD include the `Signature-Error` header. A server MAY omit it where returning diagnostic detail to an unauthenticated caller is itself judged a disclosure risk, accepting that clients then cannot self-diagnose. The response status code is typically `400 Bad Request`, since the signature or keying material is malformed or invalid. A server MAY use `401 Unauthorized` for recoverable errors (e.g., `unsupported_algorithm`, `unsupported_scheme`, `invalid_input`) where the client can retry with corrected parameters.
 
 ## Header Structure
 
@@ -916,7 +920,7 @@ The `Signature-Error` header is the authoritative source for machine-readable er
 
 ## Response Body
 
-Servers SHOULD use Problem Details [@!RFC9457] (`application/problem+json`) for the response body when returning `Signature-Error`. The `type` member SHOULD be a URN of the form `urn:ietf:params:sig-error:<error-code>`, where `<error-code>` matches the `error` value in the header.
+Servers SHOULD use Problem Details [@!RFC9457] (`application/problem+json`) for the response body when returning `Signature-Error`, and MAY use another representation where content negotiation or an existing error format requires it. The header, not the body, is the interoperable carrier. Where a Problem Details body is returned, its `type` member MUST be a URN of the form `urn:ietf:params:sig-error:<error-code>`, where `<error-code>` matches the `error` value in the header; a `type` of any other form cannot be interpreted against this document's registry.
 
 ```json
 {
@@ -983,7 +987,7 @@ Signature-Error: error=invalid_signature
 
 The Signature-Input is missing required covered components.
 
-- `required_input` (OPTIONAL): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the covered components the server requires. The response SHOULD include this member.
+- `required_input` (RECOMMENDED): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the covered components the server requires. A server SHOULD include this member, and MAY omit it where enumerating its requirements to an unauthenticated caller is judged a disclosure risk; a client then has to discover the required components by other means.
 
 ```http
 Signature-Error: error=invalid_input,
@@ -1131,7 +1135,7 @@ Verifiers MAY cache keys to improve performance but MUST implement appropriate c
 
 - **jkt-jwt**: Cache embedded keys until JWT expiration; cache by `iss` thumbprint URI
 
-Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.
+Verifiers MUST implement cache limits. Cache entries are created by unauthenticated callers, so an unbounded cache is a resource exhaustion attack with no work factor for the attacker.
 
 When the `Signature-Key` scheme is `jwks_uri` and a cached key matching the JWT `kid` fails signature verification, the verifier SHOULD refresh the issuer's JWKS once and retry verification before returning `unknown_key` (if the key is then absent) or `invalid_jwt` (if verification still fails), subject to the once-per-minute fetch floor and egress admission ((#scheme-specific-risks)) that apply to unknown-`kid` refreshes. This covers silent re-keying where the issuer replaces key material under the same `kid` without changing the identifier.
 
@@ -1139,9 +1143,9 @@ When the `Signature-Key` scheme is `jwks_uri` and a cached key matching the JWT 
 
 **hwk**: No identity verification - suitable only for scenarios where pseudonymous access is acceptable.
 
-**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised. Implementations SHOULD use the shortest practical lifetime. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
+**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised, and the lifetime should be no longer than the deployment's re-delegation interval allows. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
 
-**jwks_uri**: Relies on HTTPS security — vulnerable to DNS/CA compromise. Beyond HTTPS validation, nothing prevents an attacker from copying a client's public keys and serving them from a different domain. Verifiers SHOULD verify that the `id` parameter in the Signature-Key header matches an expected or authorized origin.
+**jwks_uri**: Relies on HTTPS security — vulnerable to DNS/CA compromise. Beyond HTTPS validation, nothing prevents an attacker from copying a client's public keys and serving them from a different domain. Verifiers SHOULD verify that the `id` parameter in the Signature-Key header matches an expected or authorized origin. A general-purpose verifier that accepts signers it has no prior relationship with has no such list to match against, and cannot apply this check; such a verifier obtains an origin-bound pseudonym rather than an authorized identity, and MUST NOT treat a well-formed `id` as evidence that the origin authorized the request.
 
 Because the JWKS location (and, for `jwks_uri`, the metadata document that yields it) is controlled by the asserted signer, an unconstrained verifier can be induced to fetch attacker-chosen internal URLs (SSRF). Verifiers MUST apply egress admission before fetching issuer metadata, a `jwks_uri`, or a `jwks` `url`:
 
@@ -1196,11 +1200,11 @@ A self-contained cache identifier carries verifier state to itself across a flee
 
 ## Post-Quantum Key and Signature Sizes {#pqc-sizes}
 
-Post-quantum keys and signatures are substantially larger than classical ones. ML-DSA public keys are 1312, 1952, and 2592 octets for the three parameter sets, and signatures are larger still, and other post-quantum schemes are larger again. Two consequences follow for deployments. First, an inline key conveyed with the hwk scheme, together with the signature, can approach or exceed HTTP header size limits imposed by servers, proxies, and intermediaries. Deployments conveying large keys SHOULD prefer a discovery scheme (jwks_uri or jwks), which conveys a reference rather than the key itself, so that the key material does not traverse a header. Second, the HTTP Message Signature itself is carried in a header regardless of scheme and is large for post-quantum algorithms; discovery does not mitigate this, and operators SHOULD size header buffers to accommodate post-quantum signatures where such algorithms are in use.
+Post-quantum keys and signatures are substantially larger than classical ones. ML-DSA public keys are 1312, 1952, and 2592 octets for the three parameter sets, and signatures are larger still, and other post-quantum schemes are larger again. The cost that matters here is size rather than verification time: ML-DSA verification is comparable to Ed25519, so what a deployment must plan for is bytes on the wire. Two consequences follow. First, an inline key conveyed with the hwk scheme, together with the signature, can approach or exceed HTTP header size limits imposed by servers, proxies, and intermediaries. Deployments conveying large keys SHOULD prefer a discovery scheme (jwks_uri or jwks), which conveys a reference rather than the key itself, so that the key material does not traverse a header. A deployment MAY keep an inline scheme where it controls the whole request path and has confirmed the headers fit, trading the discovery fetch for header size. Second, the HTTP Message Signature itself is carried in a header regardless of scheme and is large for post-quantum algorithms; discovery does not mitigate this, and operators should size header buffers to accommodate post-quantum signatures where such algorithms are in use.
 
 ## Signature-Key Integrity
 
-The Signature-Key header SHOULD be included as a covered component in Signature-Input:
+The Signature-Key header MUST be included as a covered component in Signature-Input:
 
 ```
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
@@ -1212,7 +1216,7 @@ If `signature-key` is not covered, an attacker can modify the header without inv
 
 **Identity substitution**: An attacker modifies the `id` parameter in a `jwks_uri` scheme to point to their own metadata endpoint that returns the same public key, impersonating a different signer.
 
-Verifiers SHOULD reject requests where `signature-key` is not a covered component.
+Verifiers MUST reject requests where `signature-key` is not a covered component. There is no deployment in which accepting an uncovered `Signature-Key` is safe: both attacks above succeed against any verifier that does so, and neither is detectable after the fact.
 
 # Privacy Considerations
 
@@ -1423,8 +1427,21 @@ For the Signature Error Code registry, the expert should additionally verify tha
   - Required verifiers to take the algorithm from the JWK `alg` rather than derive it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`.
   - Required RSA `alg` to name both padding and hash, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
   - Forbade symmetric algorithms: the `oct` key type, the JOSE MAC identifiers, and `hmac-sha256`. Every scheme here distributes a public key, and a shared secret handed to the verifier proves nothing.
+  - Raised `signature-key` coverage from SHOULD to MUST on both sides: signers MUST include it as a covered component and verifiers MUST reject requests where it is not covered. The scheme-substitution and identity-substitution attacks in (#signature-key-integrity) succeed against any verifier that accepts an uncovered header, so no valid reason to ignore the requirement exists. This also removes an internal contradiction, since (#accept-signature-scheme) already described coverage as a requirement of this specification.
+  - Raised `exp` from a member of the "standard claims" SHOULD list to MUST in the jwt and self-jwt schemes. For jwt, `exp` is what bounds acceptance of the confirmation key the assertion carries.
+  - Raised the hwk `kid` prohibition from SHOULD NOT to MUST NOT. The key is inline, so a `kid` selects nothing and a disagreeing `kid` has no defined resolution.
+  - Raised rejection of a malformed JWT from SHOULD to MUST. A value that does not parse as a JWT cannot be verified, so the SHOULD had no exception case; the early-rejection rationale was the point being made and is retained as such.
+  - Raised cache limits from SHOULD to MUST. Cache entries are created by unauthenticated callers.
+  - Required the Problem Details `type` member, where a Problem Details body is returned, to be the `urn:ietf:params:sig-error:` URN form. Whether to return that body remains a SHOULD; the format of the member, once present, is not optional, since another form cannot be resolved against the registry.
 
   Other changes:
+
+  - Audited every BCP 14 SHOULD against RFC 2119 Section 6. Each retained SHOULD now names the circumstance under which it may be ignored: omitting `Signature-Error` or `required_input` where diagnostics to an unauthenticated caller are a disclosure risk, returning a non-Problem-Details body under content negotiation, the general-purpose verifier that has no authorized-origin list to check `id` against, and the deployment that keeps an inline scheme because it has confirmed its headers fit.
+  - Downgraded to lowercase the statements that were not interoperability requirements, per RFC 2119 Section 6 and the RFC 8174 convention that only uppercase is normative: single-signature deployment advice, the recommendation to document enclave stable-key algorithms, the "shortest practical lifetime" guidance, which was unmeasurable as written, and header buffer sizing.
+  - Changed the `typ` header check from SHOULD to MAY in the jwt and self-jwt schemes. The text identifies it as an optimization for quick rejection, and step 2 of each verification procedure already states the check.
+  - Corrected the layered cryptographic agility rationale: post-quantum verification is not the expensive part, since ML-DSA verification is comparable to Ed25519. What caching saves the verifier is the assertion's bytes on the wire and the repeated resolution, not verification time. The signer's per-request cost is time and the verifier's is size.
+  - Corrected the basis of the classical hot path: what bounds exposure is the lifetime of the confirmation key, not the expiry of the assertion carrying it. A signer that rebinds one long-lived key into successive assertions leaves that key acceptable indefinitely whatever each `exp` says, and gains nothing from short assertion lifetimes. jkt-jwt has the intended shape by construction.
+  - Removed the archived IETF 125 presentation from the repository.
 
   - Added the `jwks` scheme: a direct JWKS fetch whose HTTPS `url` is both the signer identity and the key location, under the same egress-admission rules as `jwks_uri`.
   - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable.
@@ -1555,9 +1572,11 @@ Adding header fields here does not contradict the argument against per-scheme ke
 
 ## Layered Cryptographic Agility
 
-Post-quantum protection is applied to artifacts whose authenticity must survive into the quantum era: durable, consequential, or retained assertions. The per-request HTTP Message Signature is ephemeral, replay-bounded proof of possession that no verifier accepts outside its short window, and so does not face a harvest-now-forge-later threat; it MAY continue to use a classical algorithm such as Ed25519 in a post-quantum deployment. Ed25519 is not itself post-quantum; the claim here is that it remains acceptable for ephemeral per-request authentication in a post-quantum setting, which is a statement about the threat model for short-lived authentication signatures rather than about the algorithm's quantum resistance. The agent's proof-of-possession key is itself short-lived and is carried within the assertion, so its exploitable lifetime is bounded by the assertion's expiry. Caching ((#signature-key-cache-response-header)) makes the post-quantum assertion, whose signature is large ((#pqc-sizes)), affordable to reference on each request without retransmitting it.
+Post-quantum protection is applied to artifacts whose authenticity must survive into the quantum era: durable, consequential, or retained assertions. The per-request HTTP Message Signature is ephemeral, replay-bounded proof of possession that no verifier accepts outside its short window; it MAY continue to use a classical algorithm such as Ed25519 in a post-quantum deployment. Ed25519 is not itself post-quantum, and the claim here concerns the threat model for short-lived authentication signatures rather than the algorithm's quantum resistance. Caching ((#signature-key-cache-response-header)) makes the post-quantum assertion, whose signature is large ((#pqc-sizes)), affordable to reference on each request without retransmitting it.
 
-The saving is on both sides, and the jkt-jwt scheme ((#jkt-jwt-scheme)) shows it most clearly. That scheme exists because signing in a secure enclave is slow, so the enclave key signs once and delegates to a fast ephemeral key. Verification has the same shape: checking a post-quantum delegation is expensive, so a verifier that caches the delegation performs the thumbprint computation and the signature verification once and references the result thereafter. The same argument that motivates delegation on the signer's side motivates caching on the verifier's.
+What makes the classical hot path acceptable is the lifetime of the key, not the lifetime of the assertion carrying it. A confirmation key's public value travels in the assertion and can be collected by any observer today, so the exposure is bounded by how long a verifier will still accept that key, not by how long ago it was seen. A classical key is safe against an attacker who later recovers private keys from harvested public keys for as long as it is replaced — a freshly generated key bound in a newly issued assertion — faster than that recovery is possible. Expiring the assertion does not achieve this on its own: a signer that rebinds one long-lived key into each successive assertion leaves that key acceptable for as long as it keeps doing so, whatever `exp` any individual assertion carries. The jkt-jwt scheme ((#jkt-jwt-scheme)) has the intended shape by construction, the stable enclave key establishing identity while the request key in `cnf` is generated per delegation. A deployment that instead reuses a confirmation key across assertions gains nothing from short assertion lifetimes, and should choose that key's algorithm against its true acceptance window.
+
+The saving is on both sides, though for a different reason on each. The jkt-jwt scheme exists because signing in a secure enclave is slow, so the enclave key signs once and delegates to a fast ephemeral key: the signer's per-request cost is time. The verifier's is size. Post-quantum verification is not the expensive part — ML-DSA verification is comparable to Ed25519 — and the burden is the assertion ((#pqc-sizes)) that would otherwise be retransmitted and reparsed on every request. A verifier that caches the delegation resolves it once, fetching, parsing, computing the thumbprint, and verifying the signature, and references the result thereafter, while the caller stops paying the assertion's bytes on each request. Delegation on the signer's side and caching on the verifier's answer the same shape of problem from opposite ends.
 
 Long-term non-repudiation is out of scope for this layer and is provided above it. The per-request signature is not the durable evidentiary record. Where long-term, tamper-evident proof of what an agent did is required, it is provided by a transparency ledger that records actions and is itself protected for the long term, not by retaining and later trusting individual per-request signatures. Because durable evidence lives in the ledger, the per-request signature has no long-term evidentiary value to protect, and the classical hot path needs no post-quantum sealing at this layer. The ledger, being the durable artifact, is where post-quantum protection is applied for audit. The ledger itself is outside the scope of this document.
 
