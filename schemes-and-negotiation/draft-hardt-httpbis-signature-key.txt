@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 1 February 2027                                      Cloudflare
-                                                            31 July 2026
+Expires: 4 February 2027                                      Cloudflare
+                                                           3 August 2026
 
 
                           HTTP Signature Keys
@@ -53,7 +53,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 February 2027.
+   This Internet-Draft will expire on 4 February 2027.
 
 Copyright Notice
 
@@ -1020,7 +1020,11 @@ Signature: sig1=:MEQCIA5...:
    server returning unsupported_scheme (Section 5.4.2) SHOULD include
    Accept-Signature-Scheme, and a server returning unsupported_algorithm
    (Section 5.4.1) SHOULD include Accept-Signature-Alg. The error names
-   what went wrong; the header names what would succeed.
+   what went wrong; the header names what would succeed.  A server MAY
+   omit the header where enumerating its accepted schemes or algorithms
+   to an unauthenticated caller is judged a disclosure risk, accepting
+   that a client then has to discover them by trial or out of band; the
+   same consideration applies to Signature-Error itself.
 
    HTTP/1.1 401 Unauthorized
    Signature-Error: error=unsupported_scheme
@@ -1737,6 +1741,11 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       scheme, for carrying the accepted sets in header fields rather
       than in parameters or error members, and for not reserving grease
       values.
+
+   *  Gave the SHOULD for sending Accept-Signature-Scheme and Accept-
+      Signature-Alg on an error response its exception case, per RFC
+      2119 Section 6: a server may withhold the header where enumerating
+      what it accepts to an unauthenticated caller is a disclosure risk.
 
    *  Corrected the Accept-Signature parameter name from algs to alg,
       per [RFC9421], Section 5.1.
