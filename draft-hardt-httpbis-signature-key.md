@@ -707,7 +707,7 @@ Both headers MAY be sent on any response. They are useful on two occasions in pa
 
 On a challenge, before the client has signed anything, they let the client choose correctly the first time.
 
-On a `Signature-Error` response, they say what would have worked. A server returning `unsupported_scheme` ((#unsupported-scheme)) SHOULD include `Accept-Signature-Scheme`, and a server returning `unsupported_algorithm` ((#unsupported_algorithm)) SHOULD include `Accept-Signature-Alg`. The error names what went wrong; the header names what would succeed.
+On a `Signature-Error` response, they say what would have worked. A server returning `unsupported_scheme` ((#unsupported-scheme)) SHOULD include `Accept-Signature-Scheme`, and a server returning `unsupported_algorithm` ((#unsupported_algorithm)) SHOULD include `Accept-Signature-Alg`. The error names what went wrong; the header names what would succeed. A server MAY omit the header where enumerating its accepted schemes or algorithms to an unauthenticated caller is judged a disclosure risk, accepting that a client then has to discover them by trial or out of band; the same consideration applies to `Signature-Error` itself.
 
 ```http
 HTTP/1.1 401 Unauthorized
@@ -1192,6 +1192,7 @@ This document establishes the "Signature Error Code" registry. New values may be
   - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable.
   - Expanded the Introduction to state the gaps this document addresses and the invariants that follow.
   - Added rationale for a scheme token rather than a header per scheme, for carrying the accepted sets in header fields rather than in parameters or error members, and for not reserving grease values.
+  - Gave the SHOULD for sending `Accept-Signature-Scheme` and `Accept-Signature-Alg` on an error response its exception case, per RFC 2119 Section 6: a server may withhold the header where enumerating what it accepts to an unauthenticated caller is a disclosure risk.
   - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
   - Converted internal cross-references to mmark xref syntax so they render as section numbers.
 
