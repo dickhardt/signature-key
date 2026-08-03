@@ -994,7 +994,7 @@ This document establishes the "HTTP Signature-Key Scheme" registry. This registr
 
 ### Registration Procedure
 
-New scheme registrations require Specification Required per [@!RFC8126].
+New scheme registrations follow the Specification Required policy ([@!RFC8126], Section 4.6). See (#designated-expert-instructions) for instructions to the designated expert.
 
 ### Initial Registry Contents
 
@@ -1049,7 +1049,7 @@ The URN pattern is `urn:ietf:params:sig-error:<error-code>`, where `<error-code>
 
 ## Signature Error Code Registry
 
-This document establishes the "Signature Error Code" registry. New values may be registered following the Specification Required policy ([@!RFC8126]).
+This document establishes the "Signature Error Code" registry. New values may be registered following the Expert Review policy ([@!RFC8126], Section 4.5). See (#designated-expert-instructions) for instructions to the designated expert.
 
 ### Initial Registry Contents
 
@@ -1064,9 +1064,48 @@ This document establishes the "Signature Error Code" registry. New values may be
 | `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
 | `expired_jwt` | JWT expired | [this document] |
 
+### Registration Template
+
+Value:
+: The error code token used in the `Signature-Error` header and the `urn:ietf:params:sig-error:` URN
+
+Description:
+: A brief description of the error condition and when a verifier generates it
+
+Reference:
+: Reference to the document or specification defining the error code
+
+## Designated Expert Instructions {#designated-expert-instructions}
+
+Registration requests for the registries established by this document are evaluated by a designated expert appointed by the IESG. The HTTP Signature-Key Scheme registry uses the Specification Required policy ([@!RFC8126], Section 4.6); the Signature Error Code registry uses the Expert Review policy ([@!RFC8126], Section 4.5).
+
+Registration requests should be sent to IANA, which will forward them to the designated expert. The expert is expected to respond within two weeks. Denials should include an explanation and, if applicable, suggestions for how the request could be revised to be successful.
+
+For all registrations, the designated expert should verify that:
+
+- The proposed value conforms to the registry's syntax and is not confusingly similar to an existing entry.
+- The registration does not duplicate the semantics of an existing entry without clear justification.
+
+For the HTTP Signature-Key Scheme registry, the expert should additionally verify that the referenced specification is stable and freely available, describes the scheme in sufficient detail that interoperable, independent implementations are possible, and defines:
+
+- How the verifier obtains the public key and establishes its authenticity.
+- All parameters used by the scheme, including which are required and which are optional.
+- The security and privacy properties of the scheme, including the trust model (e.g., pseudonymous, URI-bound, or PKI-anchored) and any risks introduced by network fetches during verification.
+
+For the Signature Error Code registry, the expert should additionally verify that:
+
+- The error code is a lowercase token using only lowercase letters and underscore, consistent with the registry's existing entries.
+- The error condition is broadly applicable to HTTP message signature verification rather than specific to a single application.
+- The description makes clear when a verifier generates the error, and the error does not leak sensitive information to unauthenticated callers.
+
 # Document History
 
 *Note: This section is to be removed before publishing as an RFC.*
+
+- draft-hardt-httpbis-signature-key-07
+  - IANA review feedback: added Designated Expert Instructions for the HTTP Signature-Key Scheme and Signature Error Code registries per RFC 8126 Section 4.5.
+  - Changed the Signature Error Code registry policy from Specification Required to Expert Review.
+  - Added a registration template to the Signature Error Code registry.
 
 - draft-hardt-httpbis-signature-key-06
   - Added `self-jwt` as a new standalone scheme for self-issued JWTs where the signer and JWT issuer are the same party. The JWT signing key (discovered via `{iss}/.well-known/{dwk}`) is reused as the HTTP signing key; no `cnf` claim is present.
