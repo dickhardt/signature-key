@@ -423,10 +423,33 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
       references such a key, and a server MUST NOT list a symmetric
       algorithm in Accept-Signature-Alg (Section 4.2).  See Section 7.5.
 
-   This requirement follows the guidance of [RFC9864], which recommends
-   that the algorithm of a JWK be present so that a key is used only
-   with the algorithm intended, and which deprecates polymorphic
-   algorithm identifiers in the JOSE registry.
+   [RFC9864] states the rule this rests on — that a key be used with
+   only a single algorithm, unless using one key with several is proven
+   secure — and from it RECOMMENDS that the alg member of a JWK be
+   present, unless some other mechanism ensures the key is used as
+   intended.  It also deprecates the polymorphic identifiers in the JOSE
+   registry, which is what the first bullet above applies.
+
+   This document raises that RECOMMENDED to a requirement, because for
+   the schemes defined here the exception is not available.  A key
+   conveyed inline by the hwk scheme, or carried in an assertion,
+   arrives in band from a party with which the verifier need have no
+   prior relationship.  There is no registration, configuration, or
+   negotiation step in which an intended algorithm could have been
+   agreed, so the "other mechanism" [RFC9864] allows a deployment to
+   rely on instead is exactly what these schemes lack.  Requiring alg
+   supplies it, in the message itself.
+
+   Nor can the key's other members substitute for it.  An RSA key has no
+   crv, and kty alone leaves both the padding scheme and the hash free.
+   For an EC key, crv fixes the curve but not the hash.  For the AKP key
+   type of [RFC9964], the parameter set is not derivable from kty at
+   all.  Only for OKP keys do kty and crv determine the algorithm
+   between them, and a rule carrying one key-type exception would be
+   harder to implement correctly, and to test, than a uniform
+   requirement.  [I-D.richer-oauth-httpsig] arrives at the same
+   requirement independently for the keys it binds as JWKs, requiring a
+   fully-specified JWK alg and forbidding polymorphic identifiers.
 
    A JWK also carries key-structure members: kty, which [RFC7517]
    requires, and crv where the key type has one.  Because a fully-
@@ -2371,6 +2394,18 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
    Other changes:
 
+   *  Rewrote the justification in Algorithm Determination.  [RFC9864]
+      RECOMMENDS rather than requires the JWK alg member, and allows a
+      deployment to rely on some other mechanism for ensuring a key is
+      used as intended, so citing it as the basis for a MUST overstated
+      it.  The requirement now says what it is — a tightening — and
+      gives the reason: keys conveyed in band come from a party the
+      verifier has no prior relationship with, so no such other
+      mechanism exists, and kty and crv underdetermine the algorithm for
+      RSA, EC, and AKP keys alike.  Noted that
+      [I-D.richer-oauth-httpsig] reaches the same requirement
+      independently for JWK-bound keys.
+
    *  Audited every BCP 14 SHOULD against RFC 2119 Section 6.  Each
       retained SHOULD now names the circumstance under which it may be
       ignored: omitting Signature-Error or required_input where
@@ -2625,6 +2660,14 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
               Draft, draft-hardt-oauth-aauth-protocol-09, 4 July 2026,
               <https://datatracker.ietf.org/doc/html/draft-hardt-oauth-
               aauth-protocol-09>.
+
+   [I-D.richer-oauth-httpsig]
+              Richer, J., Parecki, A., Bastian, P., Skokan, F., and C.
+              Bormann, "OAuth Proof of Possession Tokens with HTTP
+              Message Signatures", Work in Progress, Internet-Draft,
+              draft-richer-oauth-httpsig-03, 28 July 2026,
+              <https://datatracker.ietf.org/doc/html/draft-richer-oauth-
+              httpsig-03>.
 
    [I-D.ryan-httpauth-payment]
               Ryan, B., Moxey, J., Meagher, T., Weinstein, J., and S.
