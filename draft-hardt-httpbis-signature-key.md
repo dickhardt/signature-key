@@ -831,7 +831,13 @@ Accept-Signature-Scheme: jwks_uri, jwt
 Accept-Signature-Alg: ecdsa-p256-sha256
 ```
 
-A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]) alongside a signature challenge:
+A client that understands both mechanisms distinguishes two cases by the `WWW-Authenticate` auth-scheme. Because the rule applies only where the client understands the scheme, the client knows what that scheme does.
+
+- Where the challenge is an authentication or authorization challenge, such as `Basic` or `Bearer`, the two are alternatives and either satisfies the server. The client MUST sign the request rather than present the credential. A signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it; signing also puts no credential on the wire that the exchange did not require.
+
+- Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]), the two are complements and satisfying one does not satisfy the other. The client MUST satisfy both.
+
+A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]) alongside a signature challenge. Payment is not authentication, so this is the complementary case and a client satisfies both:
 
 ```http
 HTTP/1.1 402 Payment Required
@@ -1426,6 +1432,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
   - Required defined rejection of unimplemented JWK key types, including `AKP` [@!RFC9964], reported as `unsupported_algorithm`.
   - Noted that the ML-DSA identifiers of [@!RFC9964] satisfy the rule without special treatment, and that none is yet registered for HTTP Message Signatures, so ML-DSA can sign an assertion but not the per-request signature. Added a deployment consideration on post-quantum key and signature sizes.
   - Added assertion caching as a strawman for discussion: the `cached` scheme, the `cache` signal on jwt and jkt-jwt, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution and validation model. A JWT is cacheable only if it carries a `jti`, and self-jwt is excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not. Whether this is the right layer for caching is an open question.
+  - Specified client behaviour when a response carries both `WWW-Authenticate` and a signature challenge: alternatives where the auth-scheme authenticates, in which case the client signs rather than presenting the credential, and complements where it does not, such as a payment challenge, in which case the client satisfies both. Addresses issue #17.
   - Expanded the Introduction to state the gaps this document addresses and the invariants that follow.
   - Added rationale for a scheme token rather than a header per scheme, for carrying the accepted sets in header fields rather than in parameters or error members, for layered cryptographic agility, for the verifier issuing the cache identifier rather than deriving it from the assertion as an entity tag would be, and for not reserving grease values.
   - Corrected the Accept-Signature parameter name from `algs` to `alg`, per [@!RFC9421], Section 5.1.
