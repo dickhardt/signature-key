@@ -2355,9 +2355,9 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
    _Note: This section is to be removed before publishing as an RFC._
 
-   *  draft-hardt-httpbis-signature-key-07
+   *  draft-hardt-httpbis-signature-key-08
 
-   Not backward compatible with -06.  Breaking changes are listed first.
+   Not backward compatible with -07.  Breaking changes are listed first.
 
    Breaking changes:
 
@@ -2370,8 +2370,10 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       in -04.  Use Accept-Signature-Alg, which works on a challenge and
       on an error alike.
    *  Made the hwk alg parameter REQUIRED and fully specified.  It was
-      forbidden in -06, so an hwk key serialized per -06 is rejected by
-      a -07 verifier.
+      forbidden in -06 and -07, so an hwk key serialized per -07 is
+      rejected by a -08 verifier, and one serialized per -08 is rejected
+      by a -07 verifier.  There is nothing to negotiate over, so both
+      ends of a deployment move together.
    *  Forbade the polymorphic EdDSA identifier, deprecated by [RFC9864].
       Use Ed25519 or Ed448.
    *  Required verifiers to take the algorithm from the JWK alg rather
@@ -2553,6 +2555,14 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
    *  Added a registration template to the Signature Error Code
       registry.
+
+   *  draft-hardt-httpbis-signature-key-07
+
+      -  Editorial.  Noted in the Introduction that the mechanisms
+         defined here are used by other specifications, citing the AAuth
+         protocol [I-D.hardt-oauth-aauth-protocol] and Email
+         Verification [I-D.hardt-email-verification].  No normative
+         change.
 
    *  draft-hardt-httpbis-signature-key-06
 

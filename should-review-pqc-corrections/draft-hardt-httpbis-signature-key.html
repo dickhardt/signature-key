@@ -3370,17 +3370,17 @@ Accept-Signature-Scheme: jwks_uri, jwt
       </h2>
 <p id="section-10-1"><em>Note: This section is to be removed before publishing as an RFC.</em><a href="#section-10-1" class="pilcrow">¶</a></p>
 <ul class="compact">
-<li class="compact" id="section-10-2.1">draft-hardt-httpbis-signature-key-07<a href="#section-10-2.1" class="pilcrow">¶</a>
+<li class="compact" id="section-10-2.1">draft-hardt-httpbis-signature-key-08<a href="#section-10-2.1" class="pilcrow">¶</a>
 </li>
       </ul>
-<p id="section-10-3">Not backward compatible with -06. Breaking changes are listed first.<a href="#section-10-3" class="pilcrow">¶</a></p>
+<p id="section-10-3">Not backward compatible with -07. Breaking changes are listed first.<a href="#section-10-3" class="pilcrow">¶</a></p>
 <p id="section-10-4">Breaking changes:<a href="#section-10-4" class="pilcrow">¶</a></p>
 <ul class="compact">
 <li class="compact" id="section-10-5.1">Removed the <code>sigkey</code> Accept-Signature parameter and its registry entry. A parameter value is a bare Item and cannot be a list, so <code>sigkey</code> could name only one scheme. Use <code>Accept-Signature-Scheme</code> and <code>Accept-Signature-Alg</code>, which are Lists of Tokens and let a client select before it signs rather than after a rejection.<a href="#section-10-5.1" class="pilcrow">¶</a>
 </li>
         <li class="compact" id="section-10-5.2">Removed the <code>supported_algorithms</code> member of <code>Signature-Error</code>, added in -04. Use <code>Accept-Signature-Alg</code>, which works on a challenge and on an error alike.<a href="#section-10-5.2" class="pilcrow">¶</a>
 </li>
-        <li class="compact" id="section-10-5.3">Made the hwk <code>alg</code> parameter REQUIRED and fully specified. It was forbidden in -06, so an hwk key serialized per -06 is rejected by a -07 verifier.<a href="#section-10-5.3" class="pilcrow">¶</a>
+        <li class="compact" id="section-10-5.3">Made the hwk <code>alg</code> parameter REQUIRED and fully specified. It was forbidden in -06 and -07, so an hwk key serialized per -07 is rejected by a -08 verifier, and one serialized per -08 is rejected by a -07 verifier. There is nothing to negotiate over, so both ends of a deployment move together.<a href="#section-10-5.3" class="pilcrow">¶</a>
 </li>
         <li class="compact" id="section-10-5.4">Forbade the polymorphic <code>EdDSA</code> identifier, deprecated by <span>[<a href="#RFC9864" class="cite xref">RFC9864</a>]</span>. Use <code>Ed25519</code> or <code>Ed448</code>.<a href="#section-10-5.4" class="pilcrow">¶</a>
 </li>
@@ -3476,72 +3476,79 @@ Accept-Signature-Scheme: jwks_uri, jwt
           <p id="section-10-7.22.1">Added a registration template to the Signature Error Code registry.<a href="#section-10-7.22.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.23">
-          <p id="section-10-7.23.1">draft-hardt-httpbis-signature-key-06<a href="#section-10-7.23.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.23.1">draft-hardt-httpbis-signature-key-07<a href="#section-10-7.23.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-10-7.23.2.1">Added the <code>self-jwt</code> scheme for self-issued JWTs where the signer and the JWT issuer are the same party. The JWT signing key, discovered via <code>{iss}/.well-known/{dwk}</code>, is reused as the HTTP signing key, and no <code>cnf</code> claim is present.<a href="#section-10-7.23.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-10-7.23.2.1">Editorial. Noted in the Introduction that the mechanisms defined here are used by other specifications, citing the AAuth protocol <span>[<a href="#I-D.hardt-oauth-aauth-protocol" class="cite xref">I-D.hardt-oauth-aauth-protocol</a>]</span> and Email Verification <span>[<a href="#I-D.hardt-email-verification" class="cite xref">I-D.hardt-email-verification</a>]</span>. No normative change.<a href="#section-10-7.23.2.1" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-10-7.24">
-          <p id="section-10-7.24.1">draft-hardt-httpbis-signature-key-05<a href="#section-10-7.24.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.24.1">draft-hardt-httpbis-signature-key-06<a href="#section-10-7.24.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-10-7.24.2.1">Incorporated implementer feedback from Joshua Gay (sidecat), and added him to the acknowledgments.<a href="#section-10-7.24.2.1" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.24.2.2">Added a mandatory egress-admission checklist to the <code>jwks_uri</code> SSRF risk bullet: HTTPS, size and timeout limits, redirect policy, private and loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.<a href="#section-10-7.24.2.2" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.24.2.3">Added a once-per-minute JWKS fetch floor, and a same-<code>kid</code> refresh rule allowing one refresh and retry before returning <code>unknown_key</code> or <code>invalid_jwt</code>, subject to that floor and to egress-admission policy.<a href="#section-10-7.24.2.3" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.24.2.4">Noted that the stable (enclave) key algorithm in <code>jkt-jwt</code> is enclave-determined, and that deployments supporting Ed25519 or other stable-key algorithms SHOULD document this.<a href="#section-10-7.24.2.4" class="pilcrow">¶</a>
+<li class="compact normal" id="section-10-7.24.2.1">Added the <code>self-jwt</code> scheme for self-issued JWTs where the signer and the JWT issuer are the same party. The JWT signing key, discovered via <code>{iss}/.well-known/{dwk}</code>, is reused as the HTTP signing key, and no <code>cnf</code> claim is present.<a href="#section-10-7.24.2.1" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-10-7.25">
-          <p id="section-10-7.25.1">draft-hardt-httpbis-signature-key-04<a href="#section-10-7.25.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.25.1">draft-hardt-httpbis-signature-key-05<a href="#section-10-7.25.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-10-7.25.2.1">Renamed the specification from "HTTP Signature-Key Header" to "HTTP Signature Keys".<a href="#section-10-7.25.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-10-7.25.2.1">Incorporated implementer feedback from Joshua Gay (sidecat), and added him to the acknowledgments.<a href="#section-10-7.25.2.1" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.25.2.2">Added the <code>sigkey</code> parameter to Accept-Signature (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5) with three values: <code>jkt</code> (pseudonymous), <code>uri</code> (URI-identified), and <code>x509</code> (PKI certificate), and registered it in the HTTP Signature Metadata Parameters registry.<a href="#section-10-7.25.2.2" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.25.2.2">Added a mandatory egress-admission checklist to the <code>jwks_uri</code> SSRF risk bullet: HTTPS, size and timeout limits, redirect policy, private and loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.<a href="#section-10-7.25.2.2" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.25.2.3">Added the Signature-Error response header and established the Signature Error Code registry.<a href="#section-10-7.25.2.3" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.25.2.3">Added a once-per-minute JWKS fetch floor, and a same-<code>kid</code> refresh rule allowing one refresh and retry before returning <code>unknown_key</code> or <code>invalid_jwt</code>, subject to that floor and to egress-admission policy.<a href="#section-10-7.25.2.3" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.25.2.4">Added an incremental adoption section describing zero-coordination deployment via 429, 401, and 402 responses.<a href="#section-10-7.25.2.4" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.25.2.5">Added privacy considerations for key thumbprint tracking, agent identity disclosure, and the JWKS fetch side channel.<a href="#section-10-7.25.2.5" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.25.2.4">Noted that the stable (enclave) key algorithm in <code>jkt-jwt</code> is enclave-determined, and that deployments supporting Ed25519 or other stable-key algorithms SHOULD document this.<a href="#section-10-7.25.2.4" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-10-7.26">
-          <p id="section-10-7.26.1">draft-hardt-httpbis-signature-key-03<a href="#section-10-7.26.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.26.1">draft-hardt-httpbis-signature-key-04<a href="#section-10-7.26.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-10-7.26.2.1">Added the <code>jkt-jwt</code> scheme for self-issued key delegation, with a TOFU reference to <span>[<a href="#RFC7435" class="cite xref">RFC7435</a>]</span>.<a href="#section-10-7.26.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-10-7.26.2.1">Renamed the specification from "HTTP Signature-Key Header" to "HTTP Signature Keys".<a href="#section-10-7.26.2.1" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.26.2.2">Renamed the <code>well-known</code> parameter to <code>dwk</code> (dot well-known).<a href="#section-10-7.26.2.2" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.26.2.2">Added the <code>sigkey</code> parameter to Accept-Signature (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5) with three values: <code>jkt</code> (pseudonymous), <code>uri</code> (URI-identified), and <code>x509</code> (PKI certificate), and registered it in the HTTP Signature Metadata Parameters registry.<a href="#section-10-7.26.2.2" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.26.2.3">Added <code>iss</code> and <code>dwk</code> claims to the jwt scheme (SHOULD) for issuer key discovery.<a href="#section-10-7.26.2.3" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.26.2.3">Added the Signature-Error response header and established the Signature Error Code registry.<a href="#section-10-7.26.2.3" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.26.2.4">Added an early validation step to jwt verification: format, <code>typ</code>, and <code>exp</code> checks before any network fetch.<a href="#section-10-7.26.2.4" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.26.2.4">Added an incremental adoption section describing zero-coordination deployment via 429, 401, and 402 responses.<a href="#section-10-7.26.2.4" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.26.2.5">Added design rationale for <code>jwks_uri</code> rather than an inline JWKS, and moved the hwk string versus byte sequence note to the rationale appendix.<a href="#section-10-7.26.2.5" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.26.2.6">Reordered the schemes and added acknowledgments.<a href="#section-10-7.26.2.6" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.26.2.5">Added privacy considerations for key thumbprint tracking, agent identity disclosure, and the JWKS fetch side channel.<a href="#section-10-7.26.2.5" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-10-7.27">
-          <p id="section-10-7.27.1">draft-hardt-httpbis-signature-key-02<a href="#section-10-7.27.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.27.1">draft-hardt-httpbis-signature-key-03<a href="#section-10-7.27.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-10-7.27.2.1">Changed the <code>x5t</code> parameter to a byte sequence, per reviewer feedback.<a href="#section-10-7.27.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-10-7.27.2.1">Added the <code>jkt-jwt</code> scheme for self-issued key delegation, with a TOFU reference to <span>[<a href="#RFC7435" class="cite xref">RFC7435</a>]</span>.<a href="#section-10-7.27.2.1" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.27.2.2">Added structured field types to all parameters.<a href="#section-10-7.27.2.2" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.27.2.2">Renamed the <code>well-known</code> parameter to <code>dwk</code> (dot well-known).<a href="#section-10-7.27.2.2" class="pilcrow">¶</a>
 </li>
-            <li class="compact normal" id="section-10-7.27.2.3">Added a design note on the string versus byte sequence choice for hwk.<a href="#section-10-7.27.2.3" class="pilcrow">¶</a>
+            <li class="compact normal" id="section-10-7.27.2.3">Added <code>iss</code> and <code>dwk</code> claims to the jwt scheme (SHOULD) for issuer key discovery.<a href="#section-10-7.27.2.3" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.27.2.4">Added an early validation step to jwt verification: format, <code>typ</code>, and <code>exp</code> checks before any network fetch.<a href="#section-10-7.27.2.4" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.27.2.5">Added design rationale for <code>jwks_uri</code> rather than an inline JWKS, and moved the hwk string versus byte sequence note to the rationale appendix.<a href="#section-10-7.27.2.5" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.27.2.6">Reordered the schemes and added acknowledgments.<a href="#section-10-7.27.2.6" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
         <li class="normal" id="section-10-7.28">
-          <p id="section-10-7.28.1">draft-hardt-httpbis-signature-key-01<a href="#section-10-7.28.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.28.1">draft-hardt-httpbis-signature-key-02<a href="#section-10-7.28.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-10-7.28.2.1">Initial public draft, with four schemes: hwk, jwks_uri, x509, and jwt.<a href="#section-10-7.28.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-10-7.28.2.1">Changed the <code>x5t</code> parameter to a byte sequence, per reviewer feedback.<a href="#section-10-7.28.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.28.2.2">Added structured field types to all parameters.<a href="#section-10-7.28.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.28.2.3">Added a design note on the string versus byte sequence choice for hwk.<a href="#section-10-7.28.2.3" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-10-7.29">
+          <p id="section-10-7.29.1">draft-hardt-httpbis-signature-key-01<a href="#section-10-7.29.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-10-7.29.2.1">Initial public draft, with four schemes: hwk, jwks_uri, x509, and jwt.<a href="#section-10-7.29.2.1" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
