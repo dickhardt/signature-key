@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 4 February 2027                                      Cloudflare
-                                                           3 August 2026
+Expires: 5 February 2027                                      Cloudflare
+                                                           4 August 2026
 
 
                           HTTP Signature Keys
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 February 2027.
+   This Internet-Draft will expire on 5 February 2027.
 
 Copyright Notice
 
@@ -158,6 +158,7 @@ Table of Contents
      A.8.  Why the Verifier Issues the Cache Identifier
      A.9.  Precedents for Assertion Caching
      A.10. Why Strings Instead of Byte Sequences for hwk?
+     A.11. Why alg Is Required on Every Conveyed Key
    Authors' Addresses
 
 1.  Conventions and Definitions
@@ -446,26 +447,42 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
    intended.  It also deprecates the polymorphic identifiers in the JOSE
    registry, which is what the first bullet above applies.
 
-   This document raises that RECOMMENDED to a requirement, because for
-   the schemes defined here the exception is not available.  A key
-   conveyed inline by the hwk scheme, or carried in an assertion,
-   arrives in band from a party with which the verifier need have no
-   prior relationship.  There is no registration, configuration, or
-   negotiation step in which an intended algorithm could have been
-   agreed, so the "other mechanism" [RFC9864] allows a deployment to
-   rely on instead is exactly what these schemes lack.  Requiring alg
-   supplies it, in the message itself.
+   This document raises that RECOMMENDED to a requirement, and does so
+   uniformly rather than conditionally on key type.
 
-   Nor can the key's other members substitute for it.  An RSA key has no
-   crv, and kty alone leaves both the padding scheme and the hash free.
-   For an EC key, crv fixes the curve but not the hash.  For the AKP key
-   type of [RFC9964], the parameter set is not derivable from kty at
-   all.  Only for OKP keys do kty and crv determine the algorithm
-   between them, and a rule carrying one key-type exception would be
-   harder to implement correctly, and to test, than a uniform
-   requirement.  [I-D.richer-oauth-httpsig] arrives at the same
-   requirement independently for the keys it binds as JWKs, requiring a
-   fully-specified JWK alg and forbidding polymorphic identifiers.
+   For OKP and EC keys, kty and crv do determine the algorithm between
+   them, and so are an instance of the "other mechanism" [RFC9864]
+   permits.  No registered JOSE signing algorithm pairs the Ed25519
+   curve with anything but Ed25519, or P-256 with anything but ES256.
+   They do not determine it for an RSA key, which has no crv and whose
+   padding scheme and hash are both free, nor for the AKP key type of
+   [RFC9964], which covers several ML-DSA parameter sets.  Requiring alg
+   of every conveyed key, including those it would be possible to
+   derive, is a deliberate choice; Appendix A.11 gives the reasons.
+   [I-D.richer-oauth-httpsig] arrives at the same requirement
+   independently for the keys it binds as JWKs.
+
+   A verifier MUST reject a key whose alg names an algorithm it does not
+   support, reporting unsupported_algorithm (Section 5.4.1).  Accept-
+   Signature-Alg (Section 4.2) states exactly that set — the algorithms
+   the verifier accepts, neither a subset nor a superset — so a client
+   that selects an algorithm from that list, and presents a key carrying
+   it, is assured of clearing this check.
+
+   Where the alg member comes from depends on the scheme.  The hwk
+   scheme carries it as a header parameter, the key itself being in the
+   header.  The jwt and jkt-jwt schemes carry it inside cnf.jwk, in an
+   assertion the issuer mints.  The jwks_uri, jwks, and self-jwt schemes
+   carry no algorithm in the Signature-Key header at all: that header
+   conveys id, kid, and dwk, which identify a key rather than describe
+   it, so the alg member of the resolved JWKS entry is the only channel.
+   A deployment adopting one of those schemes MUST publish a key that
+   carries alg.  Pointing at an existing key that omits it does not
+   satisfy this document, even though such a key is valid under
+   [RFC7517], where alg is OPTIONAL.  Only the key the kid selects is
+   subject to this requirement; other members of the same JWKS are never
+   resolved, so an existing metadata document can be reused by adding a
+   conforming key to it.
 
    A JWK also carries key-structure members: kty, which [RFC7517]
    requires, and crv where the key type has one.  Because a fully-
@@ -1233,7 +1250,7 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
    registry the key uses is what lets a client compare what a server
    accepts against the keys it holds.
 
-   Accept-Signature-Alg: ed25519, ecdsa-p256-sha256
+   Accept-Signature-Alg: Ed25519, ES256
 
    Order, unknown-token handling, and the no-recognized-value case are
    as for Accept-Signature-Scheme.
@@ -1266,7 +1283,7 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
    HTTP/1.1 401 Unauthorized
    Accept-Signature: sig1=("@method" "@path" "@authority");created
    Accept-Signature-Scheme: jwks_uri, jwt
-   Accept-Signature-Alg: ed25519
+   Accept-Signature-Alg: Ed25519
 
    The client responds with matching labels:
 
@@ -1372,7 +1389,7 @@ Signature: sig1=:MEQCIA5...:
    HTTP/1.1 401 Unauthorized
    WWW-Authenticate: Bearer realm="api"
    Accept-Signature-Scheme: jwks_uri, jwt
-   Accept-Signature-Alg: ecdsa-p256-sha256
+   Accept-Signature-Alg: ES256
 
    A client that understands both mechanisms distinguishes two cases by
    the WWW-Authenticate auth-scheme.  Because the rule applies only
@@ -1414,7 +1431,7 @@ Signature: sig1=:MEQCIA5...:
 
    HTTP/1.1 401 Unauthorized
    Accept-Signature-Scheme: jwks_uri, jwt
-   Accept-Signature-Alg: ecdsa-p256-sha256
+   Accept-Signature-Alg: ES256
 
    Rate limiting with pseudonymous upgrade:
 
@@ -1511,7 +1528,7 @@ Signature: sig1=:MEQCIA5...:
      "type": "urn:ietf:params:sig-error:unsupported_algorithm",
      "title": "Unsupported signature algorithm",
      "status": 400,
-     "detail": "The server does not support rsa-v1_5-sha256"
+     "detail": "The server does not support RS256"
    }
 
    Extension members in the Problem Details object MAY duplicate
@@ -1538,13 +1555,13 @@ Signature: sig1=:MEQCIA5...:
    (Section 4.2) naming the algorithms the server accepts.
 
    Signature-Error: error=unsupported_algorithm
-   Accept-Signature-Alg: ed25519, ecdsa-p256-sha256
+   Accept-Signature-Alg: Ed25519, ES256
 
    This error also covers a JWK whose key type the server does not
    implement (Section 3.3).  Because a fully-specified algorithm
    identifier determines the key type, the accompanying Accept-
    Signature-Alg tells the client which key types are usable without a
-   separate list: a client offered ed25519 learns that an OKP key on the
+   separate list: a client offered Ed25519 learns that an OKP key on the
    Ed25519 curve is accepted.
 
 5.4.2.  unsupported_scheme
@@ -1942,11 +1959,15 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
 
    Verifiers MUST:
 
-   *  Validate the algorithm against policy (reject weak algorithms)
+   *  Take the algorithm from the key's alg member, and reject a key
+      that has none (Section 3.3)
 
-   *  Ensure the key type is consistent with the derived algorithm
+   *  Reject a key whose kty or crv is inconsistent with its alg
 
-   *  Reject keys whose type does not match an acceptable algorithm
+   *  Reject an alg naming an algorithm the verifier does not support,
+      or that its policy declines, reporting unsupported_algorithm
+      (Section 5.4.1) and stating what it does accept in Accept-
+      Signature-Alg (Section 4.2)
 
 7.5.  Symmetric Algorithms
 
@@ -2440,6 +2461,41 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       be resolved against the registry.
 
    Other changes:
+
+   *  Corrected the claim that kty and crv underdetermine the algorithm
+      for EC keys.  Within JOSE they do not: ES256, ES384, and ES512
+      correspond one to one with P-256, P-384, and P-521, and no
+      registered signing algorithm pairs a curve with another hash.
+      Genuine underdetermination is limited to RSA, which has no crv,
+      and to the AKP key type of [RFC9964].
+
+   *  Stated that requiring alg of every conveyed key is therefore a
+      choice rather than a necessity, and gave the reasons in a new
+      Design Rationale section, Appendix A.11: the set of
+      underdetermined key types grows as algorithms are registered,
+      Accept-Signature-Alg comparison has to be total, a verifier keeps
+      one code path, and the signer bears no cost.  Said plainly that
+      this tightens [RFC9864], which RECOMMENDS rather than requires the
+      member.
+
+   *  Required a verifier to reject an alg it does not support with
+      unsupported_algorithm, and stated that Accept-Signature-Alg names
+      exactly that set, neither a subset nor a superset.  Replaced the
+      vague "validate the algorithm against policy" verifier obligations
+      with the specific checks.
+
+   *  Stated where alg comes from in each scheme, and that jwks_uri,
+      jwks, and self-jwt have no in-band channel for it: the resolved
+      JWKS entry is the only source, so adopting those schemes means
+      publishing a key that carries alg rather than pointing at one that
+      omits it.  Only the key the kid selects is subject to the
+      requirement, so an existing metadata document can be reused by
+      adding a conforming key.
+
+   *  Corrected the Accept-Signature-Alg examples, which still used HTTP
+      Signature Algorithms registry identifiers (ed25519, ecdsa-
+      p256-sha256, rsa-v1_5-sha256) after the header was defined to
+      carry JOSE identifiers.
 
    *  Rewrote the justification in Algorithm Determination.  [RFC9864]
       RECOMMENDS rather than requires the JWK alg member, and allows a
@@ -3185,6 +3241,67 @@ A.10.  Why Strings Instead of Byte Sequences for hwk?
    Using strings allows implementations to pass JWK values directly
    without converting between base64url and base64, avoiding a potential
    source of encoding bugs.
+
+A.11.  Why alg Is Required on Every Conveyed Key
+
+   The alternative considered was deriving the algorithm from the key's
+   structure, as JOSE implementations commonly do today.
+
+   That derivation works, for two of the four key types this document
+   can convey.  No registered JOSE signing algorithm pairs the Ed25519
+   curve with anything but Ed25519, or P-256 with anything but ES256;
+   for OKP and EC keys, kty and crv between them name exactly one
+   algorithm.  Stating otherwise would be wrong, and the requirement
+   here is not justified by an ambiguity that does not exist in those
+   cases.
+
+   It fails for the other two.  An RSA key has no crv, and kty of RSA
+   determines neither the padding scheme nor the hash, so the same key
+   admits RS256, PS256, RS512, and more.  The AKP key type of [RFC9964]
+   covers several ML-DSA parameter sets, none of them recoverable from
+   kty.  In both cases the key does not say what it is for, and nothing
+   else in these schemes does either.
+
+   The requirement is uniform rather than restricted to those two cases,
+   for four reasons.
+
+   *The set of underdetermined types grows.* A conditional rule needs a
+   table of which key types are self-determining, maintained in this
+   document, revised whenever an algorithm is registered.  Post-quantum
+   and hybrid algorithms are arriving now, and AKP is already an entry
+   in that table.  A uniform requirement accommodates a new algorithm
+   with no change here at all.
+
+   *Negotiation must be a total comparison.* Accept-Signature-Alg
+   (Section 4.2) advertises algorithm identifiers with no key attached,
+   because the server has no key to attach.  A client decides which of
+   its keys to present by comparing them against that list.  Were keys
+   permitted to omit alg, every client would have to implement the
+   derivation table purely to perform that comparison, and would have to
+   implement it identically to every server, or the two would disagree
+   about what the client holds.  Requiring alg makes the comparison a
+   string match over one vocabulary on both sides.
+
+   *One code path in the verifier.* Determination becomes a single
+   lookup followed by a single consistency check, with no branch on
+   whether this key type happens to be self-determining, and no second
+   path that a test suite must cover and an implementer may get wrong.
+   The redundancy between alg and kty/crv is then available as a check
+   rather than as an alternative (Section 3.3).
+
+   *The cost to the signer is nil.* A signer constructs the key it
+   conveys inline, mints the assertion that carries its confirmation
+   key, and publishes the JWKS its identity resolves to.  There is no
+   third party to persuade and no existing artifact that must change,
+   because a deployment adopting this document is publishing keys for a
+   purpose that did not previously exist.
+
+   [RFC9864] RECOMMENDS rather than requires that a JWK carry alg,
+   permitting a deployment to rely instead on "some other mechanism for
+   ensuring that the key is used as intended".  This document tightens
+   that RECOMMENDED to a requirement.  It does so as a matter of choice,
+   on the grounds above, and not because the exception [RFC9864] allows
+   is unavailable — for OKP and EC keys it plainly is available.
 
 Authors' Addresses
 
