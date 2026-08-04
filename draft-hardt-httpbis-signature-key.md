@@ -221,6 +221,12 @@ Post-quantum signature algorithms are accommodated by this rule without special 
 
 A verifier that encounters a JWK whose `kty` it does not implement, including the `AKP` key type defined by [@!RFC9964] for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via `unsupported_algorithm` ((#unsupported_algorithm)). Absence of support for a key type is a reason to decline, not a parsing failure.
 
+The rules above apply to the key a scheme resolves to, and to that key alone. A JWKS may contain keys a verifier cannot use, including keys whose `kty` or `alg` it does not implement. A verifier resolving a key from a JWKS MUST select the member matching `kid` without requiring that any other member be usable, and MUST NOT fail because a member it did not select names an unimplemented `kty` or `alg`.
+
+This is what allows a signer to introduce a new algorithm at all. An issuer adding a post-quantum key alongside a classical one would otherwise break every verifier that does not implement the new key type, including verifiers that were only ever going to use the classical key. The accommodation for unimplemented key types above would then be unreachable in deployment: no issuer could publish such a key without breaking the deployed base, so no verifier would ever meet one.
+
+Within a single JWK, a member a verifier does not understand is ignored, as [@!RFC7517], Section 4 requires of any JWK. That is distinct from a member this document forbids, such as `kid` in the hwk scheme ((#header-web-key-hwk)): a forbidden member is understood and rejected, not unknown and ignored.
+
 ## Header Web Key (hwk)
 
 The hwk scheme provides a self-contained public key inline in the header, enabling pseudonymous verification without key discovery. The parameter names and values correspond directly to the JWK parameters defined in [@!RFC7517].
@@ -1453,6 +1459,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
 
   Other changes:
 
+  - Required a verifier resolving a key from a JWKS to select the member matching `kid` without requiring any other member to be usable, and forbade failing because an unselected member names an unimplemented `kty` or `alg`. Without this the accommodation for unimplemented key types is unreachable in deployment: an issuer adding a post-quantum key alongside a classical one would break every verifier that does not implement the new type, including those that were only ever going to use the classical key, so no issuer could publish one. Noted that an unknown member within a single JWK is ignored per [@!RFC7517], Section 4, which is distinct from a member this document forbids.
   - Corrected the claim that `kty` and `crv` underdetermine the algorithm for EC keys. Within JOSE they do not: `ES256`, `ES384`, and `ES512` correspond one to one with `P-256`, `P-384`, and `P-521`, and no registered signing algorithm pairs a curve with another hash. Genuine underdetermination is limited to RSA, which has no `crv`, and to the `AKP` key type of [@!RFC9964].
   - Stated that requiring `alg` of every conveyed key is therefore a choice rather than a necessity, and gave the reasons in a new Design Rationale section, (#why-alg-is-required): the set of underdetermined key types grows as algorithms are registered, `Accept-Signature-Alg` comparison has to be total, a verifier keeps one code path, and the signer bears no cost. Said plainly that this tightens [@!RFC9864], which RECOMMENDS rather than requires the member.
   - Required a verifier to reject an `alg` it does not support with `unsupported_algorithm`, and stated that `Accept-Signature-Alg` names exactly that set, neither a subset nor a superset. Replaced the vague "validate the algorithm against policy" verifier obligations with the specific checks.
