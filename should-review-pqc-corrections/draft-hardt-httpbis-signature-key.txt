@@ -511,6 +511,28 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
    unsupported_algorithm (Section 5.4.1).  Absence of support for a key
    type is a reason to decline, not a parsing failure.
 
+   The rules above apply to the key a scheme resolves to, and to that
+   key alone.  A JWKS may contain keys a verifier cannot use, including
+   keys whose kty or alg it does not implement.  A verifier resolving a
+   key from a JWKS MUST select the member matching kid without requiring
+   that any other member be usable, and MUST NOT fail because a member
+   it did not select names an unimplemented kty or alg.
+
+   This is what allows a signer to introduce a new algorithm at all.  An
+   issuer adding a post-quantum key alongside a classical one would
+   otherwise break every verifier that does not implement the new key
+   type, including verifiers that were only ever going to use the
+   classical key.  The accommodation for unimplemented key types above
+   would then be unreachable in deployment: no issuer could publish such
+   a key without breaking the deployed base, so no verifier would ever
+   meet one.
+
+   Within a single JWK, a member a verifier does not understand is
+   ignored, as [RFC7517], Section 4 requires of any JWK.  That is
+   distinct from a member this document forbids, such as kid in the hwk
+   scheme (Section 3.4): a forbidden member is understood and rejected,
+   not unknown and ignored.
+
 3.4.  Header Web Key (hwk)
 
    The hwk scheme provides a self-contained public key inline in the
@@ -2461,6 +2483,18 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       be resolved against the registry.
 
    Other changes:
+
+   *  Required a verifier resolving a key from a JWKS to select the
+      member matching kid without requiring any other member to be
+      usable, and forbade failing because an unselected member names an
+      unimplemented kty or alg.  Without this the accommodation for
+      unimplemented key types is unreachable in deployment: an issuer
+      adding a post-quantum key alongside a classical one would break
+      every verifier that does not implement the new type, including
+      those that were only ever going to use the classical key, so no
+      issuer could publish one.  Noted that an unknown member within a
+      single JWK is ignored per [RFC7517], Section 4, which is distinct
+      from a member this document forbids.
 
    *  Corrected the claim that kty and crv underdetermine the algorithm
       for EC keys.  Within JOSE they do not: ES256, ES384, and ES512
