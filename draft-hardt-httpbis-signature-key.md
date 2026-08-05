@@ -140,7 +140,9 @@ Multiple keys are comma-separated per the dictionary format. See [@!RFC8941] for
 
 **Unknown schemes:**
 
-A verifier that encounters a scheme token it does not implement, including any unregistered value, MUST reject the request with a `Signature-Error` of `error=unsupported_scheme` ((#unsupported-scheme)) and MUST NOT fail in a scheme-specific or undefined manner. Verifiers SHOULD dispatch on the scheme token through a lookup over the HTTP Signature-Key Scheme registry ((#scheme-registry)) rather than a fixed set of branches, so that unknown schemes take this defined path.
+A verifier that selects a member whose scheme token it does not implement, including any unregistered value, MUST reject the request with a `Signature-Error` of `error=unsupported_scheme` ((#unsupported-scheme)) and MUST NOT fail in a scheme-specific or undefined manner. Verifiers SHOULD dispatch on the scheme token through a lookup over the HTTP Signature-Key Scheme registry ((#scheme-registry)) rather than a fixed set of branches, so that unknown schemes take this defined path.
+
+This rule governs the member the verifier selected, and that member alone. A verifier MUST NOT reject a request because a member it did not select names a scheme the verifier does not implement; such members are ignored under (#label-consistency). Without this, a signer could not offer a signature under a new scheme without breaking every verifier that does not implement it, so no signer would offer one and the scheme registry would have no path into deployment.
 
 **Example:**
 
@@ -661,7 +663,7 @@ Both headers are advisory capability statements, not directives. A server that o
 Accept-Signature-Scheme: hwk, jwks_uri, jwt
 ```
 
-Order is significant: a server SHOULD list schemes in descending order of preference, and a client SHOULD choose the earliest listed scheme it can satisfy. A client MUST NOT treat the order as a requirement; any listed scheme is acceptable.
+Order carries the server's preference: a server SHOULD list schemes in descending order of preference. A client MAY choose any listed scheme it can satisfy, and the order does not bind it. The preference is an operational convenience for the server, while the choice of scheme decides whether the signer stays pseudonymous or is identified ((#pseudonymity-vs-identity)). A client that would be identified under the server's first preference and pseudonymous under its second is entitled to take the second.
 
 A client MUST ignore tokens it does not recognize, so that a server may list schemes registered after the client was written without breaking it. A client that recognizes no listed scheme SHOULD NOT sign the request, since no scheme it can produce will be accepted.
 
@@ -669,19 +671,23 @@ A client MUST ignore tokens it does not recognize, so that a server may list sch
 
 `Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each an identifier from the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2). It states the signature algorithms the server accepts.
 
+[@!RFC9421] carries these identifiers as Strings, both in the `alg` signature parameter and in the `alg` parameter of `Accept-Signature`; this field carries them as Tokens. The identifier is the same registry value in both cases and the two forms differ only in the quoting. Every identifier registered to date is a valid Token, and one that cannot be serialized as a Token cannot be named in this field.
+
 ```http
 Accept-Signature-Alg: ed25519, ecdsa-p256-sha256
 ```
 
 Order, unknown-token handling, and the no-recognized-value case are as for `Accept-Signature-Scheme`.
 
-`Accept-Signature-Alg` states what the server accepts. The `alg` parameter of `Accept-Signature` ([@!RFC9421], Section 5.1) requests one specific algorithm for a specific signature label. Where both are present, `alg` is the more specific instruction and the client SHOULD honor it; `alg` SHOULD name a member of `Accept-Signature-Alg`.
+`Accept-Signature-Alg` states what the server accepts. The `alg` parameter of `Accept-Signature` ([@!RFC9421], Section 5.1) requests one specific algorithm for a specific signature label. Where both are present, `alg` is the more specific instruction and the client SHOULD honor it. A server MUST NOT send an `alg` that is not a member of the `Accept-Signature-Alg` it sends in the same response; a client that receives such a response MAY use either value, since the server has stated two incompatible requirements and neither is more authoritative than the other.
 
 ## Relationship to Accept-Signature
 
 `Accept-Signature` continues to carry what is to be signed: the covered components, and the per-label parameters of [@!RFC9421] Section 5.1. The two headers defined here carry what the server will accept in the `Signature-Key` header and in the signature itself. They are independent fields; a response MAY include any combination.
 
 Neither header is keyed by signature label. Both state a server-wide capability, which does not vary per signature. A deployment that genuinely requires different schemes for different labels in one multi-signature message is outside what these headers express, and states the requirement in its own protocol.
+
+`Accept-Signature` also defines a `keyid` parameter ([@!RFC9421], Section 5.1), which asks the signer to use key material the two parties already hold. Where the client is to identify its key through `Signature-Key`, `keyid` has nothing left to name: a server SHOULD NOT send it, and a client MAY ignore it. If a signer includes `keyid` in `Signature-Input` for a label it also lists in `Signature-Key`, the two MUST identify the same key, and a verifier verifying that label MUST take the key from `Signature-Key`.
 
 ```http
 HTTP/1.1 401 Unauthorized
@@ -795,7 +801,7 @@ Accept-Signature-Scheme: hwk
 
 ## Client Processing {#client-processing}
 
-When a client receives a response containing `Accept-Signature-Scheme` ((#accept-signature-scheme)), it MAY retry the request with an HTTP Message Signature using any listed Signature-Key scheme it can satisfy, preferring the earliest listed.
+When a client receives a response containing `Accept-Signature-Scheme` ((#accept-signature-scheme)), it MAY retry the request with an HTTP Message Signature using any listed Signature-Key scheme it can satisfy.
 
 [@!RFC9421] Section 5.2 defines the processing of `Accept-Signature` by the client. A client MAY ignore `Accept-Signature-Scheme` and `Accept-Signature-Alg`, and MUST ignore tokens within them that it does not recognize.
 
@@ -844,7 +850,7 @@ Extension members in the Problem Details object MAY duplicate information from t
 
 ## Access Denied
 
-When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns `403 Forbidden`. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an `Accept-Signature-Scheme` header or a `Signature-Error` header.
+When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns `403 Forbidden`. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an `Accept-Signature-Scheme` header, an `Accept-Signature-Alg` header, or a `Signature-Error` header.
 
 ## Error Codes {#error-codes}
 
@@ -1029,7 +1035,7 @@ Verifiers SHOULD reject requests where `signature-key` is not a covered componen
 
 # Privacy Considerations
 
-## Pseudonymity vs. Identity
+## Pseudonymity vs. Identity {#pseudonymity-vs-identity}
 
 The hwk and jkt-jwt schemes enable pseudonymous operation where the signer's identity is not disclosed. Verifiers should be aware that:
 
@@ -1189,7 +1195,11 @@ This document establishes the "Signature Error Code" registry. New values may be
   Other changes:
 
   - Added the `jwks` scheme: a direct JWKS fetch whose HTTPS `url` is both the signer identity and the key location, under the same egress-admission rules as `jwks_uri`.
-  - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable.
+  - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable, scoped to the `Signature-Key` member the verifier selected. A member for a label the verifier is not verifying is ignored as before, so a signer can offer a signature under a new scheme without every verifier that lacks it rejecting the request.
+  - Stated what `keyid` ([@!RFC9421], Section 5.1) means alongside `Signature-Key`, which went unsaid once the `sigkey` text was removed: a server SHOULD NOT send it, a `keyid` in `Signature-Input` MUST identify the same key as the `Signature-Key` member for that label, and the verifier takes the key from `Signature-Key`.
+  - Made the scheme preference order in `Accept-Signature-Scheme` non-binding on the client. The order is the server's operational preference, while the choice of scheme decides whether the signer is identified, which is the client's to make.
+  - Forbade a server from sending an `Accept-Signature` `alg` outside the `Accept-Signature-Alg` of the same response, and said what a client does if one arrives anyway.
+  - Noted that the algorithm identifiers are Strings in [@!RFC9421] and Tokens here, and that the value is the same in both.
   - Expanded the Introduction to state the gaps this document addresses and the invariants that follow.
   - Added rationale for a scheme token rather than a header per scheme, for carrying the accepted sets in header fields rather than in parameters or error members, and for not reserving grease values.
   - Gave the SHOULD for sending `Accept-Signature-Scheme` and `Accept-Signature-Alg` on an error response its exception case, per RFC 2119 Section 6: a server may withhold the header where enumerating what it accepts to an unauthenticated caller is a disclosure risk.
