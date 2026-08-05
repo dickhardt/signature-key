@@ -32,6 +32,15 @@ organization = "Cloudflare"
 
 %%%
 
+<reference anchor="IANA.JOSE.Algorithms" target="https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms">
+  <front>
+    <title>JSON Web Signature and Encryption Algorithms</title>
+    <author>
+      <organization>IANA</organization>
+    </author>
+  </front>
+</reference>
+
 <reference anchor="x402" target="https://docs.x402.org">
   <front>
     <title>x402: HTTP 402 Payment Protocol</title>
@@ -143,7 +152,9 @@ Multiple keys are comma-separated per the dictionary format. See [@!RFC8941] for
 
 **Unknown schemes:**
 
-A verifier that encounters a scheme token it does not implement, including any unregistered value, MUST reject the request with a `Signature-Error` of `error=unsupported_scheme` ((#unsupported-scheme)) and MUST NOT fail in a scheme-specific or undefined manner. Verifiers SHOULD dispatch on the scheme token through a lookup over the HTTP Signature-Key Scheme registry ((#scheme-registry)) rather than a fixed set of branches, so that unknown schemes take this defined path.
+A verifier that selects a member whose scheme token it does not implement, including any unregistered value, MUST reject the request with a `Signature-Error` of `error=unsupported_scheme` ((#unsupported-scheme)) and MUST NOT fail in a scheme-specific or undefined manner. Verifiers SHOULD dispatch on the scheme token through a lookup over the HTTP Signature-Key Scheme registry ((#scheme-registry)) rather than a fixed set of branches, so that unknown schemes take this defined path.
+
+This rule governs the member the verifier selected, and that member alone. A verifier MUST NOT reject a request because a member it did not select names a scheme the verifier does not implement; such members are ignored under (#label-consistency). Without this, a signer could not offer a signature under a new scheme without breaking every verifier that does not implement it, so no signer would offer one and the scheme registry would have no path into deployment.
 
 **Example:**
 
@@ -185,13 +196,17 @@ Signature: sig1=:...:, sig2=:...:
 Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk="eg-config";kid="k1"
 ```
 
-Most deployments SHOULD use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See (#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
+Most deployments use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See (#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
 
 ## Algorithm Determination {#algorithm-determination}
 
 Several schemes in this document convey or reference a JSON Web Key [@!RFC7517]. For any such JWK, the signature algorithm MUST be fully determined by the key, meaning the JWK carries an `alg` member whose value is a fully-specified algorithm identifier: one that determines the signature operation completely, including curve and hash where applicable. A verifier MUST reject a JWK whose `alg` member is absent or whose `alg` is a polymorphic identifier, and MUST NOT select an algorithm for it by inspecting other key parameters. This requirement applies identically regardless of how the JWK was obtained.
 
+Algorithm identifiers in this document are values from the IANA "JSON Web Signature and Encryption Algorithms" registry [@!IANA.JOSE.Algorithms], established by [@!RFC7518] and extended since. This document uses the JOSE signing algorithms of [@!RFC9421], Section 3.3.7: the signature base is the JWS Signing Input, no JOSE header is used, and the key signals the algorithm rather than the wire. That section states that JWA values are not registered in the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2), and that the `alg` signature parameter is not used at all with JOSE signing algorithms. This document therefore does not use that registry; see (#algorithm-selection).
+
 In particular:
+
+- The `none` algorithm MUST NOT be used, nor any algorithm whose JOSE Implementation Requirement is `Prohibited`. [@!RFC9421], Section 3.3.7 requires this of any JWS algorithm used for an HTTP Message Signature. A server MUST NOT list such an algorithm in `Accept-Signature-Alg` ((#accept-signature-alg)); listing `none` would advertise that the server takes an unsigned request for a signed one.
 
 - The polymorphic `EdDSA` identifier MUST NOT be used. Use the fully-specified `Ed25519` or `Ed448` identifiers registered by [@!RFC9864] instead.
 
@@ -199,17 +214,29 @@ In particular:
 
 - The JOSE ECDSA identifiers `ES256`, `ES384`, and `ES512` are already fully specified and are used as-is.
 
-- Symmetric algorithms MUST NOT be used. The `oct` key type, the JOSE MAC identifiers `HS256`, `HS384`, and `HS512`, and the `hmac-sha256` identifier of the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2) all name a shared secret rather than a public key. A verifier MUST reject a Signature-Key scheme that conveys or references such a key, and a server MUST NOT list a symmetric algorithm in `Accept-Signature-Alg` ((#accept-signature-alg)). See (#symmetric-algorithms).
+- Symmetric algorithms MUST NOT be used. The `oct` key type and the JOSE MAC identifiers `HS256`, `HS384`, and `HS512` name a shared secret rather than a public key. A verifier MUST reject a Signature-Key scheme that conveys or references such a key, and a server MUST NOT list a symmetric algorithm in `Accept-Signature-Alg` ((#accept-signature-alg)). See (#symmetric-algorithms).
 
-This requirement follows the guidance of [@!RFC9864], which recommends that the algorithm of a JWK be present so that a key is used only with the algorithm intended, and which deprecates polymorphic algorithm identifiers in the JOSE registry.
+[@!RFC9864] states the rule this rests on — that a key be used with only a single algorithm, unless using one key with several is proven secure — and from it RECOMMENDS that the `alg` member of a JWK be present, unless some other mechanism ensures the key is used as intended. It also deprecates the polymorphic identifiers in the JOSE registry, which is what the first bullet above applies.
+
+This document raises that RECOMMENDED to a requirement, and does so uniformly rather than conditionally on key type.
+
+For OKP and EC keys, `kty` and `crv` do determine the algorithm between them, and so are an instance of the "other mechanism" [@!RFC9864] permits. No registered JOSE signing algorithm pairs the `Ed25519` curve with anything but `Ed25519`, or `P-256` with anything but `ES256`. They do not determine it for an RSA key, which has no `crv` and whose padding scheme and hash are both free, nor for the `AKP` key type of [@!RFC9964], which covers several ML-DSA parameter sets. Requiring `alg` of every conveyed key, including those it would be possible to derive, is a deliberate choice; (#why-alg-is-required) gives the reasons. [@?I-D.richer-oauth-httpsig] arrives at the same requirement independently for the keys it binds as JWKs.
+
+A verifier MUST reject a key whose `alg` names an algorithm it does not support, reporting `unsupported_algorithm` ((#unsupported_algorithm)). `Accept-Signature-Alg` ((#accept-signature-alg)) states exactly that set — the algorithms the verifier accepts, neither a subset nor a superset — so a client that selects an algorithm from that list, and presents a key carrying it, is assured of clearing this check.
+
+Where the `alg` member comes from depends on the scheme. The hwk scheme carries it as a header parameter, the key itself being in the header. The jwt and jkt-jwt schemes carry it inside `cnf.jwk`, in an assertion the issuer mints. The jwks_uri, jwks, and self-jwt schemes carry no algorithm in the Signature-Key header at all: that header conveys `id`, `kid`, and `dwk`, which identify a key rather than describe it, so the `alg` member of the resolved JWKS entry is the only channel. A deployment adopting one of those schemes MUST publish a key that carries `alg`. Pointing at an existing key that omits it does not satisfy this document, even though such a key is valid under [@!RFC7517], where `alg` is OPTIONAL. Only the key the `kid` selects is subject to this requirement; other members of the same JWKS are never resolved, so an existing metadata document can be reused by adding a conforming key to it.
 
 A JWK also carries key-structure members: `kty`, which [@!RFC7517] requires, and `crv` where the key type has one. Because a fully-specified `alg` determines the key type and the curve, these members are redundant with it. They remain present, since the schemes in this document convey ordinary JWKs, and the redundancy is used as a check rather than ignored: a verifier MUST verify that `kty` and, where present, `crv` are consistent with `alg`, and MUST reject the key if they are not. A JWK with an `alg` of `ES256` and a `kty` of `RSA` is inconsistent and MUST be rejected, as is one with an `alg` of `ES256` and a `crv` of `P-384`. Rejecting on disagreement prevents a key from being used under either of two conflicting interpretations.
 
 Post-quantum signature algorithms are accommodated by this rule without special treatment. For example, the ML-DSA identifiers `ML-DSA-44`, `ML-DSA-65`, and `ML-DSA-87` registered by [@!RFC9964] are fully specified and are used directly as the JWK `alg` value. The requirement is algorithm-agnostic and accommodates additional post-quantum and hybrid algorithms as they are registered.
 
-> **Editor's Note:** This paragraph is valid only once ML-DSA is registered for HTTP Message Signatures. [@!RFC9964] registers the ML-DSA identifiers for JOSE, but at the time of writing no corresponding identifier appears in the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2): an entry was added and then withdrawn, and re-registration is in progress. Until it completes, an ML-DSA key can be the key of an assertion this document conveys, such as the signing key of a JWT, but ML-DSA cannot be named as the algorithm of an HTTP Message Signature itself. The gap is in the registry rather than in this document, and Algorithm Determination applies to whichever identifiers are registered. This note is to be removed once the registration lands.
-
 A verifier that encounters a JWK whose `kty` it does not implement, including the `AKP` key type defined by [@!RFC9964] for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via `unsupported_algorithm` ((#unsupported_algorithm)). Absence of support for a key type is a reason to decline, not a parsing failure.
+
+The rules above apply to the key a scheme resolves to and to that key alone. A JWKS may hold keys a verifier cannot use. A verifier MUST select the member matching `kid` without requiring any other member to be usable, and MUST NOT fail because an unselected member names a `kty` or `alg` it does not implement.
+
+Without this rule no signer could introduce a new algorithm: an issuer adding a post-quantum key alongside a classical one would break every verifier that does not implement the new type, including those that were only ever going to use the classical key. The accommodation above would never be reached in deployment, because no issuer could afford to publish such a key.
+
+Within a single JWK, a member a verifier does not understand is ignored, as [@!RFC7517], Section 4 requires. A member this document forbids, such as `kid` in the hwk scheme ((#header-web-key-hwk)), is different: it is understood and rejected, not unknown and ignored.
 
 ## Header Web Key (hwk)
 
@@ -265,7 +292,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
 - The `alg` parameter MUST be present and fully specified. The inline JWK is subject to Algorithm Determination ((#algorithm-determination)).
 
-- The `kid` parameter SHOULD NOT be used
+- The `kid` parameter MUST NOT be used. The key is carried inline, so there is nothing for an identifier to select, and a `kid` that disagrees with the inline key has no defined resolution.
 
 **Use cases:**
 
@@ -376,7 +403,7 @@ JWT payload:
 
 In this example, the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software). The identity is `urn:jkt:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs`.
 
-The stable (enclave) key algorithm in the JWT `alg` header is determined by what the enclave hardware supports. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; deployments whose enclaves support Ed25519 (or other) stable-key algorithms SHOULD document this explicitly. The `cnf.jwk` request key algorithm is likewise enclave-determined.
+The stable (enclave) key algorithm in the JWT `alg` header is determined by what the enclave hardware supports. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; deployments whose enclaves support Ed25519 (or other) stable-key algorithms should document this explicitly. The `cnf.jwk` request key algorithm is likewise enclave-determined.
 
 **Verification procedure:**
 
@@ -404,7 +431,7 @@ The stable (enclave) key algorithm in the JWT `alg` header is determined by what
 
 **Caching:**
 
-Caching ((#signature-key-cache-response-header)) removes an assertion's transmission and verification cost from the steady state, and the saving grows with the size of the keys and signatures the assertion carries ((#pqc-sizes)). This applies to any cacheable assertion, not only to jkt-jwt. What is specific to jkt-jwt is that the assertion carries a public key in its header and is signed by that key, so caching it also removes the thumbprint computation and the verification of that signature, which the jwt scheme does not perform. The per-request signature continues to use the ephemeral `cnf.jwk` key.
+Caching ((#signature-key-cache-response-header)) keeps an assertion off the wire in the steady state, and the saving grows with the size of the keys and signatures the assertion carries ((#pqc-sizes)). This applies to any cacheable assertion, not only to jkt-jwt. What is specific to jkt-jwt is that the assertion carries a public key in its header and is signed by that key, so caching it also removes the thumbprint computation and the verification of that signature, which the jwt scheme does not perform. That part of the saving is small, since post-quantum verification is comparable to classical; the bytes are the reason to cache. The per-request signature continues to use the ephemeral `cnf.jwk` key.
 
 **Use cases:**
 
@@ -516,9 +543,11 @@ Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
 
 - SHOULD contain `dwk` claim (dot well-known metadata document name) — the verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri`. Using SHOULD allows deployments where the verifier already knows the issuer's keys.
 
-- SHOULD contain standard claims: `sub`, `exp`, `iat`
+- MUST contain `exp` claim. The assertion carries a confirmation key, and `exp` is what bounds how long that key is accepted; without it the key remains acceptable indefinitely. See (#layered-cryptographic-agility).
 
-- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+- SHOULD contain standard claims: `sub`, `iat`
+
+- Verifiers MAY verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
@@ -592,17 +621,19 @@ The self-jwt scheme carries a signed JWT where the JWT issuer and the HTTP reque
 
 - MUST NOT contain `cnf` claim
 
-- SHOULD contain standard claims: `sub`, `aud`, `exp`, `iat`
+- MUST contain `exp` claim, bounding how long the assertion is accepted
 
-The self-jwt scheme does not support the `cache` parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. Assertion caching resolves a cache identifier to an assertion and takes the confirmation key from it ((#cached-scheme)); a self-jwt has no `cnf` claim, and its signing key is discovered from the issuer's JWKS rather than carried in the assertion, so there is no key to recover by resolution alone. A self-jwt is also small, carrying no embedded key, and typically carries claims specific to the request it accompanies, so there is little to be saved by referencing it instead of sending it.
+- SHOULD contain standard claims: `sub`, `aud`, `iat`
 
-- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+The self-jwt scheme does not support the `cache` parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. A self-jwt embeds no key: its signing key is the confirmation key and is discovered from the issuer's JWKS by `iss` and `kid`. That key is already cacheable on those two values ((#caching-and-performance)), so caching the assertion in addition would save only the assertion's own bytes, of which there are few. A self-jwt also typically carries claims specific to the request it accompanies, so a cached copy would be stale for the next request rather than reusable.
+
+- Verifiers MAY verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
 **Verification procedure:**
 
-1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Verifiers SHOULD reject if the value is not a well-formed JWT. This and subsequent pre-signature checks allow the verifier to fail early without expensive cryptographic operations or network fetches.
+1. Parse the JWT parameter value per [@!RFC7519] Section 7.2. Verifiers MUST reject if the value is not a well-formed JWT. Performing this and the subsequent pre-signature checks first lets the verifier fail early, without expensive cryptographic operations or network fetches.
 
 2. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
 
@@ -738,25 +769,27 @@ Both headers are advisory capability statements, not directives. A server that o
 Accept-Signature-Scheme: hwk, jwks_uri, jwt
 ```
 
-Order is significant: a server SHOULD list schemes in descending order of preference, and a client SHOULD choose the earliest listed scheme it can satisfy. A client MUST NOT treat the order as a requirement; any listed scheme is acceptable.
+Order carries the server's preference: a server SHOULD list schemes in descending order of preference. A client MAY choose any listed scheme it can satisfy, and the order does not bind it. The preference is an operational convenience for the server, while the choice of scheme decides whether the signer stays pseudonymous or is identified ((#pseudonymity-vs-identity)). A client that would be identified under the server's first preference and pseudonymous under its second is entitled to take the second.
 
 A client MUST ignore tokens it does not recognize, so that a server may list schemes registered after the client was written without breaking it. A client that recognizes no listed scheme SHOULD NOT sign the request, since no scheme it can produce will be accepted.
 
-Listing the `cached` scheme ((#cached-scheme)) states that the server implements assertion caching. A client that sees it can set the `cache` signal ((#jwt-confirmation-key-jwt)) on its first request rather than probing.
+Listing the `cached` scheme ((#cached-scheme)) states that the server implements assertion caching. A client that sees it can set the `cache` signal ((#jwt-confirmation-key-jwt)) on its first request rather than probing. `cached` is a capability announcement rather than a scheme a client can choose to present: a client MUST NOT present it until a verifier has issued it a cache identifier, whatever the list order. A server that lists `cached` first is stating a preference for the steady state, not for the first request, and the client selects any scheme it can satisfy from the remainder.
 
 ## Accept-Signature-Alg {#accept-signature-alg}
 
-`Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each an identifier from the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2). It states the signature algorithms the server accepts.
+`Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each a fully-specified identifier from the IANA "JSON Web Signature and Encryption Algorithms" registry [@!IANA.JOSE.Algorithms] — the same identifiers a conveyed key carries in its `alg` member ((#algorithm-determination)), and not those of the HTTP Signature Algorithms registry, which this document does not use ((#algorithm-selection)). It states the signature algorithms the server accepts. Using the registry the key uses is what lets a client compare what a server accepts against the keys it holds.
 
 ```http
-Accept-Signature-Alg: ed25519, ecdsa-p256-sha256
+Accept-Signature-Alg: Ed25519, ES256
 ```
+
+Each Token is the registered identifier verbatim, including its case: `ES256`, not `es256`. Structured Field parsing preserves the case of a Token ([@!RFC8941], Section 4.2.6), and the comparison a client performs is against the `alg` member of a JWK, a case-sensitive JSON string. A case-folded token names no registered algorithm and matches no key.
 
 Order, unknown-token handling, and the no-recognized-value case are as for `Accept-Signature-Scheme`.
 
 Because a fully-specified algorithm identifier determines the key type and curve ((#algorithm-determination)), this list also tells the client which keys are usable, and so which key to generate or select when it holds more than one.
 
-`Accept-Signature-Alg` states what the server accepts. The `alg` parameter of `Accept-Signature` ([@!RFC9421], Section 5.1) requests one specific algorithm for a specific signature label. Where both are present, `alg` is the more specific instruction and the client SHOULD honor it; `alg` SHOULD name a member of `Accept-Signature-Alg`.
+`Accept-Signature-Alg` states what the server accepts. The `alg` parameter of `Accept-Signature` ([@!RFC9421], Section 5.1) requests one specific algorithm for a specific signature label, naming it in the HTTP Signature Algorithms registry, which this document does not use ((#algorithm-selection)): under the JOSE signing algorithms the algorithm is signaled by the key, not requested on the wire. A server that sends `Accept-Signature-Alg` SHOULD NOT send the `alg` parameter, and a client MAY ignore an `alg` received alongside `Accept-Signature-Alg`; the algorithm the client uses is the one its key carries ((#algorithm-determination)).
 
 ## Relationship to Accept-Signature
 
@@ -764,11 +797,13 @@ Because a fully-specified algorithm identifier determines the key type and curve
 
 Neither header is keyed by signature label. Both state a server-wide capability, which does not vary per signature. A deployment that genuinely requires different schemes for different labels in one multi-signature message is outside what these headers express, and states the requirement in its own protocol.
 
+`Accept-Signature` also defines a `keyid` parameter ([@!RFC9421], Section 5.1), which asks the signer to use key material the two parties already hold. Where the client is to identify its key through `Signature-Key`, `keyid` has nothing left to name: a server SHOULD NOT send it, and a client MAY ignore it. If a signer includes `keyid` in `Signature-Input` for a label it also lists in `Signature-Key`, the two MUST identify the same key, and a verifier verifying that label MUST take the key from `Signature-Key`.
+
 ```http
 HTTP/1.1 401 Unauthorized
 Accept-Signature: sig1=("@method" "@path" "@authority");created
 Accept-Signature-Scheme: jwks_uri, jwt
-Accept-Signature-Alg: ed25519
+Accept-Signature-Alg: Ed25519
 ```
 
 The client responds with matching labels:
@@ -828,14 +863,14 @@ These headers and `WWW-Authenticate` ([@!RFC9110], Section 11.6.1) are independe
 HTTP/1.1 401 Unauthorized
 WWW-Authenticate: Bearer realm="api"
 Accept-Signature-Scheme: jwks_uri, jwt
-Accept-Signature-Alg: ecdsa-p256-sha256
+Accept-Signature-Alg: ES256
 ```
 
-A client that understands both mechanisms distinguishes two cases by the `WWW-Authenticate` auth-scheme. Because the rule applies only where the client understands the scheme, the client knows what that scheme does.
+What a client that understands both mechanisms does depends on what the `WWW-Authenticate` auth-scheme does. Nothing on the wire says which, and this document defines no signal for it, but a client only faces the choice for a scheme it already understands.
 
-- Where the challenge is an authentication or authorization challenge, such as `Basic` or `Bearer`, the two are alternatives and either satisfies the server. The client MUST sign the request rather than present the credential. A signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it; signing also puts no credential on the wire that the exchange did not require.
+- Where the challenge is an authentication or authorization challenge, such as `Basic` or `Bearer`, the two are alternatives. The client SHOULD sign the request rather than present the credential: a signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it, and signing puts no credential on the wire that the exchange did not require. A response carrying both does not assert that the two grant the same access, so a client that needs what only the credential grants MAY present it instead, and a server that is not satisfied by the choice challenges again.
 
-- Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]), the two are complements and satisfying one does not satisfy the other. The client MUST satisfy both.
+- Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]), the two are complements: satisfying one does not satisfy the other, and a client that wants the resource satisfies both.
 
 A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]) alongside a signature challenge. Payment is not authentication, so this is the complementary case and a client satisfies both:
 
@@ -860,7 +895,7 @@ Identity with algorithm restriction:
 ```http
 HTTP/1.1 401 Unauthorized
 Accept-Signature-Scheme: jwks_uri, jwt
-Accept-Signature-Alg: ecdsa-p256-sha256
+Accept-Signature-Alg: ES256
 ```
 
 Rate limiting with pseudonymous upgrade:
@@ -882,7 +917,7 @@ Accept-Signature-Scheme: hwk
 
 ## Client Processing {#client-processing}
 
-When a client receives a response containing `Accept-Signature-Scheme` ((#accept-signature-scheme)), it MAY retry the request with an HTTP Message Signature using any listed Signature-Key scheme it can satisfy, preferring the earliest listed.
+When a client receives a response containing `Accept-Signature-Scheme` ((#accept-signature-scheme)), it MAY retry the request with an HTTP Message Signature using any listed Signature-Key scheme it can satisfy.
 
 [@!RFC9421] Section 5.2 defines the processing of `Accept-Signature` by the client. A client MAY ignore `Accept-Signature-Scheme` and `Accept-Signature-Alg`, and MUST ignore tokens within them that it does not recognize.
 
@@ -898,7 +933,7 @@ A server MAY return a `429` response without `Accept-Signature-Scheme` to a sign
 
 # Signature-Error HTTP Response Header
 
-When a server rejects a signed request due to a signature-related error, the response SHOULD include the `Signature-Error` header. The response status code is typically `400 Bad Request`, since the signature or keying material is malformed or invalid. A server MAY use `401 Unauthorized` for recoverable errors (e.g., `unsupported_algorithm`, `unsupported_scheme`, `invalid_input`) where the client can retry with corrected parameters.
+When a server rejects a signed request due to a signature-related error, the response SHOULD include the `Signature-Error` header. A server MAY omit it where returning diagnostic detail to an unauthenticated caller is itself judged a disclosure risk, accepting that clients then cannot self-diagnose. The response status code is typically `400 Bad Request`, since the signature or keying material is malformed or invalid. A server MAY use `401 Unauthorized` for recoverable errors (e.g., `unsupported_algorithm`, `unsupported_scheme`, `invalid_input`) where the client can retry with corrected parameters.
 
 ## Header Structure
 
@@ -916,14 +951,14 @@ The `Signature-Error` header is the authoritative source for machine-readable er
 
 ## Response Body
 
-Servers SHOULD use Problem Details [@!RFC9457] (`application/problem+json`) for the response body when returning `Signature-Error`. The `type` member SHOULD be a URN of the form `urn:ietf:params:sig-error:<error-code>`, where `<error-code>` matches the `error` value in the header.
+Servers SHOULD use Problem Details [@!RFC9457] (`application/problem+json`) for the response body when returning `Signature-Error`, and MAY use another representation where content negotiation or an existing error format requires it. The header, not the body, is the interoperable carrier. Where a Problem Details body is returned, its `type` member MUST be a URN of the form `urn:ietf:params:sig-error:<error-code>`, where `<error-code>` matches the `error` value in the header; a `type` of any other form cannot be interpreted against this document's registry.
 
 ```json
 {
   "type": "urn:ietf:params:sig-error:unsupported_algorithm",
   "title": "Unsupported signature algorithm",
   "status": 400,
-  "detail": "The server does not support rsa-v1_5-sha256"
+  "detail": "The server does not support RS256"
 }
 ```
 
@@ -931,7 +966,7 @@ Extension members in the Problem Details object MAY duplicate information from t
 
 ## Access Denied
 
-When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns `403 Forbidden`. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an `Accept-Signature-Scheme` header or a `Signature-Error` header.
+When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns `403 Forbidden`. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an `Accept-Signature-Scheme` header, an `Accept-Signature-Alg` header, or a `Signature-Error` header.
 
 ## Error Codes {#error-codes}
 
@@ -943,10 +978,10 @@ The response SHOULD include an `Accept-Signature-Alg` header ((#accept-signature
 
 ```http
 Signature-Error: error=unsupported_algorithm
-Accept-Signature-Alg: ed25519, ecdsa-p256-sha256
+Accept-Signature-Alg: Ed25519, ES256
 ```
 
-This error also covers a JWK whose key type the server does not implement ((#algorithm-determination)). Because a fully-specified algorithm identifier determines the key type, the accompanying `Accept-Signature-Alg` tells the client which key types are usable without a separate list: a client offered `ed25519` learns that an OKP key on the Ed25519 curve is accepted.
+This error also covers a JWK whose key type the server does not implement ((#algorithm-determination)). Because a fully-specified algorithm identifier determines the key type, the accompanying `Accept-Signature-Alg` tells the client which key types are usable without a separate list: a client offered `Ed25519` learns that an OKP key on the Ed25519 curve is accepted.
 
 ### unsupported_scheme {#unsupported-scheme}
 
@@ -983,7 +1018,7 @@ Signature-Error: error=invalid_signature
 
 The Signature-Input is missing required covered components.
 
-- `required_input` (OPTIONAL): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the covered components the server requires. The response SHOULD include this member.
+- `required_input` (RECOMMENDED): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the covered components the server requires. A server SHOULD include this member, and MAY omit it where enumerating its requirements to an unauthenticated caller is judged a disclosure risk; a client then has to discover the required components by other means.
 
 ```http
 Signature-Error: error=invalid_input,
@@ -1075,13 +1110,13 @@ Signature-Key: sig1=cached;cid="2f9c8a1e-a7b3"
 
 Each request is signed as usual, and `signature-key` remains a covered component, so the cache identifier is signed over on every request that carries it.
 
-The cache identifier's validity never exceeds the cached assertion's expiry. Presenting a cache identifier for an assertion that has expired is not a cache condition; the verifier resolves it and the assertion then fails validation exactly as an expired assertion presented in full would.
+The cache identifier's validity never exceeds the cached assertion's expiry. Two expiries are therefore in play and MUST NOT be confused. The cache entry's expiry is the verifier's own retention decision; the assertion's expiry is a property of the assertion. A verifier that still holds the entry MUST resolve it and let the assertion fail validation ((#presenting-and-resolving-a-cached-assertion)), exactly as an expired assertion presented in full would, rather than reporting `cache_miss`. A verifier that has already evicted the entry returns `cache_miss`, which is correct: it no longer holds the assertion and cannot say why the assertion would have been rejected. The caller resends in full and receives the validation error.
 
 ## Presenting and Resolving a Cached Assertion {#presenting-and-resolving-a-cached-assertion}
 
 A receiver processes a request bearing the cached scheme in two stages, which MUST remain distinct:
 
-1. Resolution. The signature-verification layer resolves the cache identifier to the cached assertion. If it is unknown, expired from the cache, or (for a self-contained identifier) fails integrity or decryption, resolution fails and the verifier returns `cache_miss` ((#cache_miss)). On success, the verifier obtains the assertion and its confirmation key and verifies the per-request signature against that key. This stage answers cache hit or cache miss.
+1. Resolution. The signature-verification layer resolves the cache identifier to the cached assertion. If it is unknown, has been evicted, including at the cache entry's own expiry, or (for a self-contained identifier) fails integrity or decryption, resolution fails and the verifier returns `cache_miss` ((#cache_miss)). On success, the verifier obtains the assertion and its confirmation key and verifies the per-request signature against that key. This stage answers cache hit or cache miss.
 
 2. Validation. The resolved assertion is validated by the consuming authorization layer identically to an assertion presented in full, including expiry and any other claim checks. Resolution by cache identifier does not move, replace, or defer this validation. This stage answers valid or invalid, and an expired assertion here produces the same error as an expired assertion presented in full.
 
@@ -1115,7 +1150,7 @@ Verifiers MUST validate all cryptographic material before use:
 
 - **jkt-jwt**: Verify JWT signature per [@!RFC7519] using header `jwk`, validate thumbprint matches `iss` per [@!RFC7638], validate embedded ephemeral JWK per [@!RFC7517]
 
-## Caching and Performance
+## Caching and Performance {#caching-and-performance}
 
 Verifiers MAY cache keys to improve performance but MUST implement appropriate cache expiration:
 
@@ -1131,7 +1166,7 @@ Verifiers MAY cache keys to improve performance but MUST implement appropriate c
 
 - **jkt-jwt**: Cache embedded keys until JWT expiration; cache by `iss` thumbprint URI
 
-Verifiers SHOULD implement cache limits to prevent resource exhaustion attacks.
+Verifiers MUST implement cache limits. Cache entries are created by unauthenticated callers, so an unbounded cache is a resource exhaustion attack with no work factor for the attacker.
 
 When the `Signature-Key` scheme is `jwks_uri` and a cached key matching the JWT `kid` fails signature verification, the verifier SHOULD refresh the issuer's JWKS once and retry verification before returning `unknown_key` (if the key is then absent) or `invalid_jwt` (if verification still fails), subject to the once-per-minute fetch floor and egress admission ((#scheme-specific-risks)) that apply to unknown-`kid` refreshes. This covers silent re-keying where the issuer replaces key material under the same `kid` without changing the identifier.
 
@@ -1139,9 +1174,9 @@ When the `Signature-Key` scheme is `jwks_uri` and a cached key matching the JWT 
 
 **hwk**: No identity verification - suitable only for scenarios where pseudonymous access is acceptable.
 
-**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised. Implementations SHOULD use the shortest practical lifetime. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
+**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised, and the lifetime should be no longer than the deployment's re-delegation interval allows. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
 
-**jwks_uri**: Relies on HTTPS security — vulnerable to DNS/CA compromise. Beyond HTTPS validation, nothing prevents an attacker from copying a client's public keys and serving them from a different domain. Verifiers SHOULD verify that the `id` parameter in the Signature-Key header matches an expected or authorized origin.
+**jwks_uri**: Relies on HTTPS security — vulnerable to DNS/CA compromise. Beyond HTTPS validation, nothing prevents an attacker from copying a client's public keys and serving them from a different domain. Verifiers SHOULD verify that the `id` parameter in the Signature-Key header matches an expected or authorized origin. A general-purpose verifier that accepts signers it has no prior relationship with has no such list to match against, and cannot apply this check; such a verifier obtains an origin-bound pseudonym rather than an authorized identity, and MUST NOT treat a well-formed `id` as evidence that the origin authorized the request.
 
 Because the JWKS location (and, for `jwks_uri`, the metadata document that yields it) is controlled by the asserted signer, an unconstrained verifier can be induced to fetch attacker-chosen internal URLs (SSRF). Verifiers MUST apply egress admission before fetching issuer metadata, a `jwks_uri`, or a `jwks` `url`:
 
@@ -1162,25 +1197,27 @@ Because the JWKS location (and, for `jwks_uri`, the metadata document that yield
 
 ## Algorithm Selection
 
-The signature algorithm is determined by the key material in Signature-Key, not by the optional `alg` parameter in Signature-Input ([@!RFC9421], Section 2.3). For JWK-based schemes (hwk, jkt-jwt, jwks_uri, jwks, jwt, self-jwt), the algorithm is the fully-specified identifier carried in the JWK `alg` member, per Algorithm Determination ((#algorithm-determination)); verifiers MUST NOT derive it from the key type and curve. For the x509 scheme, the algorithm is determined by the certificate's public key type.
+The signature algorithm is determined by the key material in Signature-Key. For JWK-based schemes (hwk, jkt-jwt, jwks_uri, jwks, jwt, self-jwt), the algorithm is the fully-specified identifier carried in the JWK `alg` member, per Algorithm Determination ((#algorithm-determination)); verifiers MUST NOT derive it from the key type and curve. For the x509 scheme, the algorithm is determined by the certificate's public key type.
 
-If the `alg` parameter is present in Signature-Input, verifiers MUST verify it is consistent with the key material.
+[@!RFC9421], Section 1.4 offers three ways for an application to establish the algorithm: state it in the `alg` signature parameter, derive it from the key material, or agree it out of band. This document takes the second, which [@!RFC9421], Section 3.3.7 develops for JOSE signing algorithms: the algorithm is signaled by the key, and "the explicit `alg` signature parameter is not used at all when using JOSE signing algorithms".
+
+Signers therefore MUST NOT include the `alg` parameter in Signature-Input ([@!RFC9421], Section 2.3), and verifiers MUST ignore it if present and MUST NOT use it to select or validate the algorithm. One source of truth is the point. The two identifier spaces do not correspond — [@!RFC9421], Section 3.3.7 notes that JWA values are not registered in the HTTP Signature Algorithms registry — so a rule requiring the parameter to agree with the key would have no defined meaning to test against. Ignoring the parameter also forecloses the confused-verifier condition in which one verifier takes the algorithm from the parameter and another from the key.
 
 Algorithm agility depends on the verifier selecting exactly one signature algorithm for a given key. A key whose algorithm is not fully determined by its identifier invites downgrade and confused-verifier conditions, where two verifiers disagree on the operation a signature represents. For this reason this document requires a present, fully-specified `alg` for conveyed JWKs ((#algorithm-determination)). This aligns with [@!RFC9864], which states that a key is to be used with only a single algorithm unless the use of that key with multiple algorithms has been proven secure, and recommends that the algorithm parameter of a JWK be present.
 
 Verifiers MUST:
 
-- Validate the algorithm against policy (reject weak algorithms)
+- Take the algorithm from the key's `alg` member, and reject a key that has none ((#algorithm-determination))
 
-- Ensure the key type is consistent with the derived algorithm
+- Reject a key whose `kty` or `crv` is inconsistent with its `alg`
 
-- Reject keys whose type does not match an acceptable algorithm
+- Reject an `alg` naming an algorithm the verifier does not support, or that its policy declines, reporting `unsupported_algorithm` ((#unsupported_algorithm)) and stating what it does accept in `Accept-Signature-Alg` ((#accept-signature-alg))
 
 ## Symmetric Algorithms {#symmetric-algorithms}
 
 Every scheme in this document distributes a public key or a reference to one, and every verification it describes is a public-key operation. A symmetric algorithm has no public key: verifying a MAC requires the same secret used to produce it. Distributing that secret in a request header would hand the verifying party the ability to forge the signature it is checking, and any intermediary that saw the header the same ability. The proof of possession this document relies on would then prove nothing, since possession would no longer be exclusive to the signer.
 
-For this reason symmetric algorithms MUST NOT be used with Signature-Key ((#algorithm-determination)). A verifier MUST reject a JWK whose `kty` is `oct` or whose `alg` is a MAC identifier such as `HS256`, and MUST NOT accept `hmac-sha256` as the algorithm of a signature whose key was conveyed by this document, even though that identifier is registered for HTTP Message Signatures ([@!RFC9421], Section 6.2). A shared-secret MAC remains available to deployments that have a pre-shared key and use `keyid` as [@!RFC9421] describes; it is out of scope here precisely because it needs no key distribution.
+For this reason symmetric algorithms MUST NOT be used with Signature-Key ((#algorithm-determination)). A verifier MUST reject a JWK whose `kty` is `oct` or whose `alg` is a MAC identifier such as `HS256`. A shared-secret MAC remains available to deployments that have a pre-shared key and use `keyid` as [@!RFC9421] describes; it is out of scope here precisely because it needs no key distribution.
 
 ## Cache Identifiers {#cache-identifiers}
 
@@ -1192,15 +1229,17 @@ Cache identifiers MUST be unpredictable to any party other than the verifier. A 
 
 A cache identifier is a stable reference to one assertion and is therefore a correlator across the requests that use it, for the life of the assertion, in the same way that a repeated `ETag` or session ticket is. It is a fingerprinting surface, but not a new one: it replaces an assertion that carries the confirmation key itself, and a repeated key is at least as strong a correlator as a repeated identifier. Any party that can observe the identifier could have observed the assertion it stands in for. The exposure is therefore bounded above by what the assertion already discloses, and it is bounded below only by the identifier's lifetime: a verifier concerned with correlation by intermediaries MAY issue and rotate distinct identifiers for the same assertion, which the caller cannot detect and need not act on, since it presents whatever it was last issued.
 
+Assertion caching lets a caller create verifier-side state at will. Nothing bounds how many distinct assertions it presents with `cache`, and a self-issued scheme such as jkt-jwt can mint a fresh `jti`, and so a fresh cache entry, on every request. The cache limits required by (#caching-and-performance) apply to assertion caching, and a verifier SHOULD bound entries per confirmation key rather than only in aggregate, so that one caller cannot evict every other caller's entries. A verifier is never obliged to issue a cache identifier: `cache` is a request, not an instruction.
+
 A self-contained cache identifier carries verifier state to itself across a fleet. Such an identifier MUST be integrity-protected and encrypted under keys known only to the verifier fleet, so that it cannot be forged or read by any other party, and one that fails integrity or decryption MUST be treated as a cache miss ((#cache_miss)).
 
 ## Post-Quantum Key and Signature Sizes {#pqc-sizes}
 
-Post-quantum keys and signatures are substantially larger than classical ones. ML-DSA public keys are 1312, 1952, and 2592 octets for the three parameter sets, and signatures are larger still, and other post-quantum schemes are larger again. Two consequences follow for deployments. First, an inline key conveyed with the hwk scheme, together with the signature, can approach or exceed HTTP header size limits imposed by servers, proxies, and intermediaries. Deployments conveying large keys SHOULD prefer a discovery scheme (jwks_uri or jwks), which conveys a reference rather than the key itself, so that the key material does not traverse a header. Second, the HTTP Message Signature itself is carried in a header regardless of scheme and is large for post-quantum algorithms; discovery does not mitigate this, and operators SHOULD size header buffers to accommodate post-quantum signatures where such algorithms are in use.
+Post-quantum keys and signatures are substantially larger than classical ones. ML-DSA public keys are 1312, 1952, and 2592 octets for the three parameter sets, and signatures are larger still, and other post-quantum schemes are larger again. The cost that matters here is size rather than verification time: ML-DSA verification is comparable to Ed25519, so what a deployment must plan for is bytes on the wire. Two consequences follow. First, an inline key conveyed with the hwk scheme, together with the signature, can approach or exceed HTTP header size limits imposed by servers, proxies, and intermediaries. Deployments conveying large keys SHOULD prefer a discovery scheme (jwks_uri or jwks), which conveys a reference rather than the key itself, so that the key material does not traverse a header. A deployment MAY keep an inline scheme where it controls the whole request path and has confirmed the headers fit, trading the discovery fetch for header size. Second, the HTTP Message Signature itself is carried in a header regardless of scheme and is large for post-quantum algorithms; discovery does not mitigate this, and operators should size header buffers to accommodate post-quantum signatures where such algorithms are in use.
 
 ## Signature-Key Integrity
 
-The Signature-Key header SHOULD be included as a covered component in Signature-Input:
+The Signature-Key header MUST be included as a covered component in Signature-Input:
 
 ```
 Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
@@ -1212,11 +1251,11 @@ If `signature-key` is not covered, an attacker can modify the header without inv
 
 **Identity substitution**: An attacker modifies the `id` parameter in a `jwks_uri` scheme to point to their own metadata endpoint that returns the same public key, impersonating a different signer.
 
-Verifiers SHOULD reject requests where `signature-key` is not a covered component.
+Verifiers MUST reject requests where `signature-key` is not a covered component. There is no deployment in which accepting an uncovered `Signature-Key` is safe: both attacks above succeed against any verifier that does so, and neither is detectable after the fact.
 
 # Privacy Considerations
 
-## Pseudonymity vs. Identity
+## Pseudonymity vs. Identity {#pseudonymity-vs-identity}
 
 The hwk and jkt-jwt schemes enable pseudonymous operation where the signer's identity is not disclosed. Verifiers should be aware that:
 
@@ -1403,36 +1442,68 @@ For the HTTP Signature-Key Scheme registry, the expert should additionally verif
 For the Signature Error Code registry, the expert should additionally verify that:
 
 - The error code is a lowercase token using only lowercase letters and underscore, consistent with the registry's existing entries.
-- The error condition is broadly applicable to HTTP message signature verification rather than specific to a single application.
+- The error condition is broadly applicable to signed HTTP message exchanges rather than specific to a single application. The condition need not be a signature verification failure; it may concern any part of the exchange the verifier rejects, as `invalid_request` does.
 - The description makes clear when a verifier generates the error, and the error does not leak sensitive information to unauthenticated callers.
 
 # Document History
 
 *Note: This section is to be removed before publishing as an RFC.*
 
-- draft-hardt-httpbis-signature-key-07
+- draft-hardt-httpbis-signature-key-08
 
-  Not backward compatible with -06. Breaking changes are listed first.
+  Not backward compatible with -07. Breaking changes are listed first.
 
   Breaking changes:
 
   - Removed the `sigkey` Accept-Signature parameter and its registry entry. A parameter value is a bare Item and cannot be a list, so `sigkey` could name only one scheme. Use `Accept-Signature-Scheme` and `Accept-Signature-Alg`, which are Lists of Tokens and let a client select before it signs rather than after a rejection.
   - Removed the `supported_algorithms` member of `Signature-Error`, added in -04. Use `Accept-Signature-Alg`, which works on a challenge and on an error alike.
-  - Made the hwk `alg` parameter REQUIRED and fully specified. It was forbidden in -06, so an hwk key serialized per -06 is rejected by a -07 verifier.
+  - Made the hwk `alg` parameter REQUIRED and fully specified. It was forbidden in -06 and -07, so an hwk key serialized per -07 is rejected by a -08 verifier, and one serialized per -08 is rejected by a -07 verifier. There is nothing to negotiate over, so both ends of a deployment move together.
   - Forbade the polymorphic `EdDSA` identifier, deprecated by [@!RFC9864]. Use `Ed25519` or `Ed448`.
   - Required verifiers to take the algorithm from the JWK `alg` rather than derive it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`.
   - Required RSA `alg` to name both padding and hash, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
-  - Forbade symmetric algorithms: the `oct` key type, the JOSE MAC identifiers, and `hmac-sha256`. Every scheme here distributes a public key, and a shared secret handed to the verifier proves nothing.
+  - Forbade symmetric algorithms: the `oct` key type and the JOSE MAC identifiers. Every scheme here distributes a public key, and a shared secret handed to the verifier proves nothing.
+  - Forbade the `none` algorithm and any algorithm whose JOSE Implementation Requirement is `Prohibited`, as [@!RFC9421], Section 3.3.7 requires of a JWS algorithm used for an HTTP Message Signature. Gave the rule its response-side half: a server MUST NOT list such an algorithm in `Accept-Signature-Alg`, which would otherwise advertise that it accepts unsigned requests as signed.
+  - Named the registry these identifiers come from, citing the IANA "JSON Web Signature and Encryption Algorithms" registry itself rather than [@!RFC7518], which established it but no longer holds all of it. This document uses the JOSE signing algorithms of [@!RFC9421], Section 3.3.7 and does not use the HTTP Signature Algorithms registry.
+  - Corrected `Accept-Signature-Alg` to carry identifiers from that same JOSE registry rather than from the HTTP Signature Algorithms registry. A server has to advertise algorithms in the namespace a conveyed key uses, or a client cannot compare what the server accepts against the keys it holds.
+  - Replaced the requirement that a Signature-Input `alg` parameter be "consistent with the key material" with the rule of [@!RFC9421], Section 3.3.7: signers MUST NOT send it and verifiers MUST ignore it. The consistency rule had no testable meaning, since Section 3.3.7 states that JWA values are not registered in the HTTP Signature Algorithms registry and so no mapping between the two namespaces exists. Cited Section 1.4, which names deriving the algorithm from the key material as one of the three approaches an application may take.
+  - Removed the Editor's Note that made the post-quantum paragraph contingent on ML-DSA being registered for HTTP Message Signatures. Under [@!RFC9421], Section 3.3.7 the JOSE path never consults that registry, so the pending registration does not gate ML-DSA here: [@!RFC9964] registers ML-DSA in the JOSE registry, which is the one that applies.
+  - Raised `signature-key` coverage from SHOULD to MUST on both sides: signers MUST include it as a covered component and verifiers MUST reject requests where it is not covered. The scheme-substitution and identity-substitution attacks in (#signature-key-integrity) succeed against any verifier that accepts an uncovered header, so no valid reason to ignore the requirement exists. This also removes an internal contradiction, since (#accept-signature-scheme) already described coverage as a requirement of this specification.
+  - Raised `exp` from a member of the "standard claims" SHOULD list to MUST in the jwt and self-jwt schemes. For jwt, `exp` is what bounds acceptance of the confirmation key the assertion carries.
+  - Raised the hwk `kid` prohibition from SHOULD NOT to MUST NOT. The key is inline, so a `kid` selects nothing and a disagreeing `kid` has no defined resolution.
+  - Raised rejection of a malformed JWT from SHOULD to MUST. A value that does not parse as a JWT cannot be verified, so the SHOULD had no exception case; the early-rejection rationale was the point being made and is retained as such.
+  - Raised cache limits from SHOULD to MUST. Cache entries are created by unauthenticated callers.
+  - Required the Problem Details `type` member, where a Problem Details body is returned, to be the `urn:ietf:params:sig-error:` URN form. Whether to return that body remains a SHOULD; the format of the member, once present, is not optional, since another form cannot be resolved against the registry.
 
   Other changes:
 
+  - Required a verifier resolving a key from a JWKS to select the member matching `kid` without requiring any other member to be usable, and forbade failing because an unselected member names an unimplemented `kty` or `alg`. Without it no issuer could add a post-quantum key alongside a classical one, since doing so would break every verifier that does not implement the new type, including those that were only ever going to use the classical key. Noted that an unknown member within a single JWK is ignored per [@!RFC7517], Section 4, which is distinct from a member this document forbids.
+  - Stated that an `Accept-Signature-Alg` Token is the registered identifier verbatim, case included: `ES256`, not `es256`. Structured Field parsing preserves a Token's case, and the value is compared against the `alg` member of a JWK, a case-sensitive JSON string, so a case-folded token matches no key.
+  - Corrected the claim that `kty` and `crv` underdetermine the algorithm for EC keys. Within JOSE they do not: `ES256`, `ES384`, and `ES512` correspond one to one with `P-256`, `P-384`, and `P-521`, and no registered signing algorithm pairs a curve with another hash. Genuine underdetermination is limited to RSA, which has no `crv`, and to the `AKP` key type of [@!RFC9964].
+  - Stated that requiring `alg` of every conveyed key is therefore a choice rather than a necessity, and gave the reasons in a new Design Rationale section, (#why-alg-is-required): the set of underdetermined key types grows as algorithms are registered, `Accept-Signature-Alg` comparison has to be total, a verifier keeps one code path, and the signer bears no cost. Said plainly that this tightens [@!RFC9864], which RECOMMENDS rather than requires the member.
+  - Required a verifier to reject an `alg` it does not support with `unsupported_algorithm`, and stated that `Accept-Signature-Alg` names exactly that set, neither a subset nor a superset. Replaced the vague "validate the algorithm against policy" verifier obligations with the specific checks.
+  - Stated where `alg` comes from in each scheme, and that jwks_uri, jwks, and self-jwt have no in-band channel for it: the resolved JWKS entry is the only source, so adopting those schemes means publishing a key that carries `alg` rather than pointing at one that omits it. Only the key the `kid` selects is subject to the requirement, so an existing metadata document can be reused by adding a conforming key.
+  - Corrected the `Accept-Signature-Alg` examples, which still used HTTP Signature Algorithms registry identifiers (`ed25519`, `ecdsa-p256-sha256`, `rsa-v1_5-sha256`) after the header was defined to carry JOSE identifiers.
+  - Rewrote the justification in Algorithm Determination. [@!RFC9864] RECOMMENDS rather than requires the JWK `alg` member, and allows a deployment to rely on some other mechanism for ensuring a key is used as intended, so citing it as the basis for a MUST overstated it. The requirement now says what it is — a tightening — and gives the reason: keys conveyed in band come from a party the verifier has no prior relationship with, so no such other mechanism exists, and `kty` and `crv` underdetermine the algorithm for RSA, EC, and `AKP` keys alike. Noted that [@?I-D.richer-oauth-httpsig] reaches the same requirement independently for JWK-bound keys.
+  - Audited every BCP 14 SHOULD against RFC 2119 Section 6. Each retained SHOULD now names the circumstance under which it may be ignored: omitting `Signature-Error` or `required_input` where diagnostics to an unauthenticated caller are a disclosure risk, returning a non-Problem-Details body under content negotiation, the general-purpose verifier that has no authorized-origin list to check `id` against, and the deployment that keeps an inline scheme because it has confirmed its headers fit.
+  - Downgraded to lowercase the statements that were not interoperability requirements, per RFC 2119 Section 6 and the RFC 8174 convention that only uppercase is normative: single-signature deployment advice, the recommendation to document enclave stable-key algorithms, the "shortest practical lifetime" guidance, which was unmeasurable as written, and header buffer sizing.
+  - Changed the `typ` header check from SHOULD to MAY in the jwt and self-jwt schemes. The text identifies it as an optimization for quick rejection, and step 2 of each verification procedure already states the check.
+  - Corrected the layered cryptographic agility rationale: post-quantum verification is not the expensive part, since ML-DSA verification is comparable to Ed25519. What caching saves the verifier is the assertion's bytes on the wire and the repeated resolution, not verification time. The signer's per-request cost is time and the verifier's is size.
+  - Corrected the basis of the classical hot path: what bounds exposure is the lifetime of the confirmation key, not the expiry of the assertion carrying it. A signer that rebinds one long-lived key into successive assertions leaves that key acceptable indefinitely whatever each `exp` says, and gains nothing from short assertion lifetimes. jkt-jwt has the intended shape by construction.
+  - Removed the archived IETF 125 presentation from the repository.
+
   - Added the `jwks` scheme: a direct JWKS fetch whose HTTPS `url` is both the signer identity and the key location, under the same egress-admission rules as `jwks_uri`.
-  - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable.
+  - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable, scoped to the `Signature-Key` member the verifier selected. A member the verifier did not select is ignored, so a signer can offer a signature under a new scheme without breaking verifiers that lack it.
   - Added an Algorithm Determination section as the single home for the fully-specified algorithm rules, referenced from every scheme that conveys or references a JWK.
   - Required defined rejection of unimplemented JWK key types, including `AKP` [@!RFC9964], reported as `unsupported_algorithm`.
-  - Noted that the ML-DSA identifiers of [@!RFC9964] satisfy the rule without special treatment, and that none is yet registered for HTTP Message Signatures, so ML-DSA can sign an assertion but not the per-request signature. Added a deployment consideration on post-quantum key and signature sizes.
-  - Added assertion caching as a strawman for discussion: the `cached` scheme, the `cache` signal on jwt and jkt-jwt, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution and validation model. A JWT is cacheable only if it carries a `jti`, and self-jwt is excluded, having no `cnf` claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not. Whether this is the right layer for caching is an open question.
+  - Noted that the ML-DSA identifiers of [@!RFC9964] satisfy the rule without special treatment. Added a deployment consideration on post-quantum key and signature sizes.
+  - Added assertion caching as a strawman for discussion: the `cached` scheme, the `cache` signal on jwt and jkt-jwt, the `Signature-Key-Cache` response header, the `cache_miss` error, and the resolution and validation model. A JWT is cacheable only if it carries a `jti`; self-jwt is excluded, its key being already cacheable on `iss` and `kid` and its claims request-specific. Implementation is optional; the degradation behavior is not. Whether this is the right layer for caching is an open question.
+  - Distinguished the cache entry's expiry from the assertion's: a verifier still holding the entry resolves it and lets validation reject an expired assertion, while one that has evicted it returns `cache_miss` and the caller resends in full.
+  - Made `cached` in `Accept-Signature-Scheme` a capability announcement: a client cannot present it until a verifier has issued it a cache identifier.
+  - Bounded verifier-side cache state: a caller can mint an assertion, and so a cache entry, per request, so the cache limits apply to assertion caching and a verifier should bound entries per confirmation key.
   - Specified client behaviour when a response carries both `WWW-Authenticate` and a signature challenge: alternatives where the auth-scheme authenticates, in which case the client signs rather than presenting the credential, and complements where it does not, such as a payment challenge, in which case the client satisfies both. Addresses issue #17.
+  - Stated what `keyid` ([@!RFC9421], Section 5.1) means alongside `Signature-Key`: a server SHOULD NOT send it, a `keyid` in `Signature-Input` MUST identify the same key as the `Signature-Key` member for that label, and the verifier takes the key from `Signature-Key`.
+  - Made the scheme preference order in `Accept-Signature-Scheme` non-binding on the client. The order is the server's preference, while the choice of scheme decides whether the signer is identified, which is the client's to make.
+  - Had a server that sends `Accept-Signature-Alg` not send the `alg` parameter of `Accept-Signature`, which names algorithms in the HTTP Signature Algorithms registry this document does not use; a client MAY ignore an `alg` received alongside `Accept-Signature-Alg`.
   - Expanded the Introduction to state the gaps this document addresses and the invariants that follow.
   - Added rationale for a scheme token rather than a header per scheme, for carrying the accepted sets in header fields rather than in parameters or error members, for layered cryptographic agility, for the verifier issuing the cache identifier rather than deriving it from the assertion as an entity tag would be, and for not reserving grease values.
   - Gave the SHOULD for sending `Accept-Signature-Scheme` and `Accept-Signature-Alg` on an error response its exception case, per RFC 2119 Section 6: a server may withhold the header where enumerating what it accepts to an unauthenticated caller is a disclosure risk.
@@ -1441,6 +1512,9 @@ For the Signature Error Code registry, the expert should additionally verify tha
   - IANA review feedback: added Designated Expert Instructions for the HTTP Signature-Key Scheme and Signature Error Code registries per RFC 8126 Section 4.5.
   - Changed the Signature Error Code registry policy from Specification Required to Expert Review.
   - Added a registration template to the Signature Error Code registry.
+
+- draft-hardt-httpbis-signature-key-07
+  - Editorial. Noted in the Introduction that the mechanisms defined here are used by other specifications, citing the AAuth protocol [@?I-D.hardt-oauth-aauth-protocol] and Email Verification [@?I-D.hardt-email-verification]. No normative change.
 
 - draft-hardt-httpbis-signature-key-06
   - Added the `self-jwt` scheme for self-issued JWTs where the signer and the JWT issuer are the same party. The JWT signing key, discovered via `{iss}/.well-known/{dwk}`, is reused as the HTTP signing key, and no `cnf` claim is present.
@@ -1556,9 +1630,11 @@ Adding header fields here does not contradict the argument against per-scheme ke
 
 ## Layered Cryptographic Agility
 
-Post-quantum protection is applied to artifacts whose authenticity must survive into the quantum era: durable, consequential, or retained assertions. The per-request HTTP Message Signature is ephemeral, replay-bounded proof of possession that no verifier accepts outside its short window, and so does not face a harvest-now-forge-later threat; it MAY continue to use a classical algorithm such as Ed25519 in a post-quantum deployment. Ed25519 is not itself post-quantum; the claim here is that it remains acceptable for ephemeral per-request authentication in a post-quantum setting, which is a statement about the threat model for short-lived authentication signatures rather than about the algorithm's quantum resistance. The agent's proof-of-possession key is itself short-lived and is carried within the assertion, so its exploitable lifetime is bounded by the assertion's expiry. Caching ((#signature-key-cache-response-header)) makes the post-quantum assertion, whose signature is large ((#pqc-sizes)), affordable to reference on each request without retransmitting it.
+Post-quantum protection is applied to artifacts whose authenticity must survive into the quantum era: durable, consequential, or retained assertions. The per-request HTTP Message Signature is ephemeral, replay-bounded proof of possession that no verifier accepts outside its short window; it MAY continue to use a classical algorithm such as Ed25519 in a post-quantum deployment. Ed25519 is not itself post-quantum, and the claim here concerns the threat model for short-lived authentication signatures rather than the algorithm's quantum resistance. Caching ((#signature-key-cache-response-header)) makes the post-quantum assertion, whose signature is large ((#pqc-sizes)), affordable to reference on each request without retransmitting it.
 
-The saving is on both sides, and the jkt-jwt scheme ((#jkt-jwt-scheme)) shows it most clearly. That scheme exists because signing in a secure enclave is slow, so the enclave key signs once and delegates to a fast ephemeral key. Verification has the same shape: checking a post-quantum delegation is expensive, so a verifier that caches the delegation performs the thumbprint computation and the signature verification once and references the result thereafter. The same argument that motivates delegation on the signer's side motivates caching on the verifier's.
+What makes the classical hot path acceptable is the lifetime of the key, not the lifetime of the assertion carrying it. A confirmation key's public value travels in the assertion and can be collected by any observer today, so the exposure is bounded by how long a verifier will still accept that key, not by how long ago it was seen. A classical key is safe against an attacker who later recovers private keys from harvested public keys for as long as it is replaced — a freshly generated key bound in a newly issued assertion — faster than that recovery is possible. Expiring the assertion does not achieve this on its own: a signer that rebinds one long-lived key into each successive assertion leaves that key acceptable for as long as it keeps doing so, whatever `exp` any individual assertion carries. The jkt-jwt scheme ((#jkt-jwt-scheme)) has the intended shape by construction, the stable enclave key establishing identity while the request key in `cnf` is generated per delegation. A deployment that instead reuses a confirmation key across assertions gains nothing from short assertion lifetimes, and should choose that key's algorithm against its true acceptance window.
+
+The saving is on both sides, though for a different reason on each. The jkt-jwt scheme exists because signing in a secure enclave is slow, so the enclave key signs once and delegates to a fast ephemeral key: the signer's per-request cost is time. The verifier's is size. Post-quantum verification is not the expensive part — ML-DSA verification is comparable to Ed25519 — and the burden is the assertion ((#pqc-sizes)) that would otherwise be retransmitted and reparsed on every request. A verifier that caches the delegation resolves it once, fetching, parsing, computing the thumbprint, and verifying the signature, and references the result thereafter, while the caller stops paying the assertion's bytes on each request. Delegation on the signer's side and caching on the verifier's answer the same shape of problem from opposite ends.
 
 Long-term non-repudiation is out of scope for this layer and is provided above it. The per-request signature is not the durable evidentiary record. Where long-term, tamper-evident proof of what an agent did is required, it is provided by a transparency ledger that records actions and is itself protected for the long term, not by retaining and later trusting individual per-request signatures. Because durable evidence lives in the ledger, the per-request signature has no long-term evidentiary value to protect, and the classical hot path needs no post-quantum sealing at this layer. The ledger, being the durable artifact, is where post-quantum protection is applied for audit. The ledger itself is outside the scope of this document.
 
@@ -1588,8 +1664,28 @@ Entity tags ([@!RFC9110], Section 8.8.3) are the closest HTTP precedent and the 
 
 One property of entity tags is deliberately not adopted. A strong entity tag is commonly derived from the representation, so two parties holding the same bytes compute the same tag. Applying that to assertions, by using a thumbprint of the assertion as the cache identifier, would make the identifier computable by anyone who has seen the assertion, including any intermediary it passed through. Cache lookup would then become a probe any such party could run to learn whether a verifier currently holds a given assertion, and the identifier would no longer be unpredictable ((#cache-identifiers)). A content-derived identifier also fixes one construction for every verifier, foreclosing the self-contained encrypted form that the session-ticket precedent supports. The cache identifier is therefore verifier-minted and unpredictable rather than derived from the assertion, and the assertion's own identity is carried separately by the `jti` echoed in `Signature-Key-Cache` ((#why-the-verifier-issues-the-cache-identifier)).
 
-These are cited as context for the design, not as normative dependencies.
+The TLS mechanisms above are cited as context for the design, not as normative dependencies.
 
 ## Why Strings Instead of Byte Sequences for hwk?
 
 The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per [@!RFC7517], while structured field byte sequences use base64 encoding per [@!RFC8941]. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.
+
+## Why alg Is Required on Every Conveyed Key {#why-alg-is-required}
+
+The alternative considered was deriving the algorithm from the key's structure, as JOSE implementations commonly do today.
+
+That derivation works, for two of the four key types this document can convey. No registered JOSE signing algorithm pairs the `Ed25519` curve with anything but `Ed25519`, or `P-256` with anything but `ES256`; for OKP and EC keys, `kty` and `crv` between them name exactly one algorithm. Stating otherwise would be wrong, and the requirement here is not justified by an ambiguity that does not exist in those cases.
+
+It fails for the other two. An RSA key has no `crv`, and `kty` of `RSA` determines neither the padding scheme nor the hash, so the same key admits `RS256`, `PS256`, `RS512`, and more. The `AKP` key type of [@!RFC9964] covers several ML-DSA parameter sets, none of them recoverable from `kty`. In both cases the key does not say what it is for, and nothing else in these schemes does either.
+
+The requirement is uniform rather than restricted to those two cases, for four reasons.
+
+**The set of underdetermined types grows.** A conditional rule needs a table of which key types are self-determining, maintained in this document, revised whenever an algorithm is registered. Post-quantum and hybrid algorithms are arriving now, and `AKP` is already an entry in that table. A uniform requirement accommodates a new algorithm with no change here at all.
+
+**Negotiation must be a total comparison.** `Accept-Signature-Alg` ((#accept-signature-alg)) advertises algorithm identifiers with no key attached, because the server has no key to attach. A client decides which of its keys to present by comparing them against that list. Were keys permitted to omit `alg`, every client would have to implement the derivation table purely to perform that comparison, and would have to implement it identically to every server, or the two would disagree about what the client holds. Requiring `alg` makes the comparison a string match over one vocabulary on both sides.
+
+**One code path in the verifier.** Determination becomes a single lookup followed by a single consistency check, with no branch on whether this key type happens to be self-determining, and no second path that a test suite must cover and an implementer may get wrong. The redundancy between `alg` and `kty`/`crv` is then available as a check rather than as an alternative ((#algorithm-determination)).
+
+**The cost to the signer is nil.** A signer constructs the key it conveys inline, mints the assertion that carries its confirmation key, and publishes the JWKS its identity resolves to. There is no third party to persuade and no existing artifact that must change, because a deployment adopting this document is publishing keys for a purpose that did not previously exist.
+
+[@!RFC9864] RECOMMENDS rather than requires that a JWK carry `alg`, permitting a deployment to rely instead on "some other mechanism for ensuring that the key is used as intended". This document tightens that RECOMMENDED to a requirement. It does so as a matter of choice, on the grounds above, and not because the exception [@!RFC9864] allows is unavailable — for OKP and EC keys it plainly is available.

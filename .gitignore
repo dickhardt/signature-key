@@ -9,6 +9,7 @@
 /.refcache
 /.targets.mk
 /.vscode/
+/archive/
 /lib
 /node_modules/
 /versioned/
