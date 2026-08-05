@@ -1574,7 +1574,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
 
 # Acknowledgments
 
-The author would like to thank Joshua Gay, Ted Hardie, Yaron Sheffer, and Martin Thomson for their feedback on this specification. Ted Hardie raised the question of client behaviour when `WWW-Authenticate` and a signature challenge coexist, which (#coexistence-with-www-authenticate) answers. Martin Thomson suggested the guidance of [@?RFC9170], which shaped the extensibility design, and this document's repository is built on his i-d-template.
+The author would like to thank Joshua Gay, Ted Hardie, Thibault Meunier, Mikkel Albrechtsen, Yaron Sheffer, and Martin Thomson for their feedback on this specification. Ted Hardie raised the question of client behaviour when `WWW-Authenticate` and a signature challenge coexist, which (#coexistence-with-www-authenticate) answers. Thibault Meunier's review shaped much of -08: citing the JOSE registry itself rather than [@!RFC7518], closing the `none` case on the response side, scoping the unknown-scheme rejection to the selected member, restoring what `keyid` means alongside `Signature-Key`, and untangling the key cache expiry from the assertion cache expiry. Mikkel Albrechtsen raised the question of adding signatures independently of one another. Martin Thomson suggested the guidance of [@?RFC9170], which shaped the extensibility design, and this document's repository is built on his i-d-template.
 
 {backmatter}
 
