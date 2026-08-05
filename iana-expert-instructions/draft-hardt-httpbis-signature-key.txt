@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 30 January 2027                                      Cloudflare
-                                                            29 July 2026
+Expires: 6 February 2027                                      Cloudflare
+                                                           5 August 2026
 
 
                           HTTP Signature Keys
@@ -53,7 +53,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 January 2027.
+   This Internet-Draft will expire on 6 February 2027.
 
 Copyright Notice
 
@@ -1575,9 +1575,11 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
    *  The error code is a lowercase token using only lowercase letters
       and underscore, consistent with the registry's existing entries.
-   *  The error condition is broadly applicable to HTTP message
-      signature verification rather than specific to a single
-      application.
+   *  The error condition is broadly applicable to signed HTTP message
+      exchanges rather than specific to a single application.  The
+      condition need not be a signature verification failure; it may
+      concern any part of the exchange the verifier rejects, as
+      invalid_request does.
    *  The description makes clear when a verifier generates the error,
       and the error does not leak sensitive information to
       unauthenticated callers.
