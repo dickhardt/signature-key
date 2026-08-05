@@ -457,13 +457,17 @@ The jwks_uri scheme identifies the signer and enables key discovery via a metada
 
 1. Fetch `{id}/.well-known/{dwk}`
 
-2. Parse as JSON metadata
+2. Parse as JSON metadata. The document MUST contain `issuer` and `jwks_uri` members. Reject with `issuer_missing` ((#issuer_missing)) if `issuer` is absent.
 
-3. Extract `jwks_uri` property
+3. Verify `issuer` equals the `id` parameter, by byte equality as presented. Reject with `issuer_mismatch` ((#issuer_mismatch)) if they differ.
 
-4. Fetch JWKS from `jwks_uri`
+4. Extract `jwks_uri` property
 
-5. Find key with matching `kid`
+5. Fetch JWKS from `jwks_uri`
+
+6. Find key with matching `kid`
+
+The `issuer` check binds the metadata document to the identity it was fetched under. Without it, a document served at `{id}/.well-known/{dwk}` — through misconfigured shared hosting, a subdomain takeover, or any other means — could point `jwks_uri` at keys that do not belong to `id`, and the verifier would attribute the request accordingly. This is the same check [@!RFC8414], Section 3.3 requires of authorization server metadata, and a document conforming to [@!RFC8414] or OpenID Connect Discovery already carries `issuer`.
 
 The JWK selected from the retrieved JWKS is subject to Algorithm Determination ((#algorithm-determination)).
 
@@ -561,7 +565,7 @@ Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
 
 4. Verify required claims are present (`cnf.jwk`, plus any claims required by deployment policy). Reject if a required claim is missing.
 
-5. If `iss` and `dwk` claims are present, fetch `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`. Fetch JWKS from `jwks_uri`, find key matching `kid` in JWT header. If `iss` or `dwk` is absent, the verifier MUST obtain the issuer's key through an application-specific mechanism.
+5. If `iss` and `dwk` claims are present, fetch `{iss}/.well-known/{dwk}`, parse as JSON metadata, and verify the document's `issuer` member equals the `iss` claim as for the jwks_uri scheme ((#jwks-uri-scheme)), rejecting with `issuer_missing` or `issuer_mismatch`. Extract `jwks_uri`, fetch the JWKS from it, and find the key matching `kid` in the JWT header. If `iss` or `dwk` is absent, the verifier MUST obtain the issuer's key through an application-specific mechanism.
 
 6. Verify JWT signature using the discovered key
 
@@ -643,7 +647,7 @@ The self-jwt scheme does not support the `cache` parameter, and a verifier MUST 
 
 5. Verify `cnf` claim is absent. Reject if present.
 
-6. Construct `{iss}/.well-known/{dwk}`, parse as JSON metadata, extract `jwks_uri`. Fetch JWKS from `jwks_uri`, find the key matching `kid` from the JWT header. Reject if the key is not found (error: `unknown_key`).
+6. Construct `{iss}/.well-known/{dwk}`, parse as JSON metadata, and verify the document's `issuer` member equals the `iss` claim as for the jwks_uri scheme ((#jwks-uri-scheme)), rejecting with `issuer_missing` or `issuer_mismatch`. Extract `jwks_uri`, fetch the JWKS from it, and find the key matching `kid` from the JWT header. Reject if the key is not found (error: `unknown_key`).
 
 7. Verify JWT signature using the discovered key.
 
@@ -1050,6 +1054,22 @@ The public key from `Signature-Key` does not match any key at the client's `jwks
 Signature-Error: error=unknown_key
 ```
 
+### issuer_missing {#issuer_missing}
+
+The metadata document fetched during discovery does not contain an `issuer` member. Applicable to the jwks_uri scheme ((#jwks-uri-scheme)), and to the jwt and self-jwt schemes when they discover the issuer's keys through a metadata document.
+
+```http
+Signature-Error: error=issuer_missing
+```
+
+### issuer_mismatch {#issuer_mismatch}
+
+The `issuer` member of the metadata document fetched during discovery does not match the identity the document was fetched under: the `id` parameter for the jwks_uri scheme, or the `iss` claim for the jwt and self-jwt schemes.
+
+```http
+Signature-Error: error=issuer_mismatch
+```
+
 ### invalid_jwt
 
 The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) is malformed or its signature verification failed.
@@ -1408,6 +1428,8 @@ This document establishes the "Signature Error Code" registry. New values may be
 | `invalid_request` | Missing required info unrelated to signature | [this document] |
 | `invalid_key` | Key cannot be parsed or doesn't meet trust requirements | [this document] |
 | `unknown_key` | Key not found at jwks_uri | [this document] |
+| `issuer_missing` | Metadata document lacks an issuer member | [this document] |
+| `issuer_mismatch` | Metadata document issuer does not match the discovery identity | [this document] |
 | `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
 | `expired_jwt` | JWT expired | [this document] |
 
@@ -1493,6 +1515,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
 
   - Added the `jwks` scheme: a direct JWKS fetch whose HTTPS `url` is both the signer identity and the key location, under the same egress-admission rules as `jwks_uri`.
   - Stated that the jwks `url` is compared by byte equality as presented, with no canonicalization.
+  - Required the discovery metadata document to contain `issuer` and `jwks_uri`, and required verifiers to reject a document whose `issuer` does not match the identity it was fetched under — the check of [@!RFC8414], Section 3.3 — with the new `issuer_missing` and `issuer_mismatch` error codes. Applies to jwks_uri, jwt, and self-jwt discovery. Addresses issue #12.
   - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable, scoped to the `Signature-Key` member the verifier selected. A member the verifier did not select is ignored, so a signer can offer a signature under a new scheme without breaking verifiers that lack it.
   - Added an Algorithm Determination section as the single home for the fully-specified algorithm rules, referenced from every scheme that conveys or references a JWK.
   - Required defined rejection of unimplemented JWK key types, including `AKP` [@!RFC9964], reported as `unsupported_algorithm`.
