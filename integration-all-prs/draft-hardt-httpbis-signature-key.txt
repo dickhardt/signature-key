@@ -112,8 +112,10 @@ Table of Contents
        5.4.6.  invalid_request
        5.4.7.  invalid_key
        5.4.8.  unknown_key
-       5.4.9.  invalid_jwt
-       5.4.10. expired_jwt
+       5.4.9.  issuer_missing
+       5.4.10. issuer_mismatch
+       5.4.11. invalid_jwt
+       5.4.12. expired_jwt
    6.  Signature-Key-Cache Response Header
      6.1.  Presenting and Resolving a Cached Assertion
      6.2.  Degradation and Interoperability
@@ -838,13 +840,28 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
    1.  Fetch {id}/.well-known/{dwk}
 
-   2.  Parse as JSON metadata
+   2.  Parse as JSON metadata.  The document MUST contain issuer and
+       jwks_uri members.  Reject with issuer_missing (Section 5.4.9) if
+       issuer is absent.
 
-   3.  Extract jwks_uri property
+   3.  Verify issuer equals the id parameter, by byte equality as
+       presented.  Reject with issuer_mismatch (Section 5.4.10) if they
+       differ.
 
-   4.  Fetch JWKS from jwks_uri
+   4.  Extract jwks_uri property
 
-   5.  Find key with matching kid
+   5.  Fetch JWKS from jwks_uri
+
+   6.  Find key with matching kid
+
+   The issuer check binds the metadata document to the identity it was
+   fetched under.  Without it, a document served at {id}/.well-
+   known/{dwk} — through misconfigured shared hosting, a subdomain
+   takeover, or any other means — could point jwks_uri at keys that do
+   not belong to id, and the verifier would attribute the request
+   accordingly.  This is the same check [RFC8414], Section 3.3 requires
+   of authorization server metadata, and a document conforming to
+   [RFC8414] or OpenID Connect Discovery already carries issuer.
 
    The JWK selected from the retrieved JWKS is subject to Algorithm
    Determination (Section 3.3).
@@ -903,17 +920,10 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
    jwks scheme trades that decoupling for a single fetch and zero
    configuration.
 
-   The url is compared as presented, by byte equality of the String
-   value: a verifier MUST NOT canonicalize or normalize it before
-   comparison.  No case folding, percent-encoding normalization, dot-
-   segment removal, or addition or removal of a default port is applied,
-   and two values that differ in any byte name different identities.  A
-   signer MUST present the same bytes on every request for which it
-   intends the same identity.  This is the comparison rule of an
-   identifier, not of a location: canonicalization would let several
-   spellings collapse into one identity under rules that differ across
-   implementations, which is exactly the disagreement an identifier
-   comparison must not admit.
+   The url is compared by byte equality, as presented: a verifier MUST
+   NOT canonicalize or normalize it, and values that differ in any byte
+   name different identities.  A signer MUST present the same bytes
+   wherever it intends the same identity.
 
    *Use cases:*
 
@@ -993,10 +1003,13 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
        missing.
 
    5.  If iss and dwk claims are present, fetch {iss}/.well-known/{dwk},
-       parse as JSON metadata, extract jwks_uri.  Fetch JWKS from
-       jwks_uri, find key matching kid in JWT header.  If iss or dwk is
-       absent, the verifier MUST obtain the issuer's key through an
-       application-specific mechanism.
+       parse as JSON metadata, and verify the document's issuer member
+       equals the iss claim as for the jwks_uri scheme (Section 3.6),
+       rejecting with issuer_missing or issuer_mismatch.  Extract
+       jwks_uri, fetch the JWKS from it, and find the key matching kid
+       in the JWT header.  If iss or dwk is absent, the verifier MUST
+       obtain the issuer's key through an application-specific
+       mechanism.
 
    6.  Verify JWT signature using the discovered key
 
@@ -1103,10 +1116,12 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
 
    5.  Verify cnf claim is absent.  Reject if present.
 
-   6.  Construct {iss}/.well-known/{dwk}, parse as JSON metadata,
-       extract jwks_uri.  Fetch JWKS from jwks_uri, find the key
-       matching kid from the JWT header.  Reject if the key is not found
-       (error: unknown_key).
+   6.  Construct {iss}/.well-known/{dwk}, parse as JSON metadata, and
+       verify the document's issuer member equals the iss claim as for
+       the jwks_uri scheme (Section 3.6), rejecting with issuer_missing
+       or issuer_mismatch.  Extract jwks_uri, fetch the JWKS from it,
+       and find the key matching kid from the JWT header.  Reject if the
+       key is not found (error: unknown_key).
 
    7.  Verify JWT signature using the discovered key.
 
@@ -1728,14 +1743,32 @@ Signature: sig1=:MEQCIA5...:
 
    Signature-Error: error=unknown_key
 
-5.4.9.  invalid_jwt
+5.4.9.  issuer_missing
+
+   The metadata document fetched during discovery does not contain an
+   issuer member.  Applicable to the jwks_uri scheme (Section 3.6), and
+   to the jwt and self-jwt schemes when they discover the issuer's keys
+   through a metadata document.
+
+   Signature-Error: error=issuer_missing
+
+5.4.10.  issuer_mismatch
+
+   The issuer member of the metadata document fetched during discovery
+   does not match the identity the document was fetched under: the id
+   parameter for the jwks_uri scheme, or the iss claim for the jwt and
+   self-jwt schemes.
+
+   Signature-Error: error=issuer_mismatch
+
+5.4.11.  invalid_jwt
 
    The JWT in the Signature-Key header (when using scheme=jwt or
    scheme=jkt-jwt) is malformed or its signature verification failed.
 
    Signature-Error: error=invalid_jwt
 
-5.4.10.  expired_jwt
+5.4.12.  expired_jwt
 
    The JWT in the Signature-Key header (when using scheme=jwt or
    scheme=jkt-jwt) has expired (exp claim is in the past).
@@ -2390,8 +2423,8 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    | unsupported_scheme    | Signature-Key scheme          | [this     |
    |                       | not supported                 | document] |
    +-----------------------+-------------------------------+-----------+
-   | cache_miss            | Cache identifier              | [this     |
-   |                       | could not be resolved         | document] |
+   | cache_miss            | Cache identifier could        | [this     |
+   |                       | not be resolved               | document] |
    +-----------------------+-------------------------------+-----------+
    | invalid_signature     | Signature missing,            | [this     |
    |                       | malformed, or                 | document] |
@@ -2401,8 +2434,7 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    |                       | covered components            | document] |
    +-----------------------+-------------------------------+-----------+
    | invalid_request       | Missing required info         | [this     |
-   |                       | unrelated to                  | document] |
-   |                       | signature                     |           |
+   |                       | unrelated to signature        | document] |
    +-----------------------+-------------------------------+-----------+
    | invalid_key           | Key cannot be parsed          | [this     |
    |                       | or doesn't meet trust         | document] |
@@ -2411,9 +2443,16 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    | unknown_key           | Key not found at              | [this     |
    |                       | jwks_uri                      | document] |
    +-----------------------+-------------------------------+-----------+
+   | issuer_missing        | Metadata document             | [this     |
+   |                       | lacks an issuer member        | document] |
+   +-----------------------+-------------------------------+-----------+
+   | issuer_mismatch       | Metadata document             | [this     |
+   |                       | issuer does not match         | document] |
+   |                       | the discovery identity        |           |
+   +-----------------------+-------------------------------+-----------+
    | invalid_jwt           | JWT malformed or              | [this     |
-   |                       | signature                     | document] |
-   |                       | verification failed           |           |
+   |                       | signature verification        | document] |
+   |                       | failed                        |           |
    +-----------------------+-------------------------------+-----------+
    | expired_jwt           | JWT expired                   | [this     |
    |                       |                               | document] |
@@ -2677,10 +2716,15 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       the signer identity and the key location, under the same egress-
       admission rules as jwks_uri.
 
-   *  Stated that the jwks url is compared as presented, by byte
-      equality, with no canonicalization or normalization: values
-      differing in any byte name different identities, and a signer
-      presents the same bytes wherever it intends the same identity.
+   *  Stated that the jwks url is compared by byte equality as
+      presented, with no canonicalization.
+
+   *  Required the discovery metadata document to contain issuer and
+      jwks_uri, and required verifiers to reject a document whose issuer
+      does not match the identity it was fetched under — the check of
+      [RFC8414], Section 3.3 — with the new issuer_missing and
+      issuer_mismatch error codes.  Applies to jwks_uri, jwt, and self-
+      jwt discovery.  Addresses issue #12.
 
    *  Added the unsupported_scheme error code and made unknown-scheme
       rejection mandatory and conformance-testable, scoped to the
