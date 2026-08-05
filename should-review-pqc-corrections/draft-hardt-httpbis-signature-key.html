@@ -1050,7 +1050,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hardt &amp; Meunier</td>
-<td class="center">Expires 5 February 2027</td>
+<td class="center">Expires 6 February 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1063,12 @@ svg {
 <dd class="internet-draft">draft-hardt-httpbis-signature-key-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-08-04" class="published">4 August 2026</time>
+<time datetime="2026-08-05" class="published">5 August 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-02-05">5 February 2027</time></dd>
+<dd class="expires"><time datetime="2027-02-06">6 February 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1113,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 5 February 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 6 February 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1519,36 +1519,37 @@ svg {
 - <code>&lt;parameters&gt;</code> are semicolon-separated key-value pairs whose values are structured field strings or byte sequences, varying by scheme<a href="#section-3-4" class="pilcrow">¶</a></p>
 <p id="section-3-5">Multiple keys are comma-separated per the dictionary format. See <span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span> for definitions of dictionary, token, string, and byte sequence.<a href="#section-3-5" class="pilcrow">¶</a></p>
 <p id="section-3-6"><strong>Unknown schemes:</strong><a href="#section-3-6" class="pilcrow">¶</a></p>
-<p id="section-3-7">A verifier that encounters a scheme token it does not implement, including any unregistered value, MUST reject the request with a <code>Signature-Error</code> of <code>error=unsupported_scheme</code> (<a href="#unsupported-scheme" class="auto internal xref">Section 5.4.2</a>) and MUST NOT fail in a scheme-specific or undefined manner. Verifiers SHOULD dispatch on the scheme token through a lookup over the HTTP Signature-Key Scheme registry (<a href="#scheme-registry" class="auto internal xref">Section 9.2</a>) rather than a fixed set of branches, so that unknown schemes take this defined path.<a href="#section-3-7" class="pilcrow">¶</a></p>
-<p id="section-3-8"><strong>Example:</strong><a href="#section-3-8" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-3-9">
+<p id="section-3-7">A verifier that selects a member whose scheme token it does not implement, including any unregistered value, MUST reject the request with a <code>Signature-Error</code> of <code>error=unsupported_scheme</code> (<a href="#unsupported-scheme" class="auto internal xref">Section 5.4.2</a>) and MUST NOT fail in a scheme-specific or undefined manner. Verifiers SHOULD dispatch on the scheme token through a lookup over the HTTP Signature-Key Scheme registry (<a href="#scheme-registry" class="auto internal xref">Section 9.2</a>) rather than a fixed set of branches, so that unknown schemes take this defined path.<a href="#section-3-7" class="pilcrow">¶</a></p>
+<p id="section-3-8">This rule governs the member the verifier selected, and that member alone. A verifier MUST NOT reject a request because a member it did not select names a scheme the verifier does not implement; such members are ignored under <a href="#label-consistency" class="auto internal xref">Section 3.1</a>. Without this, a signer could not offer a signature under a new scheme without breaking every verifier that does not implement it, so no signer would offer one and the scheme registry would have no path into deployment.<a href="#section-3-8" class="pilcrow">¶</a></p>
+<p id="section-3-9"><strong>Example:</strong><a href="#section-3-9" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-3-10">
 <pre>Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
 Signature: sig=:MEQCIA5...
 Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
 
-</pre><a href="#section-3-9" class="pilcrow">¶</a>
+</pre><a href="#section-3-10" class="pilcrow">¶</a>
 </div>
-<p id="section-3-10"><strong>Label Correlation:</strong><a href="#section-3-10" class="pilcrow">¶</a></p>
-<p id="section-3-11">Labels are correlated by equality of label names across Signature-Input, Signature, and Signature-Key. Signature-Key is a dictionary keyed by label; Signature-Input and Signature are the sources of what signatures are present; Signature-Key provides keying material for those labels.<a href="#section-3-11" class="pilcrow">¶</a></p>
-<p id="section-3-12">Verifiers MUST:<a href="#section-3-12" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3-13">
-<li id="section-3-13.1">
-          <p id="section-3-13.1.1">Parse Signature-Input and Signature per RFC 9421 and obtain the set of signature labels present. The verifier determines which labels it is attempting to verify based on application context and RFC 9421 processing.<a href="#section-3-13.1.1" class="pilcrow">¶</a></p>
+<p id="section-3-11"><strong>Label Correlation:</strong><a href="#section-3-11" class="pilcrow">¶</a></p>
+<p id="section-3-12">Labels are correlated by equality of label names across Signature-Input, Signature, and Signature-Key. Signature-Key is a dictionary keyed by label; Signature-Input and Signature are the sources of what signatures are present; Signature-Key provides keying material for those labels.<a href="#section-3-12" class="pilcrow">¶</a></p>
+<p id="section-3-13">Verifiers MUST:<a href="#section-3-13" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-3-14">
+<li id="section-3-14.1">
+          <p id="section-3-14.1.1">Parse Signature-Input and Signature per RFC 9421 and obtain the set of signature labels present. The verifier determines which labels it is attempting to verify based on application context and RFC 9421 processing.<a href="#section-3-14.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-3-13.2">
-          <p id="section-3-13.2.1">Parse Signature-Key as a Structured Fields Dictionary<a href="#section-3-13.2.1" class="pilcrow">¶</a></p>
+        <li id="section-3-14.2">
+          <p id="section-3-14.2.1">Parse Signature-Key as a Structured Fields Dictionary<a href="#section-3-14.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-3-13.3">
-          <p id="section-3-13.3.1">For each label being verified, select the Signature-Key dictionary member with the same name<a href="#section-3-13.3.1" class="pilcrow">¶</a></p>
+        <li id="section-3-14.3">
+          <p id="section-3-14.3.1">For each label being verified, select the Signature-Key dictionary member with the same name<a href="#section-3-14.3.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-3-13.4">
-          <p id="section-3-13.4.1">If the Signature-Key header is present and the verifier is attempting to verify a label using it, but the corresponding dictionary member is missing, verification for that signature MUST fail<a href="#section-3-13.4.1" class="pilcrow">¶</a></p>
+        <li id="section-3-14.4">
+          <p id="section-3-14.4.1">If the Signature-Key header is present and the verifier is attempting to verify a label using it, but the corresponding dictionary member is missing, verification for that signature MUST fail<a href="#section-3-14.4.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
-<blockquote id="section-3-14">
-        <p id="section-3-14.1"><strong>Note:</strong> A verifier might choose to verify only a subset of labels present (e.g., the application-required signature); labels not verified can be ignored.<a href="#section-3-14.1" class="pilcrow">¶</a></p>
+<blockquote id="section-3-15">
+        <p id="section-3-15.1"><strong>Note:</strong> A verifier might choose to verify only a subset of labels present (e.g., the application-required signature); labels not verified can be ignored.<a href="#section-3-15.1" class="pilcrow">¶</a></p>
 </blockquote>
-<p id="section-3-15">Signatures whose keys are distributed through mechanisms outside this specification (e.g., pre-configured keys, out-of-band key exchange) are out of scope. A Signature-Key header is not required for such signatures, and verifiers MAY use application-specific means to obtain the verification key.<a href="#section-3-15" class="pilcrow">¶</a></p>
+<p id="section-3-16">Signatures whose keys are distributed through mechanisms outside this specification (e.g., pre-configured keys, out-of-band key exchange) are out of scope. A Signature-Key header is not required for such signatures, and verifiers MAY use application-specific means to obtain the verification key.<a href="#section-3-16" class="pilcrow">¶</a></p>
 <div id="label-consistency">
 <section id="section-3.1">
         <h3 id="name-label-consistency">
@@ -1579,11 +1580,11 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
 <a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-algorithm-determination" class="section-name selfRef">Algorithm Determination</a>
         </h3>
 <p id="section-3.3-1">Several schemes in this document convey or reference a JSON Web Key <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>. For any such JWK, the signature algorithm MUST be fully determined by the key, meaning the JWK carries an <code>alg</code> member whose value is a fully-specified algorithm identifier: one that determines the signature operation completely, including curve and hash where applicable. A verifier MUST reject a JWK whose <code>alg</code> member is absent or whose <code>alg</code> is a polymorphic identifier, and MUST NOT select an algorithm for it by inspecting other key parameters. This requirement applies identically regardless of how the JWK was obtained.<a href="#section-3.3-1" class="pilcrow">¶</a></p>
-<p id="section-3.3-2">Algorithm identifiers in this document are values from the "JSON Web Signature and Encryption Algorithms" registry established by <span>[<a href="#RFC7518" class="cite xref">RFC7518</a>]</span>. This document uses the JOSE signing algorithms of <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 3.3.7, under which the signature base is used directly as the JWS Signing Input, the JOSE header is not used, and the algorithm is signaled by the key rather than on the wire. That section states that JWA values are not registered in the HTTP Signature Algorithms registry (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 6.2), and that the <code>alg</code> signature parameter is not used at all with JOSE signing algorithms. This document therefore does not use that registry; see <a href="#algorithm-selection" class="auto internal xref">Section 7.4</a>.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
+<p id="section-3.3-2">Algorithm identifiers in this document are values from the IANA "JSON Web Signature and Encryption Algorithms" registry <span>[<a href="#IANA.JOSE.Algorithms" class="cite xref">IANA.JOSE.Algorithms</a>]</span>, established by <span>[<a href="#RFC7518" class="cite xref">RFC7518</a>]</span> and extended since. This document uses the JOSE signing algorithms of <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 3.3.7: the signature base is the JWS Signing Input, no JOSE header is used, and the key signals the algorithm rather than the wire. That section states that JWA values are not registered in the HTTP Signature Algorithms registry (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 6.2), and that the <code>alg</code> signature parameter is not used at all with JOSE signing algorithms. This document therefore does not use that registry; see <a href="#algorithm-selection" class="auto internal xref">Section 7.4</a>.<a href="#section-3.3-2" class="pilcrow">¶</a></p>
 <p id="section-3.3-3">In particular:<a href="#section-3.3-3" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3.3-4.1">
-            <p id="section-3.3-4.1.1">The <code>none</code> algorithm MUST NOT be used, nor any algorithm whose JOSE Implementation Requirement is <code>Prohibited</code>. <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 3.3.7 requires this of any JWS algorithm used for an HTTP Message Signature.<a href="#section-3.3-4.1.1" class="pilcrow">¶</a></p>
+            <p id="section-3.3-4.1.1">The <code>none</code> algorithm MUST NOT be used, nor any algorithm whose JOSE Implementation Requirement is <code>Prohibited</code>. <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 3.3.7 requires this of any JWS algorithm used for an HTTP Message Signature. A server MUST NOT list such an algorithm in <code>Accept-Signature-Alg</code> (<a href="#accept-signature-alg" class="auto internal xref">Section 4.2</a>); listing <code>none</code> would advertise that the server takes an unsigned request for a signed one.<a href="#section-3.3-4.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.3-4.2">
             <p id="section-3.3-4.2.1">The polymorphic <code>EdDSA</code> identifier MUST NOT be used. Use the fully-specified <code>Ed25519</code> or <code>Ed448</code> identifiers registered by <span>[<a href="#RFC9864" class="cite xref">RFC9864</a>]</span> instead.<a href="#section-3.3-4.2.1" class="pilcrow">¶</a></p>
@@ -1606,9 +1607,9 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
 <p id="section-3.3-10">A JWK also carries key-structure members: <code>kty</code>, which <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span> requires, and <code>crv</code> where the key type has one. Because a fully-specified <code>alg</code> determines the key type and the curve, these members are redundant with it. They remain present, since the schemes in this document convey ordinary JWKs, and the redundancy is used as a check rather than ignored: a verifier MUST verify that <code>kty</code> and, where present, <code>crv</code> are consistent with <code>alg</code>, and MUST reject the key if they are not. A JWK with an <code>alg</code> of <code>ES256</code> and a <code>kty</code> of <code>RSA</code> is inconsistent and MUST be rejected, as is one with an <code>alg</code> of <code>ES256</code> and a <code>crv</code> of <code>P-384</code>. Rejecting on disagreement prevents a key from being used under either of two conflicting interpretations.<a href="#section-3.3-10" class="pilcrow">¶</a></p>
 <p id="section-3.3-11">Post-quantum signature algorithms are accommodated by this rule without special treatment. For example, the ML-DSA identifiers <code>ML-DSA-44</code>, <code>ML-DSA-65</code>, and <code>ML-DSA-87</code> registered by <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span> are fully specified and are used directly as the JWK <code>alg</code> value. The requirement is algorithm-agnostic and accommodates additional post-quantum and hybrid algorithms as they are registered.<a href="#section-3.3-11" class="pilcrow">¶</a></p>
 <p id="section-3.3-12">A verifier that encounters a JWK whose <code>kty</code> it does not implement, including the <code>AKP</code> key type defined by <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span> for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via <code>unsupported_algorithm</code> (<a href="#unsupported_algorithm" class="auto internal xref">Section 5.4.1</a>). Absence of support for a key type is a reason to decline, not a parsing failure.<a href="#section-3.3-12" class="pilcrow">¶</a></p>
-<p id="section-3.3-13">The rules above apply to the key a scheme resolves to, and to that key alone. A JWKS may contain keys a verifier cannot use, including keys whose <code>kty</code> or <code>alg</code> it does not implement. A verifier resolving a key from a JWKS MUST select the member matching <code>kid</code> without requiring that any other member be usable, and MUST NOT fail because a member it did not select names an unimplemented <code>kty</code> or <code>alg</code>.<a href="#section-3.3-13" class="pilcrow">¶</a></p>
-<p id="section-3.3-14">This is what allows a signer to introduce a new algorithm at all. An issuer adding a post-quantum key alongside a classical one would otherwise break every verifier that does not implement the new key type, including verifiers that were only ever going to use the classical key. The accommodation for unimplemented key types above would then be unreachable in deployment: no issuer could publish such a key without breaking the deployed base, so no verifier would ever meet one.<a href="#section-3.3-14" class="pilcrow">¶</a></p>
-<p id="section-3.3-15">Within a single JWK, a member a verifier does not understand is ignored, as <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>, Section 4 requires of any JWK. That is distinct from a member this document forbids, such as <code>kid</code> in the hwk scheme (<a href="#header-web-key-hwk" class="auto internal xref">Section 3.4</a>): a forbidden member is understood and rejected, not unknown and ignored.<a href="#section-3.3-15" class="pilcrow">¶</a></p>
+<p id="section-3.3-13">The rules above apply to the key a scheme resolves to and to that key alone. A JWKS may hold keys a verifier cannot use. A verifier MUST select the member matching <code>kid</code> without requiring any other member to be usable, and MUST NOT fail because an unselected member names a <code>kty</code> or <code>alg</code> it does not implement.<a href="#section-3.3-13" class="pilcrow">¶</a></p>
+<p id="section-3.3-14">Without this rule no signer could introduce a new algorithm: an issuer adding a post-quantum key alongside a classical one would break every verifier that does not implement the new type, including those that were only ever going to use the classical key. The accommodation above would never be reached in deployment, because no issuer could afford to publish such a key.<a href="#section-3.3-14" class="pilcrow">¶</a></p>
+<p id="section-3.3-15">Within a single JWK, a member a verifier does not understand is ignored, as <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>, Section 4 requires. A member this document forbids, such as <code>kid</code> in the hwk scheme (<a href="#header-web-key-hwk" class="auto internal xref">Section 3.4</a>), is different: it is understood and rejected, not unknown and ignored.<a href="#section-3.3-15" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="header-web-key-hwk">
@@ -1731,7 +1732,7 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
             <p id="section-3.5-7.1.1"><code>jwt</code> (REQUIRED, String) - Compact-serialized JWT<a href="#section-3.5-7.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.5-7.2">
-            <p id="section-3.5-7.2.1"><code>cache</code> (OPTIONAL, Boolean) - As for the jwt scheme (<a href="#jwt-confirmation-key-jwt" class="auto internal xref">Section 3.8</a>): the caller indicates it can present a cache identifier on subsequent requests and requests that the verifier issue one. A JWT presented with <code>cache</code> MUST contain a <code>jti</code> claim. See <a href="#signature-key-cache-response-header" class="auto internal xref">Section 6</a>.<a href="#section-3.5-7.2.1" class="pilcrow">¶</a></p>
+            <p id="section-3.5-7.2.1"><code>cache</code> (OPTIONAL, Boolean) - As for the jwt scheme (<a href="#jwt-confirmation-key-jwt" class="auto internal xref">Section 3.8</a>): the caller indicates it can present a cache identifier on subsequent requests, using the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 3.11</a>), and requests that the verifier issue one. A JWT presented with <code>cache</code> MUST contain a <code>jti</code> claim. See <a href="#signature-key-cache-response-header" class="auto internal xref">Section 6</a>.<a href="#section-3.5-7.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-3.5-8"><strong>JWT requirements:</strong><a href="#section-3.5-8" class="pilcrow">¶</a></p>
@@ -1881,7 +1882,7 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
 </li>
         </ol>
 <p id="section-3.5-30"><strong>Caching:</strong><a href="#section-3.5-30" class="pilcrow">¶</a></p>
-<p id="section-3.5-31">Caching (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 6</a>) removes an assertion's transmission and verification cost from the steady state, and the saving grows with the size of the keys and signatures the assertion carries (<a href="#pqc-sizes" class="auto internal xref">Section 7.7</a>). This applies to any cacheable assertion, not only to jkt-jwt. What is specific to jkt-jwt is that the assertion carries a public key in its header and is signed by that key, so caching it also removes the thumbprint computation and the verification of that signature, which the jwt scheme does not perform. The per-request signature continues to use the ephemeral <code>cnf.jwk</code> key.<a href="#section-3.5-31" class="pilcrow">¶</a></p>
+<p id="section-3.5-31">Caching — the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 3.11</a>) together with the <code>Signature-Key-Cache</code> response header (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 6</a>) — keeps an assertion off the wire in the steady state, and the saving grows with the size of the keys and signatures the assertion carries (<a href="#pqc-sizes" class="auto internal xref">Section 7.7</a>). This applies to any cacheable assertion, not only to jkt-jwt. What is specific to jkt-jwt is that the assertion carries a public key in its header and is signed by that key, so caching it also removes the thumbprint computation and the verification of that signature, which the jwt scheme does not perform. That part of the saving is small, since post-quantum verification is comparable to classical; the bytes are the reason to cache. The per-request signature continues to use the ephemeral <code>cnf.jwk</code> key.<a href="#section-3.5-31" class="pilcrow">¶</a></p>
 <p id="section-3.5-32"><strong>Use cases:</strong><a href="#section-3.5-32" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-3.5-33.1">
@@ -1992,16 +1993,14 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
 </div>
 <p id="section-3.7-9"><strong>Identifier semantics:</strong><a href="#section-3.7-9" class="pilcrow">¶</a></p>
 <p id="section-3.7-10">Under the jwks scheme the signer's identity is the JWKS URL itself. A verifier that allowlists or policies by identity is doing so against <code>url</code>. Because identity and key location are the same string, moving the JWKS to a different URL changes the signer's identity. Signers that need identity to remain stable while key location changes independently should use the jwks_uri scheme (<a href="#jwks-uri-scheme" class="auto internal xref">Section 3.6</a>), whose indirection exists for that purpose (see <a href="#why-jwks-uri" class="auto internal xref">Appendix A.1</a>). The jwks scheme trades that decoupling for a single fetch and zero configuration.<a href="#section-3.7-10" class="pilcrow">¶</a></p>
-<p id="section-3.7-11"><strong>Use cases:</strong><a href="#section-3.7-11" class="pilcrow">¶</a></p>
+<p id="section-3.7-11">The <code>url</code> is compared as presented, by byte equality of the String value: a verifier MUST NOT canonicalize or normalize it before comparison. No case folding, percent-encoding normalization, dot-segment removal, or addition or removal of a default port is applied, and two values that differ in any byte name different identities. A signer MUST present the same bytes on every request for which it intends the same identity. This is the comparison rule of an identifier, not of a location: canonicalization would let several spellings collapse into one identity under rules that differ across implementations, which is exactly the disagreement an identifier comparison must not admit.<a href="#section-3.7-11" class="pilcrow">¶</a></p>
+<p id="section-3.7-12"><strong>Use cases:</strong><a href="#section-3.7-12" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-3.7-12.1">
-            <p id="section-3.7-12.1.1">Signers that want a self-describing identifier with no metadata to host<a href="#section-3.7-12.1.1" class="pilcrow">¶</a></p>
+<li class="normal" id="section-3.7-13.1">
+            <p id="section-3.7-13.1.1">Signers that want a self-describing identifier with no metadata to host<a href="#section-3.7-13.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li class="normal" id="section-3.7-12.2">
-            <p id="section-3.7-12.2.1">Deployments where the JWKS URL is an acceptable stable identity<a href="#section-3.7-12.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li class="normal" id="section-3.7-12.3">
-            <p id="section-3.7-12.3.1">Single-hop verification where discovery indirection is unnecessary<a href="#section-3.7-12.3.1" class="pilcrow">¶</a></p>
+          <li class="normal" id="section-3.7-13.2">
+            <p id="section-3.7-13.2.1">Deployments where the JWKS URL is an acceptable stable identity<a href="#section-3.7-13.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 </section>
@@ -2018,7 +2017,7 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
             <p id="section-3.8-3.1.1"><code>jwt</code> (REQUIRED, String) - Compact-serialized JWT<a href="#section-3.8-3.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.8-3.2">
-            <p id="section-3.8-3.2.1"><code>cache</code> (OPTIONAL, Boolean) - When true, the caller indicates it can present a cache identifier on subsequent requests and requests that the verifier issue one. Absent means the caller does not want one. Boolean true is indicated by omitting the value (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 4.1.1.2), so the parameter is serialized as <code>cache</code> rather than <code>cache=?1</code>. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. A JWT presented with <code>cache</code> MUST contain a <code>jti</code> claim (<span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span>, Section 4.1.7); a verifier MUST NOT issue a cache identifier for a JWT without one. See <a href="#signature-key-cache-response-header" class="auto internal xref">Section 6</a>.<a href="#section-3.8-3.2.1" class="pilcrow">¶</a></p>
+            <p id="section-3.8-3.2.1"><code>cache</code> (OPTIONAL, Boolean) - When true, the caller indicates it can present a cache identifier on subsequent requests, using the cached scheme (<a href="#cached-scheme" class="auto internal xref">Section 3.11</a>), and requests that the verifier issue one. Absent means the caller does not want one. Boolean true is indicated by omitting the value (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 4.1.1.2), so the parameter is serialized as <code>cache</code> rather than <code>cache=?1</code>. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. A JWT presented with <code>cache</code> MUST contain a <code>jti</code> claim (<span>[<a href="#RFC7519" class="cite xref">RFC7519</a>]</span>, Section 4.1.7); a verifier MUST NOT issue a cache identifier for a JWT without one. See <a href="#signature-key-cache-response-header" class="auto internal xref">Section 6</a>.<a href="#section-3.8-3.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <div class="alignLeft art-text artwork" id="section-3.8-4">
@@ -2044,7 +2043,7 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
             <p id="section-3.8-6.5.1">SHOULD contain standard claims: <code>sub</code>, <code>iat</code><a href="#section-3.8-6.5.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-3.8-6.6">
-            <p id="section-3.8-6.6.1">Verifiers MAY verify the JWT <code>typ</code> header parameter has an expected value per deployment policy, to optimize for a quick rejection<a href="#section-3.8-6.6.1" class="pilcrow">¶</a></p>
+            <p id="section-3.8-6.6.1">Verifiers SHOULD verify the JWT <code>typ</code> header parameter has an expected value per deployment policy, following the explicit-typing guidance of <span>[<a href="#RFC8725" class="cite xref">RFC8725</a>]</span>, Section 3.11. The check is a defence against token confusion — an assertion minted for one context being accepted in another — and also rejects a wrong token before any cryptographic work.<a href="#section-3.8-6.6.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <blockquote id="section-3.8-7">
@@ -2151,9 +2150,9 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
             <p id="section-3.9-5.6.1">SHOULD contain standard claims: <code>sub</code>, <code>aud</code>, <code>iat</code><a href="#section-3.9-5.6.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
-<p id="section-3.9-6">The self-jwt scheme does not support the <code>cache</code> parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. Assertion caching resolves a cache identifier to an assertion and takes the confirmation key from it (<a href="#cached-scheme" class="auto internal xref">Section 3.11</a>); a self-jwt has no <code>cnf</code> claim, and its signing key is discovered from the issuer's JWKS rather than carried in the assertion, so there is no key to recover by resolution alone. A self-jwt is also small, carrying no embedded key, and typically carries claims specific to the request it accompanies, so there is little to be saved by referencing it instead of sending it.<a href="#section-3.9-6" class="pilcrow">¶</a></p>
+<p id="section-3.9-6">The self-jwt scheme does not support the <code>cache</code> parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. A self-jwt embeds no key: its signing key is the confirmation key and is discovered from the issuer's JWKS by <code>iss</code> and <code>kid</code>. That key is already cacheable on those two values (<a href="#caching-and-performance" class="auto internal xref">Section 7.2</a>), so caching the assertion in addition would save only the assertion's own bytes, of which there are few. A self-jwt also typically carries claims specific to the request it accompanies, so a cached copy would be stale for the next request rather than reusable.<a href="#section-3.9-6" class="pilcrow">¶</a></p>
 <ul class="compact">
-<li class="compact" id="section-3.9-7.1">Verifiers MAY verify the JWT <code>typ</code> header parameter has an expected value per deployment policy, to optimize for a quick rejection<a href="#section-3.9-7.1" class="pilcrow">¶</a>
+<li class="compact" id="section-3.9-7.1">Verifiers SHOULD verify the JWT <code>typ</code> header parameter has an expected value per deployment policy, following the explicit-typing guidance of <span>[<a href="#RFC8725" class="cite xref">RFC8725</a>]</span>, Section 3.11. The check is a defence against token confusion — an assertion minted for one context being accepted in another — and also rejects a wrong token before any cryptographic work.<a href="#section-3.9-7.1" class="pilcrow">¶</a>
 </li>
         </ul>
 <blockquote id="section-3.9-8">
@@ -2341,9 +2340,9 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
 
 </pre><a href="#section-4.1-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-3">Order is significant: a server SHOULD list schemes in descending order of preference, and a client SHOULD choose the earliest listed scheme it can satisfy. A client MUST NOT treat the order as a requirement; any listed scheme is acceptable.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1-3">Order carries the server's preference: a server SHOULD list schemes in descending order of preference. A client MAY choose any listed scheme it can satisfy, and the order does not bind it. The preference is an operational convenience for the server, while the choice of scheme decides whether the signer stays pseudonymous or is identified (<a href="#pseudonymity-vs-identity" class="auto internal xref">Section 8.1</a>). A client that would be identified under the server's first preference and pseudonymous under its second is entitled to take the second.<a href="#section-4.1-3" class="pilcrow">¶</a></p>
 <p id="section-4.1-4">A client MUST ignore tokens it does not recognize, so that a server may list schemes registered after the client was written without breaking it. A client that recognizes no listed scheme SHOULD NOT sign the request, since no scheme it can produce will be accepted.<a href="#section-4.1-4" class="pilcrow">¶</a></p>
-<p id="section-4.1-5">Listing the <code>cached</code> scheme (<a href="#cached-scheme" class="auto internal xref">Section 3.11</a>) states that the server implements assertion caching. A client that sees it can set the <code>cache</code> signal (<a href="#jwt-confirmation-key-jwt" class="auto internal xref">Section 3.8</a>) on its first request rather than probing.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
+<p id="section-4.1-5">Listing the <code>cached</code> scheme (<a href="#cached-scheme" class="auto internal xref">Section 3.11</a>) states that the server implements assertion caching. A client that sees it can set the <code>cache</code> signal (<a href="#jwt-confirmation-key-jwt" class="auto internal xref">Section 3.8</a>, <a href="#jkt-jwt-scheme" class="auto internal xref">Section 3.5</a>) on its first request rather than probing. <code>cached</code> is a capability announcement rather than a scheme a client can choose to present: a client MUST NOT present it until a verifier has issued it a cache identifier, whatever the list order. A server that lists <code>cached</code> first is stating a preference for the steady state, not for the first request, and the client selects any scheme it can satisfy from the remainder.<a href="#section-4.1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="accept-signature-alg">
@@ -2351,15 +2350,16 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
         <h3 id="name-accept-signature-alg">
 <a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-accept-signature-alg" class="section-name selfRef">Accept-Signature-Alg</a>
         </h3>
-<p id="section-4.2-1"><code>Accept-Signature-Alg</code> is a List (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 3.1) of Tokens, each a fully-specified identifier from the "JSON Web Signature and Encryption Algorithms" registry (<span>[<a href="#RFC7518" class="cite xref">RFC7518</a>]</span>), the same identifiers a conveyed key carries in its <code>alg</code> member (<a href="#algorithm-determination" class="auto internal xref">Section 3.3</a>). It states the signature algorithms the server accepts. Naming them in the same registry the key uses is what lets a client compare what a server accepts against the keys it holds.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2-1"><code>Accept-Signature-Alg</code> is a List (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 3.1) of Tokens, each a fully-specified identifier from the IANA "JSON Web Signature and Encryption Algorithms" registry <span>[<a href="#IANA.JOSE.Algorithms" class="cite xref">IANA.JOSE.Algorithms</a>]</span> — the same identifiers a conveyed key carries in its <code>alg</code> member (<a href="#algorithm-determination" class="auto internal xref">Section 3.3</a>), and not those of the HTTP Signature Algorithms registry, which this document does not use (<a href="#algorithm-selection" class="auto internal xref">Section 7.4</a>). It states the signature algorithms the server accepts. Using the registry the key uses is what lets a client compare what a server accepts against the keys it holds.<a href="#section-4.2-1" class="pilcrow">¶</a></p>
 <div class="lang-http sourcecode" id="section-4.2-2">
 <pre>Accept-Signature-Alg: Ed25519, ES256
 
 </pre><a href="#section-4.2-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.2-3">Order, unknown-token handling, and the no-recognized-value case are as for <code>Accept-Signature-Scheme</code>.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
-<p id="section-4.2-4">Because a fully-specified algorithm identifier determines the key type and curve (<a href="#algorithm-determination" class="auto internal xref">Section 3.3</a>), this list also tells the client which keys are usable, and so which key to generate or select when it holds more than one.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
-<p id="section-4.2-5"><code>Accept-Signature-Alg</code> states what the server accepts. The <code>alg</code> parameter of <code>Accept-Signature</code> (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5.1) requests one specific algorithm for a specific signature label. Where both are present, <code>alg</code> is the more specific instruction and the client SHOULD honor it; <code>alg</code> SHOULD name a member of <code>Accept-Signature-Alg</code>.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+<p id="section-4.2-3">Each Token is the registered identifier verbatim, including its case: <code>ES256</code>, not <code>es256</code>. Structured Field parsing preserves the case of a Token (<span>[<a href="#RFC8941" class="cite xref">RFC8941</a>]</span>, Section 4.2.6), and the comparison a client performs is against the <code>alg</code> member of a JWK, a case-sensitive JSON string. A case-folded token names no registered algorithm and matches no key.<a href="#section-4.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.2-4">Order, unknown-token handling, and the no-recognized-value case are as for <code>Accept-Signature-Scheme</code>.<a href="#section-4.2-4" class="pilcrow">¶</a></p>
+<p id="section-4.2-5">Because a fully-specified algorithm identifier determines the key type and curve (<a href="#algorithm-determination" class="auto internal xref">Section 3.3</a>), this list also tells the client which keys are usable, and so which key to generate or select when it holds more than one.<a href="#section-4.2-5" class="pilcrow">¶</a></p>
+<p id="section-4.2-6"><code>Accept-Signature-Alg</code> states what the server accepts. The <code>alg</code> parameter of <code>Accept-Signature</code> (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5.1) requests one specific algorithm for a specific signature label, naming it in the HTTP Signature Algorithms registry, which this document does not use (<a href="#algorithm-selection" class="auto internal xref">Section 7.4</a>): under the JOSE signing algorithms the algorithm is signaled by the key, not requested on the wire. A server that sends <code>Accept-Signature-Alg</code> SHOULD NOT send the <code>alg</code> parameter, and a client MAY ignore an <code>alg</code> received alongside <code>Accept-Signature-Alg</code>; the algorithm the client uses is the one its key carries (<a href="#algorithm-determination" class="auto internal xref">Section 3.3</a>).<a href="#section-4.2-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="relationship-to-accept-signature">
@@ -2369,24 +2369,25 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
         </h3>
 <p id="section-4.3-1"><code>Accept-Signature</code> continues to carry what is to be signed: the covered components, and the per-label parameters of <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span> Section 5.1. The two headers defined here carry what the server will accept in the <code>Signature-Key</code> header and in the signature itself. They are independent fields; a response MAY include any combination.<a href="#section-4.3-1" class="pilcrow">¶</a></p>
 <p id="section-4.3-2">Neither header is keyed by signature label. Both state a server-wide capability, which does not vary per signature. A deployment that genuinely requires different schemes for different labels in one multi-signature message is outside what these headers express, and states the requirement in its own protocol.<a href="#section-4.3-2" class="pilcrow">¶</a></p>
-<div class="lang-http sourcecode" id="section-4.3-3">
+<p id="section-4.3-3"><code>Accept-Signature</code> also defines a <code>keyid</code> parameter (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5.1), which asks the signer to use key material the two parties already hold. Where the client is to identify its key through <code>Signature-Key</code>, <code>keyid</code> has nothing left to name: a server SHOULD NOT send it, and a client MAY ignore it. If a signer includes <code>keyid</code> in <code>Signature-Input</code> for a label it also lists in <code>Signature-Key</code>, the two MUST identify the same key, and a verifier verifying that label MUST take the key from <code>Signature-Key</code>.<a href="#section-4.3-3" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-4.3-4">
 <pre>HTTP/1.1 401 Unauthorized
 Accept-Signature: sig1=("@method" "@path" "@authority");created
 Accept-Signature-Scheme: jwks_uri, jwt
 Accept-Signature-Alg: Ed25519
 
-</pre><a href="#section-4.3-3" class="pilcrow">¶</a>
+</pre><a href="#section-4.3-4" class="pilcrow">¶</a>
 </div>
-<p id="section-4.3-4">The client responds with matching labels:<a href="#section-4.3-4" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-4.3-5">
+<p id="section-4.3-5">The client responds with matching labels:<a href="#section-4.3-5" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-4.3-6">
 <pre>Signature-Key: sig1=jwks_uri;id="https://client.example";dwk="example-configuration";kid="key-1"
 Signature-Input: sig1=("@method" "@path" "@authority" "signature-key");
     created=1732210000
 Signature: sig1=:MEQCIA5...:
 
-</pre><a href="#section-4.3-5" class="pilcrow">¶</a>
+</pre><a href="#section-4.3-6" class="pilcrow">¶</a>
 </div>
-<p id="section-4.3-6">The <code>signature-key</code> covered component is added by the client per this specification's requirement that <code>signature-key</code> appear in covered components. The server does not need to list it in <code>Accept-Signature</code>.<a href="#section-4.3-6" class="pilcrow">¶</a></p>
+<p id="section-4.3-7">The <code>signature-key</code> covered component is added by the client per this specification's requirement that <code>signature-key</code> appear in covered components. The server does not need to list it in <code>Accept-Signature</code>.<a href="#section-4.3-7" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="sending-on-errors-and-on-challenges">
@@ -2478,13 +2479,13 @@ Accept-Signature-Alg: ES256
 
 </pre><a href="#section-4.7-2" class="pilcrow">¶</a>
 </div>
-<p id="section-4.7-3">A client that understands both mechanisms distinguishes two cases by the <code>WWW-Authenticate</code> auth-scheme. Because the rule applies only where the client understands the scheme, the client knows what that scheme does.<a href="#section-4.7-3" class="pilcrow">¶</a></p>
+<p id="section-4.7-3">What a client that understands both mechanisms does depends on what the <code>WWW-Authenticate</code> auth-scheme does. Nothing on the wire says which, and this document defines no signal for it, but a client only faces the choice for a scheme it already understands.<a href="#section-4.7-3" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.7-4.1">
-            <p id="section-4.7-4.1.1">Where the challenge is an authentication or authorization challenge, such as <code>Basic</code> or <code>Bearer</code>, the two are alternatives and either satisfies the server. The client MUST sign the request rather than present the credential. A signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it; signing also puts no credential on the wire that the exchange did not require.<a href="#section-4.7-4.1.1" class="pilcrow">¶</a></p>
+            <p id="section-4.7-4.1.1">Where the challenge is an authentication or authorization challenge, such as <code>Basic</code> or <code>Bearer</code>, the two are alternatives. The client SHOULD sign the request rather than present the credential: a signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it, and signing puts no credential on the wire that the exchange did not require. A response carrying both does not assert that the two grant the same access, so a client that needs what only the credential grants MAY present it instead, and a server that is not satisfied by the choice challenges again.<a href="#section-4.7-4.1.1" class="pilcrow">¶</a></p>
 </li>
           <li class="normal" id="section-4.7-4.2">
-            <p id="section-4.7-4.2.1">Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol (<span>[<a href="#I-D.ryan-httpauth-payment" class="cite xref">I-D.ryan-httpauth-payment</a>]</span>), the two are complements and satisfying one does not satisfy the other. The client MUST satisfy both.<a href="#section-4.7-4.2.1" class="pilcrow">¶</a></p>
+            <p id="section-4.7-4.2.1">Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol (<span>[<a href="#I-D.ryan-httpauth-payment" class="cite xref">I-D.ryan-httpauth-payment</a>]</span>), the two are complements: satisfying one does not satisfy the other, and a client that wants the resource satisfies both.<a href="#section-4.7-4.2.1" class="pilcrow">¶</a></p>
 </li>
         </ul>
 <p id="section-4.7-5">A <code>402</code> response MAY include a payment mechanism such as x402 <span>[<a href="#x402" class="cite xref">x402</a>]</span> or the Micropayment Protocol (<span>[<a href="#I-D.ryan-httpauth-payment" class="cite xref">I-D.ryan-httpauth-payment</a>]</span>) alongside a signature challenge. Payment is not authentication, so this is the complementary case and a client satisfies both:<a href="#section-4.7-5" class="pilcrow">¶</a></p>
@@ -2542,7 +2543,7 @@ Accept-Signature-Scheme: hwk
         <h3 id="name-client-processing">
 <a href="#section-4.9" class="section-number selfRef">4.9. </a><a href="#name-client-processing" class="section-name selfRef">Client Processing</a>
         </h3>
-<p id="section-4.9-1">When a client receives a response containing <code>Accept-Signature-Scheme</code> (<a href="#accept-signature-scheme" class="auto internal xref">Section 4.1</a>), it MAY retry the request with an HTTP Message Signature using any listed Signature-Key scheme it can satisfy, preferring the earliest listed.<a href="#section-4.9-1" class="pilcrow">¶</a></p>
+<p id="section-4.9-1">When a client receives a response containing <code>Accept-Signature-Scheme</code> (<a href="#accept-signature-scheme" class="auto internal xref">Section 4.1</a>), it MAY retry the request with an HTTP Message Signature using any listed Signature-Key scheme it can satisfy.<a href="#section-4.9-1" class="pilcrow">¶</a></p>
 <p id="section-4.9-2"><span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span> Section 5.2 defines the processing of <code>Accept-Signature</code> by the client. A client MAY ignore <code>Accept-Signature-Scheme</code> and <code>Accept-Signature-Alg</code>, and MUST ignore tokens within them that it does not recognize.<a href="#section-4.9-2" class="pilcrow">¶</a></p>
 <p id="section-4.9-3">If a client already knows which schemes and algorithms the server accepts (from a previous interaction or metadata), it MAY sign the initial request directly without waiting for a challenge response.<a href="#section-4.9-3" class="pilcrow">¶</a></p>
 <p id="section-4.9-4">A conforming verifier, when presented with a well-formed request bearing an unknown or unregistered scheme, returns <code>unsupported_scheme</code> and an <code>Accept-Signature-Scheme</code> header naming what it accepts. This exercises the unknown-scheme path as a matter of defined behavior.<a href="#section-4.9-4" class="pilcrow">¶</a></p>
@@ -2605,7 +2606,7 @@ Accept-Signature-Scheme: hwk
         <h3 id="name-access-denied">
 <a href="#section-5.3" class="section-number selfRef">5.3. </a><a href="#name-access-denied" class="section-name selfRef">Access Denied</a>
         </h3>
-<p id="section-5.3-1">When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns <code>403 Forbidden</code>. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an <code>Accept-Signature-Scheme</code> header or a <code>Signature-Error</code> header.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
+<p id="section-5.3-1">When the server successfully verifies the client's signature and identity but denies access based on policy (e.g., the client is not authorized for this resource), the server returns <code>403 Forbidden</code>. This is not a signature error — the authentication succeeded but authorization was denied. The response MUST NOT include an <code>Accept-Signature-Scheme</code> header, an <code>Accept-Signature-Alg</code> header, or a <code>Signature-Error</code> header.<a href="#section-5.3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="error-codes">
@@ -2805,7 +2806,7 @@ Accept-Signature-Scheme: jwks_uri, jwt
 </pre><a href="#section-6-15" class="pilcrow">¶</a>
 </div>
 <p id="section-6-16">Each request is signed as usual, and <code>signature-key</code> remains a covered component, so the cache identifier is signed over on every request that carries it.<a href="#section-6-16" class="pilcrow">¶</a></p>
-<p id="section-6-17">The cache identifier's validity never exceeds the cached assertion's expiry. Presenting a cache identifier for an assertion that has expired is not a cache condition; the verifier resolves it and the assertion then fails validation exactly as an expired assertion presented in full would.<a href="#section-6-17" class="pilcrow">¶</a></p>
+<p id="section-6-17">The cache identifier's validity never exceeds the cached assertion's expiry. Two expiries are therefore in play and MUST NOT be confused. The cache entry's expiry is the verifier's own retention decision; the assertion's expiry is a property of the assertion. A verifier that still holds the entry MUST resolve it and let the assertion fail validation (<a href="#presenting-and-resolving-a-cached-assertion" class="auto internal xref">Section 6.1</a>), exactly as an expired assertion presented in full would, rather than reporting <code>cache_miss</code>. A verifier that has already evicted the entry returns <code>cache_miss</code>, which is correct: it no longer holds the assertion and cannot say why the assertion would have been rejected. The caller resends in full and receives the validation error.<a href="#section-6-17" class="pilcrow">¶</a></p>
 <div id="presenting-and-resolving-a-cached-assertion">
 <section id="section-6.1">
         <h3 id="name-presenting-and-resolving-a-">
@@ -2814,7 +2815,7 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <p id="section-6.1-1">A receiver processes a request bearing the cached scheme in two stages, which MUST remain distinct:<a href="#section-6.1-1" class="pilcrow">¶</a></p>
 <ol start="1" type="1" class="normal type-1" id="section-6.1-2">
 <li id="section-6.1-2.1">
-            <p id="section-6.1-2.1.1">Resolution. The signature-verification layer resolves the cache identifier to the cached assertion. If it is unknown, expired from the cache, or (for a self-contained identifier) fails integrity or decryption, resolution fails and the verifier returns <code>cache_miss</code> (<a href="#cache_miss" class="auto internal xref">Section 5.4.3</a>). On success, the verifier obtains the assertion and its confirmation key and verifies the per-request signature against that key. This stage answers cache hit or cache miss.<a href="#section-6.1-2.1.1" class="pilcrow">¶</a></p>
+            <p id="section-6.1-2.1.1">Resolution. The signature-verification layer resolves the cache identifier to the cached assertion. If it is unknown, has been evicted, including at the cache entry's own expiry, or (for a self-contained identifier) fails integrity or decryption, resolution fails and the verifier returns <code>cache_miss</code> (<a href="#cache_miss" class="auto internal xref">Section 5.4.3</a>). On success, the verifier obtains the assertion and its confirmation key and verifies the per-request signature against that key. This stage answers cache hit or cache miss.<a href="#section-6.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
           <li id="section-6.1-2.2">
             <p id="section-6.1-2.2.1">Validation. The resolved assertion is validated by the consuming authorization layer identically to an assertion presented in full, including expiry and any other claim checks. Resolution by cache identifier does not move, replace, or defer this validation. This stage answers valid or invalid, and an expired assertion here produces the same error as an expired assertion presented in full.<a href="#section-6.1-2.2.1" class="pilcrow">¶</a></p>
@@ -2971,7 +2972,8 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <p id="section-7.6-2">A verifier MUST NOT treat successful resolution as authentication. Resolution answers only which assertion was referenced. The caller is authenticated by the per-request signature, which the verifier MUST verify against the confirmation key carried in the resolved assertion, exactly as it would had the assertion been presented in full. A caller presenting a cache identifier it did not receive therefore fails signature verification, because it does not hold the corresponding private key. No separate check that the assertion belongs to the caller is required, or possible: possession of the confirmation key is that proof.<a href="#section-7.6-2" class="pilcrow">¶</a></p>
 <p id="section-7.6-3">Cache identifiers MUST be unpredictable to any party other than the verifier. A guessable identifier does not by itself permit impersonation, since the request signature must still verify against the resolved assertion's confirmation key. It does allow an unrelated party to distinguish a cache miss from a signature failure and so learn whether a verifier currently holds a given assertion, and it removes the second line of defence against a verifier that resolves without verifying. An identifier is a lookup key supplied by a remote party and is untrusted input to the cache.<a href="#section-7.6-3" class="pilcrow">¶</a></p>
 <p id="section-7.6-4">A cache identifier is a stable reference to one assertion and is therefore a correlator across the requests that use it, for the life of the assertion, in the same way that a repeated <code>ETag</code> or session ticket is. It is a fingerprinting surface, but not a new one: it replaces an assertion that carries the confirmation key itself, and a repeated key is at least as strong a correlator as a repeated identifier. Any party that can observe the identifier could have observed the assertion it stands in for. The exposure is therefore bounded above by what the assertion already discloses, and it is bounded below only by the identifier's lifetime: a verifier concerned with correlation by intermediaries MAY issue and rotate distinct identifiers for the same assertion, which the caller cannot detect and need not act on, since it presents whatever it was last issued.<a href="#section-7.6-4" class="pilcrow">¶</a></p>
-<p id="section-7.6-5">A self-contained cache identifier carries verifier state to itself across a fleet. Such an identifier MUST be integrity-protected and encrypted under keys known only to the verifier fleet, so that it cannot be forged or read by any other party, and one that fails integrity or decryption MUST be treated as a cache miss (<a href="#cache_miss" class="auto internal xref">Section 5.4.3</a>).<a href="#section-7.6-5" class="pilcrow">¶</a></p>
+<p id="section-7.6-5">Assertion caching lets a caller create verifier-side state at will. Nothing bounds how many distinct assertions it presents with <code>cache</code>, and a self-issued scheme such as jkt-jwt can mint a fresh <code>jti</code>, and so a fresh cache entry, on every request. The cache limits required by <a href="#caching-and-performance" class="auto internal xref">Section 7.2</a> apply to assertion caching, and a verifier SHOULD bound entries per confirmation key rather than only in aggregate, so that one caller cannot evict every other caller's entries. A verifier is never obliged to issue a cache identifier: <code>cache</code> is a request, not an instruction.<a href="#section-7.6-5" class="pilcrow">¶</a></p>
+<p id="section-7.6-6">A self-contained cache identifier carries verifier state to itself across a fleet. Such an identifier MUST be integrity-protected and encrypted under keys known only to the verifier fleet, so that it cannot be forged or read by any other party, and one that fails integrity or decryption MUST be treated as a cache miss (<a href="#cache_miss" class="auto internal xref">Section 5.4.3</a>).<a href="#section-7.6-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="pqc-sizes">
@@ -3362,7 +3364,7 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <ul class="compact">
 <li class="compact" id="section-9.5-8.1">The error code is a lowercase token using only lowercase letters and underscore, consistent with the registry's existing entries.<a href="#section-9.5-8.1" class="pilcrow">¶</a>
 </li>
-          <li class="compact" id="section-9.5-8.2">The error condition is broadly applicable to HTTP message signature verification rather than specific to a single application.<a href="#section-9.5-8.2" class="pilcrow">¶</a>
+          <li class="compact" id="section-9.5-8.2">The error condition is broadly applicable to signed HTTP message exchanges rather than specific to a single application. The condition need not be a signature verification failure; it may concern any part of the exchange the verifier rejects, as <code>invalid_request</code> does.<a href="#section-9.5-8.2" class="pilcrow">¶</a>
 </li>
           <li class="compact" id="section-9.5-8.3">The description makes clear when a verifier generates the error, and the error does not leak sensitive information to unauthenticated callers.<a href="#section-9.5-8.3" class="pilcrow">¶</a>
 </li>
@@ -3398,9 +3400,9 @@ Accept-Signature-Scheme: jwks_uri, jwt
 </li>
         <li class="compact" id="section-10-5.7">Forbade symmetric algorithms: the <code>oct</code> key type and the JOSE MAC identifiers. Every scheme here distributes a public key, and a shared secret handed to the verifier proves nothing.<a href="#section-10-5.7" class="pilcrow">¶</a>
 </li>
-        <li class="compact" id="section-10-5.8">Forbade the <code>none</code> algorithm and any algorithm whose JOSE Implementation Requirement is <code>Prohibited</code>, as <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 3.3.7 requires of a JWS algorithm used for an HTTP Message Signature.<a href="#section-10-5.8" class="pilcrow">¶</a>
+        <li class="compact" id="section-10-5.8">Forbade the <code>none</code> algorithm and any algorithm whose JOSE Implementation Requirement is <code>Prohibited</code>, as <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 3.3.7 requires of a JWS algorithm used for an HTTP Message Signature. Gave the rule its response-side half: a server MUST NOT list such an algorithm in <code>Accept-Signature-Alg</code>, which would otherwise advertise that it accepts unsigned requests as signed.<a href="#section-10-5.8" class="pilcrow">¶</a>
 </li>
-        <li class="compact" id="section-10-5.9">Named the registry these identifiers come from: the "JSON Web Signature and Encryption Algorithms" registry of <span>[<a href="#RFC7518" class="cite xref">RFC7518</a>]</span>. This document uses the JOSE signing algorithms of <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 3.3.7 and does not use the HTTP Signature Algorithms registry.<a href="#section-10-5.9" class="pilcrow">¶</a>
+        <li class="compact" id="section-10-5.9">Named the registry these identifiers come from, citing the IANA "JSON Web Signature and Encryption Algorithms" registry itself rather than <span>[<a href="#RFC7518" class="cite xref">RFC7518</a>]</span>, which established it but no longer holds all of it. This document uses the JOSE signing algorithms of <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 3.3.7 and does not use the HTTP Signature Algorithms registry.<a href="#section-10-5.9" class="pilcrow">¶</a>
 </li>
         <li class="compact" id="section-10-5.10">Corrected <code>Accept-Signature-Alg</code> to carry identifiers from that same JOSE registry rather than from the HTTP Signature Algorithms registry. A server has to advertise algorithms in the namespace a conveyed key uses, or a client cannot compare what the server accepts against the keys it holds.<a href="#section-10-5.10" class="pilcrow">¶</a>
 </li>
@@ -3423,152 +3425,175 @@ Accept-Signature-Scheme: jwks_uri, jwt
       </ul>
 <p id="section-10-6">Other changes:<a href="#section-10-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-10-7.1">Required a verifier resolving a key from a JWKS to select the member matching <code>kid</code> without requiring any other member to be usable, and forbade failing because an unselected member names an unimplemented <code>kty</code> or <code>alg</code>. Without this the accommodation for unimplemented key types is unreachable in deployment: an issuer adding a post-quantum key alongside a classical one would break every verifier that does not implement the new type, including those that were only ever going to use the classical key, so no issuer could publish one. Noted that an unknown member within a single JWK is ignored per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>, Section 4, which is distinct from a member this document forbids.<a href="#section-10-7.1" class="pilcrow">¶</a>
+<li class="normal" id="section-10-7.1">Required a verifier resolving a key from a JWKS to select the member matching <code>kid</code> without requiring any other member to be usable, and forbade failing because an unselected member names an unimplemented <code>kty</code> or <code>alg</code>. Without it no issuer could add a post-quantum key alongside a classical one, since doing so would break every verifier that does not implement the new type, including those that were only ever going to use the classical key. Noted that an unknown member within a single JWK is ignored per <span>[<a href="#RFC7517" class="cite xref">RFC7517</a>]</span>, Section 4, which is distinct from a member this document forbids.<a href="#section-10-7.1" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.2">Corrected the claim that <code>kty</code> and <code>crv</code> underdetermine the algorithm for EC keys. Within JOSE they do not: <code>ES256</code>, <code>ES384</code>, and <code>ES512</code> correspond one to one with <code>P-256</code>, <code>P-384</code>, and <code>P-521</code>, and no registered signing algorithm pairs a curve with another hash. Genuine underdetermination is limited to RSA, which has no <code>crv</code>, and to the <code>AKP</code> key type of <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span>.<a href="#section-10-7.2" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.2">Stated that an <code>Accept-Signature-Alg</code> Token is the registered identifier verbatim, case included: <code>ES256</code>, not <code>es256</code>. Structured Field parsing preserves a Token's case, and the value is compared against the <code>alg</code> member of a JWK, a case-sensitive JSON string, so a case-folded token matches no key.<a href="#section-10-7.2" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.3">Stated that requiring <code>alg</code> of every conveyed key is therefore a choice rather than a necessity, and gave the reasons in a new Design Rationale section, <a href="#why-alg-is-required" class="auto internal xref">Appendix A.11</a>: the set of underdetermined key types grows as algorithms are registered, <code>Accept-Signature-Alg</code> comparison has to be total, a verifier keeps one code path, and the signer bears no cost. Said plainly that this tightens <span>[<a href="#RFC9864" class="cite xref">RFC9864</a>]</span>, which RECOMMENDS rather than requires the member.<a href="#section-10-7.3" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.3">Corrected the claim that <code>kty</code> and <code>crv</code> underdetermine the algorithm for EC keys. Within JOSE they do not: <code>ES256</code>, <code>ES384</code>, and <code>ES512</code> correspond one to one with <code>P-256</code>, <code>P-384</code>, and <code>P-521</code>, and no registered signing algorithm pairs a curve with another hash. Genuine underdetermination is limited to RSA, which has no <code>crv</code>, and to the <code>AKP</code> key type of <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span>.<a href="#section-10-7.3" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.4">Required a verifier to reject an <code>alg</code> it does not support with <code>unsupported_algorithm</code>, and stated that <code>Accept-Signature-Alg</code> names exactly that set, neither a subset nor a superset. Replaced the vague "validate the algorithm against policy" verifier obligations with the specific checks.<a href="#section-10-7.4" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.4">Stated that requiring <code>alg</code> of every conveyed key is therefore a choice rather than a necessity, and gave the reasons in a new Design Rationale section, <a href="#why-alg-is-required" class="auto internal xref">Appendix A.11</a>: the set of underdetermined key types grows as algorithms are registered, <code>Accept-Signature-Alg</code> comparison has to be total, a verifier keeps one code path, and the signer bears no cost. Said plainly that this tightens <span>[<a href="#RFC9864" class="cite xref">RFC9864</a>]</span>, which RECOMMENDS rather than requires the member.<a href="#section-10-7.4" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.5">Stated where <code>alg</code> comes from in each scheme, and that jwks_uri, jwks, and self-jwt have no in-band channel for it: the resolved JWKS entry is the only source, so adopting those schemes means publishing a key that carries <code>alg</code> rather than pointing at one that omits it. Only the key the <code>kid</code> selects is subject to the requirement, so an existing metadata document can be reused by adding a conforming key.<a href="#section-10-7.5" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.5">Required a verifier to reject an <code>alg</code> it does not support with <code>unsupported_algorithm</code>, and stated that <code>Accept-Signature-Alg</code> names exactly that set, neither a subset nor a superset. Replaced the vague "validate the algorithm against policy" verifier obligations with the specific checks.<a href="#section-10-7.5" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.6">Corrected the <code>Accept-Signature-Alg</code> examples, which still used HTTP Signature Algorithms registry identifiers (<code>ed25519</code>, <code>ecdsa-p256-sha256</code>, <code>rsa-v1_5-sha256</code>) after the header was defined to carry JOSE identifiers.<a href="#section-10-7.6" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.6">Stated where <code>alg</code> comes from in each scheme, and that jwks_uri, jwks, and self-jwt have no in-band channel for it: the resolved JWKS entry is the only source, so adopting those schemes means publishing a key that carries <code>alg</code> rather than pointing at one that omits it. Only the key the <code>kid</code> selects is subject to the requirement, so an existing metadata document can be reused by adding a conforming key.<a href="#section-10-7.6" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.7">Rewrote the justification in Algorithm Determination. <span>[<a href="#RFC9864" class="cite xref">RFC9864</a>]</span> RECOMMENDS rather than requires the JWK <code>alg</code> member, and allows a deployment to rely on some other mechanism for ensuring a key is used as intended, so citing it as the basis for a MUST overstated it. The requirement now says what it is — a tightening — and gives the reason: keys conveyed in band come from a party the verifier has no prior relationship with, so no such other mechanism exists, and <code>kty</code> and <code>crv</code> underdetermine the algorithm for RSA, EC, and <code>AKP</code> keys alike. Noted that <span>[<a href="#I-D.richer-oauth-httpsig" class="cite xref">I-D.richer-oauth-httpsig</a>]</span> reaches the same requirement independently for JWK-bound keys.<a href="#section-10-7.7" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.7">Corrected the <code>Accept-Signature-Alg</code> examples, which still used HTTP Signature Algorithms registry identifiers (<code>ed25519</code>, <code>ecdsa-p256-sha256</code>, <code>rsa-v1_5-sha256</code>) after the header was defined to carry JOSE identifiers.<a href="#section-10-7.7" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.8">Audited every BCP 14 SHOULD against RFC 2119 Section 6. Each retained SHOULD now names the circumstance under which it may be ignored: omitting <code>Signature-Error</code> or <code>required_input</code> where diagnostics to an unauthenticated caller are a disclosure risk, returning a non-Problem-Details body under content negotiation, the general-purpose verifier that has no authorized-origin list to check <code>id</code> against, and the deployment that keeps an inline scheme because it has confirmed its headers fit.<a href="#section-10-7.8" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.8">Rewrote the justification in Algorithm Determination. <span>[<a href="#RFC9864" class="cite xref">RFC9864</a>]</span> RECOMMENDS rather than requires the JWK <code>alg</code> member, and allows a deployment to rely on some other mechanism for ensuring a key is used as intended, so citing it as the basis for a MUST overstated it. The requirement now says what it is — a tightening — and gives the reason: keys conveyed in band come from a party the verifier has no prior relationship with, so no such other mechanism exists, and <code>kty</code> and <code>crv</code> underdetermine the algorithm for RSA, EC, and <code>AKP</code> keys alike. Noted that <span>[<a href="#I-D.richer-oauth-httpsig" class="cite xref">I-D.richer-oauth-httpsig</a>]</span> reaches the same requirement independently for JWK-bound keys.<a href="#section-10-7.8" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.9">Downgraded to lowercase the statements that were not interoperability requirements, per RFC 2119 Section 6 and the RFC 8174 convention that only uppercase is normative: single-signature deployment advice, the recommendation to document enclave stable-key algorithms, the "shortest practical lifetime" guidance, which was unmeasurable as written, and header buffer sizing.<a href="#section-10-7.9" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.9">Audited every BCP 14 SHOULD against RFC 2119 Section 6. Each retained SHOULD now names the circumstance under which it may be ignored: omitting <code>Signature-Error</code> or <code>required_input</code> where diagnostics to an unauthenticated caller are a disclosure risk, returning a non-Problem-Details body under content negotiation, the general-purpose verifier that has no authorized-origin list to check <code>id</code> against, and the deployment that keeps an inline scheme because it has confirmed its headers fit.<a href="#section-10-7.9" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.10">Changed the <code>typ</code> header check from SHOULD to MAY in the jwt and self-jwt schemes. The text identifies it as an optimization for quick rejection, and step 2 of each verification procedure already states the check.<a href="#section-10-7.10" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.10">Downgraded to lowercase the statements that were not interoperability requirements, per RFC 2119 Section 6 and the RFC 8174 convention that only uppercase is normative: single-signature deployment advice, the recommendation to document enclave stable-key algorithms, the "shortest practical lifetime" guidance, which was unmeasurable as written, and header buffer sizing.<a href="#section-10-7.10" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.11">Corrected the layered cryptographic agility rationale: post-quantum verification is not the expensive part, since ML-DSA verification is comparable to Ed25519. What caching saves the verifier is the assertion's bytes on the wire and the repeated resolution, not verification time. The signer's per-request cost is time and the verifier's is size.<a href="#section-10-7.11" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.11">Grounded the <code>typ</code> header check of the jwt and self-jwt schemes in the JWT BCP: verifiers SHOULD require an expected <code>typ</code>, per the explicit-typing guidance of <span>[<a href="#RFC8725" class="cite xref">RFC8725</a>]</span>, Section 3.11. The check is a token-confusion defence, not the optimization the text previously called it.<a href="#section-10-7.11" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.12">Corrected the basis of the classical hot path: what bounds exposure is the lifetime of the confirmation key, not the expiry of the assertion carrying it. A signer that rebinds one long-lived key into successive assertions leaves that key acceptable indefinitely whatever each <code>exp</code> says, and gains nothing from short assertion lifetimes. jkt-jwt has the intended shape by construction.<a href="#section-10-7.12" class="pilcrow">¶</a>
+        <li class="normal" id="section-10-7.12">Corrected the layered cryptographic agility rationale: post-quantum verification is not the expensive part, since ML-DSA verification is comparable to Ed25519. What caching saves the verifier is the assertion's bytes on the wire and the repeated resolution, not verification time. The signer's per-request cost is time and the verifier's is size.<a href="#section-10-7.12" class="pilcrow">¶</a>
 </li>
-        <li class="normal" id="section-10-7.13">
-          <p id="section-10-7.13.1">Removed the archived IETF 125 presentation from the repository.<a href="#section-10-7.13.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-10-7.13">Corrected the basis of the classical hot path: what bounds exposure is the lifetime of the confirmation key, not the expiry of the assertion carrying it. A signer that rebinds one long-lived key into successive assertions leaves that key acceptable indefinitely whatever each <code>exp</code> says, and gains nothing from short assertion lifetimes. jkt-jwt has the intended shape by construction.<a href="#section-10-7.13" class="pilcrow">¶</a>
 </li>
         <li class="normal" id="section-10-7.14">
-          <p id="section-10-7.14.1">Added the <code>jwks</code> scheme: a direct JWKS fetch whose HTTPS <code>url</code> is both the signer identity and the key location, under the same egress-admission rules as <code>jwks_uri</code>.<a href="#section-10-7.14.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.14.1">Removed the archived IETF 125 presentation from the repository.<a href="#section-10-7.14.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.15">
-          <p id="section-10-7.15.1">Added the <code>unsupported_scheme</code> error code and made unknown-scheme rejection mandatory and conformance-testable.<a href="#section-10-7.15.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.15.1">Added the <code>jwks</code> scheme: a direct JWKS fetch whose HTTPS <code>url</code> is both the signer identity and the key location, under the same egress-admission rules as <code>jwks_uri</code>.<a href="#section-10-7.15.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.16">
-          <p id="section-10-7.16.1">Added an Algorithm Determination section as the single home for the fully-specified algorithm rules, referenced from every scheme that conveys or references a JWK.<a href="#section-10-7.16.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.16.1">Stated that the jwks <code>url</code> is compared as presented, by byte equality, with no canonicalization or normalization: values differing in any byte name different identities, and a signer presents the same bytes wherever it intends the same identity.<a href="#section-10-7.16.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.17">
-          <p id="section-10-7.17.1">Required defined rejection of unimplemented JWK key types, including <code>AKP</code> <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span>, reported as <code>unsupported_algorithm</code>.<a href="#section-10-7.17.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.17.1">Added the <code>unsupported_scheme</code> error code and made unknown-scheme rejection mandatory and conformance-testable, scoped to the <code>Signature-Key</code> member the verifier selected. A member the verifier did not select is ignored, so a signer can offer a signature under a new scheme without breaking verifiers that lack it.<a href="#section-10-7.17.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.18">
-          <p id="section-10-7.18.1">Noted that the ML-DSA identifiers of <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span> satisfy the rule without special treatment. Added a deployment consideration on post-quantum key and signature sizes.<a href="#section-10-7.18.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.18.1">Added an Algorithm Determination section as the single home for the fully-specified algorithm rules, referenced from every scheme that conveys or references a JWK.<a href="#section-10-7.18.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.19">
-          <p id="section-10-7.19.1">Added assertion caching as a strawman for discussion: the <code>cached</code> scheme, the <code>cache</code> signal on jwt and jkt-jwt, the <code>Signature-Key-Cache</code> response header, the <code>cache_miss</code> error, and the resolution and validation model. A JWT is cacheable only if it carries a <code>jti</code>, and self-jwt is excluded, having no <code>cnf</code> claim from which resolution could recover a confirmation key. Implementation is optional; the degradation behavior is not. Whether this is the right layer for caching is an open question.<a href="#section-10-7.19.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.19.1">Required defined rejection of unimplemented JWK key types, including <code>AKP</code> <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span>, reported as <code>unsupported_algorithm</code>.<a href="#section-10-7.19.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.20">
-          <p id="section-10-7.20.1">Specified client behaviour when a response carries both <code>WWW-Authenticate</code> and a signature challenge: alternatives where the auth-scheme authenticates, in which case the client signs rather than presenting the credential, and complements where it does not, such as a payment challenge, in which case the client satisfies both. Addresses issue #17.<a href="#section-10-7.20.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.20.1">Noted that the ML-DSA identifiers of <span>[<a href="#RFC9964" class="cite xref">RFC9964</a>]</span> satisfy the rule without special treatment. Added a deployment consideration on post-quantum key and signature sizes.<a href="#section-10-7.20.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.21">
-          <p id="section-10-7.21.1">Expanded the Introduction to state the gaps this document addresses and the invariants that follow.<a href="#section-10-7.21.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.21.1">Added assertion caching as a strawman for discussion: the <code>cached</code> scheme, the <code>cache</code> signal on jwt and jkt-jwt, the <code>Signature-Key-Cache</code> response header, the <code>cache_miss</code> error, and the resolution and validation model. A JWT is cacheable only if it carries a <code>jti</code>; self-jwt is excluded, its key being already cacheable on <code>iss</code> and <code>kid</code> and its claims request-specific. Implementation is optional; the degradation behavior is not. Whether this is the right layer for caching is an open question.<a href="#section-10-7.21.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.22">
-          <p id="section-10-7.22.1">Added rationale for a scheme token rather than a header per scheme, for carrying the accepted sets in header fields rather than in parameters or error members, for layered cryptographic agility, for the verifier issuing the cache identifier rather than deriving it from the assertion as an entity tag would be, and for not reserving grease values.<a href="#section-10-7.22.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.22.1">Distinguished the cache entry's expiry from the assertion's: a verifier still holding the entry resolves it and lets validation reject an expired assertion, while one that has evicted it returns <code>cache_miss</code> and the caller resends in full.<a href="#section-10-7.22.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.23">
-          <p id="section-10-7.23.1">Gave the SHOULD for sending <code>Accept-Signature-Scheme</code> and <code>Accept-Signature-Alg</code> on an error response its exception case, per RFC 2119 Section 6: a server may withhold the header where enumerating what it accepts to an unauthenticated caller is a disclosure risk.<a href="#section-10-7.23.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.23.1">Made <code>cached</code> in <code>Accept-Signature-Scheme</code> a capability announcement: a client cannot present it until a verifier has issued it a cache identifier.<a href="#section-10-7.23.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.24">
-          <p id="section-10-7.24.1">Corrected the Accept-Signature parameter name from <code>algs</code> to <code>alg</code>, per <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5.1.<a href="#section-10-7.24.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.24.1">Bounded verifier-side cache state: a caller can mint an assertion, and so a cache entry, per request, so the cache limits apply to assertion caching and a verifier should bound entries per confirmation key.<a href="#section-10-7.24.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.25">
-          <p id="section-10-7.25.1">Converted internal cross-references to mmark xref syntax so they render as section numbers.<a href="#section-10-7.25.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.25.1">Specified client behaviour when a response carries both <code>WWW-Authenticate</code> and a signature challenge: alternatives where the auth-scheme authenticates, in which case the client signs rather than presenting the credential, and complements where it does not, such as a payment challenge, in which case the client satisfies both. Addresses issue #17.<a href="#section-10-7.25.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.26">
-          <p id="section-10-7.26.1">IANA review feedback: added Designated Expert Instructions for the HTTP Signature-Key Scheme and Signature Error Code registries per RFC 8126 Section 4.5.<a href="#section-10-7.26.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.26.1">Stated what <code>keyid</code> (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5.1) means alongside <code>Signature-Key</code>: a server SHOULD NOT send it, a <code>keyid</code> in <code>Signature-Input</code> MUST identify the same key as the <code>Signature-Key</code> member for that label, and the verifier takes the key from <code>Signature-Key</code>.<a href="#section-10-7.26.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.27">
-          <p id="section-10-7.27.1">Changed the Signature Error Code registry policy from Specification Required to Expert Review.<a href="#section-10-7.27.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.27.1">Made the scheme preference order in <code>Accept-Signature-Scheme</code> non-binding on the client. The order is the server's preference, while the choice of scheme decides whether the signer is identified, which is the client's to make.<a href="#section-10-7.27.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.28">
-          <p id="section-10-7.28.1">Added a registration template to the Signature Error Code registry.<a href="#section-10-7.28.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.28.1">Had a server that sends <code>Accept-Signature-Alg</code> not send the <code>alg</code> parameter of <code>Accept-Signature</code>, which names algorithms in the HTTP Signature Algorithms registry this document does not use; a client MAY ignore an <code>alg</code> received alongside <code>Accept-Signature-Alg</code>.<a href="#section-10-7.28.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.29">
-          <p id="section-10-7.29.1">draft-hardt-httpbis-signature-key-07<a href="#section-10-7.29.1" class="pilcrow">¶</a></p>
-<ul class="compact normal">
-<li class="compact normal" id="section-10-7.29.2.1">Editorial. Noted in the Introduction that the mechanisms defined here are used by other specifications, citing the AAuth protocol <span>[<a href="#I-D.hardt-oauth-aauth-protocol" class="cite xref">I-D.hardt-oauth-aauth-protocol</a>]</span> and Email Verification <span>[<a href="#I-D.hardt-email-verification" class="cite xref">I-D.hardt-email-verification</a>]</span>. No normative change.<a href="#section-10-7.29.2.1" class="pilcrow">¶</a>
-</li>
-          </ul>
+          <p id="section-10-7.29.1">Expanded the Introduction to state the gaps this document addresses and the invariants that follow.<a href="#section-10-7.29.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.30">
-          <p id="section-10-7.30.1">draft-hardt-httpbis-signature-key-06<a href="#section-10-7.30.1" class="pilcrow">¶</a></p>
-<ul class="compact normal">
-<li class="compact normal" id="section-10-7.30.2.1">Added the <code>self-jwt</code> scheme for self-issued JWTs where the signer and the JWT issuer are the same party. The JWT signing key, discovered via <code>{iss}/.well-known/{dwk}</code>, is reused as the HTTP signing key, and no <code>cnf</code> claim is present.<a href="#section-10-7.30.2.1" class="pilcrow">¶</a>
-</li>
-          </ul>
+          <p id="section-10-7.30.1">Added rationale for a scheme token rather than a header per scheme, for carrying the accepted sets in header fields rather than in parameters or error members, for layered cryptographic agility, for the verifier issuing the cache identifier rather than deriving it from the assertion as an entity tag would be, and for not reserving grease values.<a href="#section-10-7.30.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.31">
-          <p id="section-10-7.31.1">draft-hardt-httpbis-signature-key-05<a href="#section-10-7.31.1" class="pilcrow">¶</a></p>
-<ul class="compact normal">
-<li class="compact normal" id="section-10-7.31.2.1">Incorporated implementer feedback from Joshua Gay (sidecat), and added him to the acknowledgments.<a href="#section-10-7.31.2.1" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.31.2.2">Added a mandatory egress-admission checklist to the <code>jwks_uri</code> SSRF risk bullet: HTTPS, size and timeout limits, redirect policy, private and loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.<a href="#section-10-7.31.2.2" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.31.2.3">Added a once-per-minute JWKS fetch floor, and a same-<code>kid</code> refresh rule allowing one refresh and retry before returning <code>unknown_key</code> or <code>invalid_jwt</code>, subject to that floor and to egress-admission policy.<a href="#section-10-7.31.2.3" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.31.2.4">Noted that the stable (enclave) key algorithm in <code>jkt-jwt</code> is enclave-determined, and that deployments supporting Ed25519 or other stable-key algorithms SHOULD document this.<a href="#section-10-7.31.2.4" class="pilcrow">¶</a>
-</li>
-          </ul>
+          <p id="section-10-7.31.1">Gave the SHOULD for sending <code>Accept-Signature-Scheme</code> and <code>Accept-Signature-Alg</code> on an error response its exception case, per RFC 2119 Section 6: a server may withhold the header where enumerating what it accepts to an unauthenticated caller is a disclosure risk.<a href="#section-10-7.31.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.32">
-          <p id="section-10-7.32.1">draft-hardt-httpbis-signature-key-04<a href="#section-10-7.32.1" class="pilcrow">¶</a></p>
-<ul class="compact normal">
-<li class="compact normal" id="section-10-7.32.2.1">Renamed the specification from "HTTP Signature-Key Header" to "HTTP Signature Keys".<a href="#section-10-7.32.2.1" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.32.2.2">Added the <code>sigkey</code> parameter to Accept-Signature (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5) with three values: <code>jkt</code> (pseudonymous), <code>uri</code> (URI-identified), and <code>x509</code> (PKI certificate), and registered it in the HTTP Signature Metadata Parameters registry.<a href="#section-10-7.32.2.2" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.32.2.3">Added the Signature-Error response header and established the Signature Error Code registry.<a href="#section-10-7.32.2.3" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.32.2.4">Added an incremental adoption section describing zero-coordination deployment via 429, 401, and 402 responses.<a href="#section-10-7.32.2.4" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.32.2.5">Added privacy considerations for key thumbprint tracking, agent identity disclosure, and the JWKS fetch side channel.<a href="#section-10-7.32.2.5" class="pilcrow">¶</a>
-</li>
-          </ul>
+          <p id="section-10-7.32.1">Corrected the Accept-Signature parameter name from <code>algs</code> to <code>alg</code>, per <span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5.1.<a href="#section-10-7.32.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.33">
-          <p id="section-10-7.33.1">draft-hardt-httpbis-signature-key-03<a href="#section-10-7.33.1" class="pilcrow">¶</a></p>
-<ul class="compact normal">
-<li class="compact normal" id="section-10-7.33.2.1">Added the <code>jkt-jwt</code> scheme for self-issued key delegation, with a TOFU reference to <span>[<a href="#RFC7435" class="cite xref">RFC7435</a>]</span>.<a href="#section-10-7.33.2.1" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.33.2.2">Renamed the <code>well-known</code> parameter to <code>dwk</code> (dot well-known).<a href="#section-10-7.33.2.2" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.33.2.3">Added <code>iss</code> and <code>dwk</code> claims to the jwt scheme (SHOULD) for issuer key discovery.<a href="#section-10-7.33.2.3" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.33.2.4">Added an early validation step to jwt verification: format, <code>typ</code>, and <code>exp</code> checks before any network fetch.<a href="#section-10-7.33.2.4" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.33.2.5">Added design rationale for <code>jwks_uri</code> rather than an inline JWKS, and moved the hwk string versus byte sequence note to the rationale appendix.<a href="#section-10-7.33.2.5" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.33.2.6">Reordered the schemes and added acknowledgments.<a href="#section-10-7.33.2.6" class="pilcrow">¶</a>
-</li>
-          </ul>
+          <p id="section-10-7.33.1">Converted internal cross-references to mmark xref syntax so they render as section numbers.<a href="#section-10-7.33.1" class="pilcrow">¶</a></p>
 </li>
         <li class="normal" id="section-10-7.34">
-          <p id="section-10-7.34.1">draft-hardt-httpbis-signature-key-02<a href="#section-10-7.34.1" class="pilcrow">¶</a></p>
+          <p id="section-10-7.34.1">IANA review feedback: added Designated Expert Instructions for the HTTP Signature-Key Scheme and Signature Error Code registries per RFC 8126 Section 4.5.<a href="#section-10-7.34.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-10-7.35">
+          <p id="section-10-7.35.1">Changed the Signature Error Code registry policy from Specification Required to Expert Review.<a href="#section-10-7.35.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-10-7.36">
+          <p id="section-10-7.36.1">Added a registration template to the Signature Error Code registry.<a href="#section-10-7.36.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-10-7.37">
+          <p id="section-10-7.37.1">draft-hardt-httpbis-signature-key-07<a href="#section-10-7.37.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-10-7.34.2.1">Changed the <code>x5t</code> parameter to a byte sequence, per reviewer feedback.<a href="#section-10-7.34.2.1" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.34.2.2">Added structured field types to all parameters.<a href="#section-10-7.34.2.2" class="pilcrow">¶</a>
-</li>
-            <li class="compact normal" id="section-10-7.34.2.3">Added a design note on the string versus byte sequence choice for hwk.<a href="#section-10-7.34.2.3" class="pilcrow">¶</a>
+<li class="compact normal" id="section-10-7.37.2.1">Editorial. Noted in the Introduction that the mechanisms defined here are used by other specifications, citing the AAuth protocol <span>[<a href="#I-D.hardt-oauth-aauth-protocol" class="cite xref">I-D.hardt-oauth-aauth-protocol</a>]</span> and Email Verification <span>[<a href="#I-D.hardt-email-verification" class="cite xref">I-D.hardt-email-verification</a>]</span>. No normative change.<a href="#section-10-7.37.2.1" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
-        <li class="normal" id="section-10-7.35">
-          <p id="section-10-7.35.1">draft-hardt-httpbis-signature-key-01<a href="#section-10-7.35.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-10-7.38">
+          <p id="section-10-7.38.1">draft-hardt-httpbis-signature-key-06<a href="#section-10-7.38.1" class="pilcrow">¶</a></p>
 <ul class="compact normal">
-<li class="compact normal" id="section-10-7.35.2.1">Initial public draft, with four schemes: hwk, jwks_uri, x509, and jwt.<a href="#section-10-7.35.2.1" class="pilcrow">¶</a>
+<li class="compact normal" id="section-10-7.38.2.1">Added the <code>self-jwt</code> scheme for self-issued JWTs where the signer and the JWT issuer are the same party. The JWT signing key, discovered via <code>{iss}/.well-known/{dwk}</code>, is reused as the HTTP signing key, and no <code>cnf</code> claim is present.<a href="#section-10-7.38.2.1" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-10-7.39">
+          <p id="section-10-7.39.1">draft-hardt-httpbis-signature-key-05<a href="#section-10-7.39.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-10-7.39.2.1">Incorporated implementer feedback from Joshua Gay (sidecat), and added him to the acknowledgments.<a href="#section-10-7.39.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.39.2.2">Added a mandatory egress-admission checklist to the <code>jwks_uri</code> SSRF risk bullet: HTTPS, size and timeout limits, redirect policy, private and loopback address rejection, DNS rebinding defense, and cross-origin JWKS admission.<a href="#section-10-7.39.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.39.2.3">Added a once-per-minute JWKS fetch floor, and a same-<code>kid</code> refresh rule allowing one refresh and retry before returning <code>unknown_key</code> or <code>invalid_jwt</code>, subject to that floor and to egress-admission policy.<a href="#section-10-7.39.2.3" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.39.2.4">Noted that the stable (enclave) key algorithm in <code>jkt-jwt</code> is enclave-determined, and that deployments supporting Ed25519 or other stable-key algorithms SHOULD document this.<a href="#section-10-7.39.2.4" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-10-7.40">
+          <p id="section-10-7.40.1">draft-hardt-httpbis-signature-key-04<a href="#section-10-7.40.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-10-7.40.2.1">Renamed the specification from "HTTP Signature-Key Header" to "HTTP Signature Keys".<a href="#section-10-7.40.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.40.2.2">Added the <code>sigkey</code> parameter to Accept-Signature (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>, Section 5) with three values: <code>jkt</code> (pseudonymous), <code>uri</code> (URI-identified), and <code>x509</code> (PKI certificate), and registered it in the HTTP Signature Metadata Parameters registry.<a href="#section-10-7.40.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.40.2.3">Added the Signature-Error response header and established the Signature Error Code registry.<a href="#section-10-7.40.2.3" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.40.2.4">Added an incremental adoption section describing zero-coordination deployment via 429, 401, and 402 responses.<a href="#section-10-7.40.2.4" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.40.2.5">Added privacy considerations for key thumbprint tracking, agent identity disclosure, and the JWKS fetch side channel.<a href="#section-10-7.40.2.5" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-10-7.41">
+          <p id="section-10-7.41.1">draft-hardt-httpbis-signature-key-03<a href="#section-10-7.41.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-10-7.41.2.1">Added the <code>jkt-jwt</code> scheme for self-issued key delegation, with a TOFU reference to <span>[<a href="#RFC7435" class="cite xref">RFC7435</a>]</span>.<a href="#section-10-7.41.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.41.2.2">Renamed the <code>well-known</code> parameter to <code>dwk</code> (dot well-known).<a href="#section-10-7.41.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.41.2.3">Added <code>iss</code> and <code>dwk</code> claims to the jwt scheme (SHOULD) for issuer key discovery.<a href="#section-10-7.41.2.3" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.41.2.4">Added an early validation step to jwt verification: format, <code>typ</code>, and <code>exp</code> checks before any network fetch.<a href="#section-10-7.41.2.4" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.41.2.5">Added design rationale for <code>jwks_uri</code> rather than an inline JWKS, and moved the hwk string versus byte sequence note to the rationale appendix.<a href="#section-10-7.41.2.5" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.41.2.6">Reordered the schemes and added acknowledgments.<a href="#section-10-7.41.2.6" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-10-7.42">
+          <p id="section-10-7.42.1">draft-hardt-httpbis-signature-key-02<a href="#section-10-7.42.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-10-7.42.2.1">Changed the <code>x5t</code> parameter to a byte sequence, per reviewer feedback.<a href="#section-10-7.42.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.42.2.2">Added structured field types to all parameters.<a href="#section-10-7.42.2.2" class="pilcrow">¶</a>
+</li>
+            <li class="compact normal" id="section-10-7.42.2.3">Added a design note on the string versus byte sequence choice for hwk.<a href="#section-10-7.42.2.3" class="pilcrow">¶</a>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-10-7.43">
+          <p id="section-10-7.43.1">draft-hardt-httpbis-signature-key-01<a href="#section-10-7.43.1" class="pilcrow">¶</a></p>
+<ul class="compact normal">
+<li class="compact normal" id="section-10-7.43.2.1">Initial public draft, with four schemes: hwk, jwks_uri, x509, and jwt.<a href="#section-10-7.43.2.1" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>
@@ -3592,6 +3617,10 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <a href="#section-12.1" class="section-number selfRef">12.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
         </h3>
 <dl class="references">
+<dt id="IANA.JOSE.Algorithms">[IANA.JOSE.Algorithms]</dt>
+        <dd>
+<span class="refAuthor">IANA</span>, <span class="refTitle">"JSON Web Signature and Encryption Algorithms"</span>, <span>&lt;<a href="https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms">https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC3553">[RFC3553]</dt>
         <dd>
 <span class="refAuthor">Mealling, M.</span>, <span class="refAuthor">Masinter, L.</span>, <span class="refAuthor">Hardie, T.</span>, and <span class="refAuthor">G. Klyne</span>, <span class="refTitle">"An IETF URN Sub-namespace for Registered Protocol Parameters"</span>, <span class="seriesInfo">BCP 73</span>, <span class="seriesInfo">RFC 3553</span>, <span class="seriesInfo">DOI 10.17487/RFC3553</span>, <time datetime="2003-06" class="refDate">June 2003</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc3553">https://www.rfc-editor.org/info/rfc3553</a>&gt;</span>. </dd>
@@ -3623,6 +3652,10 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <dt id="RFC8126">[RFC8126]</dt>
         <dd>
 <span class="refAuthor">Cotton, M.</span>, <span class="refAuthor">Leiba, B.</span>, and <span class="refAuthor">T. Narten</span>, <span class="refTitle">"Guidelines for Writing an IANA Considerations Section in RFCs"</span>, <span class="seriesInfo">BCP 26</span>, <span class="seriesInfo">RFC 8126</span>, <span class="seriesInfo">DOI 10.17487/RFC8126</span>, <time datetime="2017-06" class="refDate">June 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8126">https://www.rfc-editor.org/info/rfc8126</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8725">[RFC8725]</dt>
+        <dd>
+<span class="refAuthor">Sheffer, Y.</span>, <span class="refAuthor">Hardt, D.</span>, and <span class="refAuthor">M. Jones</span>, <span class="refTitle">"JSON Web Token Best Current Practices"</span>, <span class="seriesInfo">BCP 225</span>, <span class="seriesInfo">RFC 8725</span>, <span class="seriesInfo">DOI 10.17487/RFC8725</span>, <time datetime="2020-02" class="refDate">February 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/info/rfc8725">https://www.rfc-editor.org/info/rfc8725</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC8941">[RFC8941]</dt>
         <dd>
@@ -3893,7 +3926,7 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <p id="appendix-A.9-3">TLS session tickets (<span>[<a href="#RFC5077" class="cite xref">RFC5077</a>]</span>; <span>[<a href="#RFC8446" class="cite xref">RFC8446</a>]</span>, Section 4.6.1) are server-minted, optionally self-contained encrypted references that any node in a fleet can honor without shared state. This is the precedent for permitting a self-contained cache identifier (<a href="#signature-key-cache-response-header" class="auto internal xref">Section 6</a>) and for the fleet case in which an identifier minted by one node is presented to another that cannot resolve it (<a href="#cache_miss" class="auto internal xref">Section 5.4.3</a>).<a href="#appendix-A.9-3" class="pilcrow">¶</a></p>
 <p id="appendix-A.9-4">Entity tags (<span>[<a href="#RFC9110" class="cite xref">RFC9110</a>]</span>, Section 8.8.3) are the closest HTTP precedent and the source of three properties adopted here. An entity tag is opaque to the recipient, which echoes it back unmodified; it is issued by the party that holds the thing it names; and a recipient that does not recognize one falls back to the full representation rather than failing. A cache identifier behaves the same way: opaque, verifier-issued, and recoverable by resending the assertion (<a href="#cache_miss" class="auto internal xref">Section 5.4.3</a>).<a href="#appendix-A.9-4" class="pilcrow">¶</a></p>
 <p id="appendix-A.9-5">One property of entity tags is deliberately not adopted. A strong entity tag is commonly derived from the representation, so two parties holding the same bytes compute the same tag. Applying that to assertions, by using a thumbprint of the assertion as the cache identifier, would make the identifier computable by anyone who has seen the assertion, including any intermediary it passed through. Cache lookup would then become a probe any such party could run to learn whether a verifier currently holds a given assertion, and the identifier would no longer be unpredictable (<a href="#cache-identifiers" class="auto internal xref">Section 7.6</a>). A content-derived identifier also fixes one construction for every verifier, foreclosing the self-contained encrypted form that the session-ticket precedent supports. The cache identifier is therefore verifier-minted and unpredictable rather than derived from the assertion, and the assertion's own identity is carried separately by the <code>jti</code> echoed in <code>Signature-Key-Cache</code> (<a href="#why-the-verifier-issues-the-cache-identifier" class="auto internal xref">Appendix A.8</a>).<a href="#appendix-A.9-5" class="pilcrow">¶</a></p>
-<p id="appendix-A.9-6">These are cited as context for the design, not as normative dependencies.<a href="#appendix-A.9-6" class="pilcrow">¶</a></p>
+<p id="appendix-A.9-6">The TLS mechanisms above are cited as context for the design, not as normative dependencies.<a href="#appendix-A.9-6" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="why-strings-instead-of-byte-sequences-for-hwk">
