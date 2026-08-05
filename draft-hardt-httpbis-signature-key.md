@@ -1095,7 +1095,7 @@ For the HTTP Signature-Key Scheme registry, the expert should additionally verif
 For the Signature Error Code registry, the expert should additionally verify that:
 
 - The error code is a lowercase token using only lowercase letters and underscore, consistent with the registry's existing entries.
-- The error condition is broadly applicable to HTTP message signature verification rather than specific to a single application.
+- The error condition is broadly applicable to signed HTTP message exchanges rather than specific to a single application. The condition need not be a signature verification failure; it may concern any part of the exchange the verifier rejects, as `invalid_request` does.
 - The description makes clear when a verifier generates the error, and the error does not leak sensitive information to unauthenticated callers.
 
 # Document History
