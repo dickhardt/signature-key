@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 1 February 2027                                      Cloudflare
-                                                            31 July 2026
+Expires: 6 February 2027                                      Cloudflare
+                                                           5 August 2026
 
 
                           HTTP Signature Keys
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 February 2027.
+   This Internet-Draft will expire on 6 February 2027.
 
 Copyright Notice
 
@@ -721,15 +721,17 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
    *Caching:*
 
-   Caching (Section 6) removes an assertion's transmission and
-   verification cost from the steady state, and the saving grows with
-   the size of the keys and signatures the assertion carries
-   (Section 7.7).  This applies to any cacheable assertion, not only to
-   jkt-jwt.  What is specific to jkt-jwt is that the assertion carries a
-   public key in its header and is signed by that key, so caching it
-   also removes the thumbprint computation and the verification of that
-   signature, which the jwt scheme does not perform.  The per-request
-   signature continues to use the ephemeral cnf.jwk key.
+   Caching (Section 6) keeps an assertion off the wire in the steady
+   state, and the saving grows with the size of the keys and signatures
+   the assertion carries (Section 7.7).  This applies to any cacheable
+   assertion, not only to jkt-jwt.  What is specific to jkt-jwt is that
+   the assertion carries a public key in its header and is signed by
+   that key, so caching it also removes the thumbprint computation and
+   the verification of that signature, which the jwt scheme does not
+   perform.  That part of the saving is small, since post-quantum
+   verification is comparable to classical; the bytes are the reason to
+   cache.  The per-request signature continues to use the ephemeral
+   cnf.jwk key.
 
    *Use cases:*
 
@@ -966,14 +968,14 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
    *  SHOULD contain standard claims: sub, aud, exp, iat
 
    The self-jwt scheme does not support the cache parameter, and a
-   verifier MUST NOT issue a cache identifier for a self-jwt.  Assertion
-   caching resolves a cache identifier to an assertion and takes the
-   confirmation key from it (Section 3.11); a self-jwt has no cnf claim,
-   and its signing key is discovered from the issuer's JWKS rather than
-   carried in the assertion, so there is no key to recover by resolution
-   alone.  A self-jwt is also small, carrying no embedded key, and
-   typically carries claims specific to the request it accompanies, so
-   there is little to be saved by referencing it instead of sending it.
+   verifier MUST NOT issue a cache identifier for a self-jwt.  A self-
+   jwt embeds no key: its signing key is the confirmation key and is
+   discovered from the issuer's JWKS by iss and kid.  That key is
+   already cacheable on those two values (Section 7.2), so caching the
+   assertion in addition would save only the assertion's own bytes, of
+   which there are few.  A self-jwt also typically carries claims
+   specific to the request it accompanies, so a cached copy would be
+   stale for the next request rather than reusable.
 
    *  Verifiers SHOULD verify the JWT typ header parameter has an
       expected value per deployment policy, to optimize for a quick
@@ -1188,6 +1190,12 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
    Listing the cached scheme (Section 3.11) states that the server
    implements assertion caching.  A client that sees it can set the
    cache signal (Section 3.8) on its first request rather than probing.
+   cached is a capability announcement rather than a scheme a client can
+   choose to present: a client MUST NOT present it until a verifier has
+   issued it a cache identifier, whatever the list order.  A server that
+   lists cached first is stating a preference for the steady state, not
+   for the first request, and the client selects the earliest listed
+   scheme it can satisfy from the remainder.
 
 4.2.  Accept-Signature-Alg
 
@@ -1636,10 +1644,16 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    that carries it.
 
    The cache identifier's validity never exceeds the cached assertion's
-   expiry.  Presenting a cache identifier for an assertion that has
-   expired is not a cache condition; the verifier resolves it and the
-   assertion then fails validation exactly as an expired assertion
-   presented in full would.
+   expiry.  Two expiries are therefore in play and MUST NOT be confused.
+   The cache entry's expiry is the verifier's own retention decision;
+   the assertion's expiry is a property of the assertion.  A verifier
+   that still holds the entry MUST resolve it and let the assertion fail
+   validation (Section 6.1), exactly as an expired assertion presented
+   in full would, rather than reporting cache_miss.  A verifier that has
+   already evicted the entry returns cache_miss, which is correct: it no
+   longer holds the assertion and cannot say why the assertion would
+   have been rejected.  The caller resends in full and receives the
+   validation error.
 
 6.1.  Presenting and Resolving a Cached Assertion
 
@@ -1647,13 +1661,13 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    stages, which MUST remain distinct:
 
    1.  Resolution.  The signature-verification layer resolves the cache
-       identifier to the cached assertion.  If it is unknown, expired
-       from the cache, or (for a self-contained identifier) fails
-       integrity or decryption, resolution fails and the verifier
-       returns cache_miss (Section 5.4.3).  On success, the verifier
-       obtains the assertion and its confirmation key and verifies the
-       per-request signature against that key.  This stage answers cache
-       hit or cache miss.
+       identifier to the cached assertion.  If it is unknown, has been
+       evicted, including at the cache entry's own expiry, or (for a
+       self-contained identifier) fails integrity or decryption,
+       resolution fails and the verifier returns cache_miss
+       (Section 5.4.3).  On success, the verifier obtains the assertion
+       and its confirmation key and verifies the per-request signature
+       against that key.  This stage answers cache hit or cache miss.
 
    2.  Validation.  The resolved assertion is validated by the consuming
        authorization layer identically to an assertion presented in
@@ -1923,6 +1937,16 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    with correlation by intermediaries MAY issue and rotate distinct
    identifiers for the same assertion, which the caller cannot detect
    and need not act on, since it presents whatever it was last issued.
+
+   Assertion caching lets a caller create verifier-side state at will.
+   Nothing bounds how many distinct assertions it presents with cache,
+   and a self-issued scheme such as jkt-jwt can mint a fresh jti, and so
+   a fresh cache entry, on every request.  The cache limits required by
+   Section 7.2 apply to assertion caching, and a verifier SHOULD bound
+   entries per confirmation key rather than only in aggregate, so that
+   one caller cannot evict every other caller's entries.  A verifier is
+   never obliged to issue a cache identifier: cache is a request, not an
+   instruction.
 
    A self-contained cache identifier carries verifier state to itself
    across a fleet.  Such an identifier MUST be integrity-protected and
@@ -2259,10 +2283,19 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       scheme, the cache signal on jwt and jkt-jwt, the Signature-Key-
       Cache response header, the cache_miss error, and the resolution
       and validation model.  A JWT is cacheable only if it carries a
-      jti, and self-jwt is excluded, having no cnf claim from which
-      resolution could recover a confirmation key.  Implementation is
-      optional; the degradation behavior is not.  Whether this is the
-      right layer for caching is an open question.
+      jti, and self-jwt is excluded, its key being already cacheable on
+      iss and kid and its claims request-specific.  The cache entry's
+      expiry and the assertion's are distinct: a verifier that still
+      holds the entry resolves it and lets validation reject an expired
+      assertion, while one that has evicted it returns cache_miss and
+      the caller resends. cached in Accept-Signature-Scheme announces a
+      capability rather than offering a scheme a client may select
+      before it has been issued an identifier.  Because a caller can
+      mint an assertion, and so a cache entry, per request, the existing
+      cache-limit requirement applies and a verifier should bound
+      entries per confirmation key.  Implementation is optional; the
+      degradation behavior is not.  Whether this is the right layer for
+      caching is an open question.
 
    *  Expanded the Introduction to state the gaps this document
       addresses and the invariants that follow.
@@ -2751,15 +2784,19 @@ A.7.  Layered Cryptographic Agility
    assertion, whose signature is large (Section 7.7), affordable to
    reference on each request without retransmitting it.
 
-   The saving is on both sides, and the jkt-jwt scheme (Section 3.5)
-   shows it most clearly.  That scheme exists because signing in a
-   secure enclave is slow, so the enclave key signs once and delegates
-   to a fast ephemeral key.  Verification has the same shape: checking a
-   post-quantum delegation is expensive, so a verifier that caches the
-   delegation performs the thumbprint computation and the signature
-   verification once and references the result thereafter.  The same
-   argument that motivates delegation on the signer's side motivates
-   caching on the verifier's.
+   The saving is on both sides, though for a different reason on each.
+   The jkt-jwt scheme (Section 3.5) exists because signing in a secure
+   enclave is slow, so the enclave key signs once and delegates to a
+   fast ephemeral key: the signer's per-request cost is time.  The
+   verifier's is size.  Post-quantum verification is not the expensive
+   part, since ML-DSA verification is comparable to Ed25519, and the
+   burden is the assertion (Section 7.7) that would otherwise be
+   retransmitted and reparsed on every request.  A verifier that caches
+   the delegation resolves it once, parsing it, computing the
+   thumbprint, and verifying its signature, and references the result
+   thereafter, while the caller stops paying the assertion's bytes on
+   each request.  Delegation on the signer's side and caching on the
+   verifier's answer the same shape of problem from opposite ends.
 
    Long-term non-repudiation is out of scope for this layer and is
    provided above it.  The per-request signature is not the durable
@@ -2860,8 +2897,8 @@ A.9.  Precedents for Assertion Caching
    assertion, and the assertion's own identity is carried separately by
    the jti echoed in Signature-Key-Cache (Appendix A.8).
 
-   These are cited as context for the design, not as normative
-   dependencies.
+   The TLS mechanisms above are cited as context for the design, not as
+   normative dependencies.
 
 A.10.  Why Strings Instead of Byte Sequences for hwk?
 
