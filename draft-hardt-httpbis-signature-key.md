@@ -32,6 +32,15 @@ organization = "Cloudflare"
 
 %%%
 
+<reference anchor="IANA.JOSE.Algorithms" target="https://www.iana.org/assignments/jose/jose.xhtml#web-signature-encryption-algorithms">
+  <front>
+    <title>JSON Web Signature and Encryption Algorithms</title>
+    <author>
+      <organization>IANA</organization>
+    </author>
+  </front>
+</reference>
+
 <reference anchor="x402" target="https://docs.x402.org">
   <front>
     <title>x402: HTTP 402 Payment Protocol</title>
@@ -191,11 +200,11 @@ Most deployments use a single signature. When multiple signatures are required, 
 
 Several schemes in this document convey or reference a JSON Web Key [@!RFC7517]. For any such JWK, the signature algorithm MUST be fully determined by the key, meaning the JWK carries an `alg` member whose value is a fully-specified algorithm identifier: one that determines the signature operation completely, including curve and hash where applicable. A verifier MUST reject a JWK whose `alg` member is absent or whose `alg` is a polymorphic identifier, and MUST NOT select an algorithm for it by inspecting other key parameters. This requirement applies identically regardless of how the JWK was obtained.
 
-Algorithm identifiers in this document are values from the "JSON Web Signature and Encryption Algorithms" registry established by [@!RFC7518]. This document uses the JOSE signing algorithms of [@!RFC9421], Section 3.3.7, under which the signature base is used directly as the JWS Signing Input, the JOSE header is not used, and the algorithm is signaled by the key rather than on the wire. That section states that JWA values are not registered in the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2), and that the `alg` signature parameter is not used at all with JOSE signing algorithms. This document therefore does not use that registry; see (#algorithm-selection).
+Algorithm identifiers in this document are values from the IANA "JSON Web Signature and Encryption Algorithms" registry [@!IANA.JOSE.Algorithms], established by [@!RFC7518] and extended since. This document uses the JOSE signing algorithms of [@!RFC9421], Section 3.3.7: the signature base is the JWS Signing Input, no JOSE header is used, and the key signals the algorithm rather than the wire. That section states that JWA values are not registered in the HTTP Signature Algorithms registry ([@!RFC9421], Section 6.2), and that the `alg` signature parameter is not used at all with JOSE signing algorithms. This document therefore does not use that registry; see (#algorithm-selection).
 
 In particular:
 
-- The `none` algorithm MUST NOT be used, nor any algorithm whose JOSE Implementation Requirement is `Prohibited`. [@!RFC9421], Section 3.3.7 requires this of any JWS algorithm used for an HTTP Message Signature.
+- The `none` algorithm MUST NOT be used, nor any algorithm whose JOSE Implementation Requirement is `Prohibited`. [@!RFC9421], Section 3.3.7 requires this of any JWS algorithm used for an HTTP Message Signature. A server MUST NOT list such an algorithm in `Accept-Signature-Alg` ((#accept-signature-alg)); listing `none` would advertise that the server takes an unsigned request for a signed one.
 
 - The polymorphic `EdDSA` identifier MUST NOT be used. Use the fully-specified `Ed25519` or `Ed448` identifiers registered by [@!RFC9864] instead.
 
@@ -221,11 +230,11 @@ Post-quantum signature algorithms are accommodated by this rule without special 
 
 A verifier that encounters a JWK whose `kty` it does not implement, including the `AKP` key type defined by [@!RFC9964] for post-quantum keys, MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner. Unrecognized key material is handled on the same defined path as an unsupported algorithm, via `unsupported_algorithm` ((#unsupported_algorithm)). Absence of support for a key type is a reason to decline, not a parsing failure.
 
-The rules above apply to the key a scheme resolves to, and to that key alone. A JWKS may contain keys a verifier cannot use, including keys whose `kty` or `alg` it does not implement. A verifier resolving a key from a JWKS MUST select the member matching `kid` without requiring that any other member be usable, and MUST NOT fail because a member it did not select names an unimplemented `kty` or `alg`.
+The rules above apply to the key a scheme resolves to and to that key alone. A JWKS may hold keys a verifier cannot use. A verifier MUST select the member matching `kid` without requiring any other member to be usable, and MUST NOT fail because an unselected member names a `kty` or `alg` it does not implement.
 
-This is what allows a signer to introduce a new algorithm at all. An issuer adding a post-quantum key alongside a classical one would otherwise break every verifier that does not implement the new key type, including verifiers that were only ever going to use the classical key. The accommodation for unimplemented key types above would then be unreachable in deployment: no issuer could publish such a key without breaking the deployed base, so no verifier would ever meet one.
+Without this rule no signer could introduce a new algorithm: an issuer adding a post-quantum key alongside a classical one would break every verifier that does not implement the new type, including those that were only ever going to use the classical key. The accommodation above would never be reached in deployment, because no issuer could afford to publish such a key.
 
-Within a single JWK, a member a verifier does not understand is ignored, as [@!RFC7517], Section 4 requires of any JWK. That is distinct from a member this document forbids, such as `kid` in the hwk scheme ((#header-web-key-hwk)): a forbidden member is understood and rejected, not unknown and ignored.
+Within a single JWK, a member a verifier does not understand is ignored, as [@!RFC7517], Section 4 requires. A member this document forbids, such as `kid` in the hwk scheme ((#header-web-key-hwk)), is different: it is understood and rejected, not unknown and ignored.
 
 ## Header Web Key (hwk)
 
@@ -766,11 +775,13 @@ Listing the `cached` scheme ((#cached-scheme)) states that the server implements
 
 ## Accept-Signature-Alg {#accept-signature-alg}
 
-`Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each a fully-specified identifier from the "JSON Web Signature and Encryption Algorithms" registry ([@!RFC7518]), the same identifiers a conveyed key carries in its `alg` member ((#algorithm-determination)). It states the signature algorithms the server accepts. Naming them in the same registry the key uses is what lets a client compare what a server accepts against the keys it holds.
+`Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each a fully-specified identifier from the IANA "JSON Web Signature and Encryption Algorithms" registry [@!IANA.JOSE.Algorithms] — the same identifiers a conveyed key carries in its `alg` member ((#algorithm-determination)), and not those of the HTTP Signature Algorithms registry, which this document does not use ((#algorithm-selection)). It states the signature algorithms the server accepts. Using the registry the key uses is what lets a client compare what a server accepts against the keys it holds.
 
 ```http
 Accept-Signature-Alg: Ed25519, ES256
 ```
+
+Each Token is the registered identifier verbatim, including its case: `ES256`, not `es256`. Structured Field parsing preserves the case of a Token ([@!RFC8941], Section 4.2.6), and the comparison a client performs is against the `alg` member of a JWK, a case-sensitive JSON string. A case-folded token names no registered algorithm and matches no key.
 
 Order, unknown-token handling, and the no-recognized-value case are as for `Accept-Signature-Scheme`.
 
@@ -1445,8 +1456,8 @@ For the Signature Error Code registry, the expert should additionally verify tha
   - Required verifiers to take the algorithm from the JWK `alg` rather than derive it from `kty` and `crv`, and to reject a JWK whose `kty` or `crv` disagrees with its `alg`.
   - Required RSA `alg` to name both padding and hash, for example `PS256` or `RS256`. A key type of `RSA` alone is no longer sufficient.
   - Forbade symmetric algorithms: the `oct` key type and the JOSE MAC identifiers. Every scheme here distributes a public key, and a shared secret handed to the verifier proves nothing.
-  - Forbade the `none` algorithm and any algorithm whose JOSE Implementation Requirement is `Prohibited`, as [@!RFC9421], Section 3.3.7 requires of a JWS algorithm used for an HTTP Message Signature.
-  - Named the registry these identifiers come from: the "JSON Web Signature and Encryption Algorithms" registry of [@!RFC7518]. This document uses the JOSE signing algorithms of [@!RFC9421], Section 3.3.7 and does not use the HTTP Signature Algorithms registry.
+  - Forbade the `none` algorithm and any algorithm whose JOSE Implementation Requirement is `Prohibited`, as [@!RFC9421], Section 3.3.7 requires of a JWS algorithm used for an HTTP Message Signature. Gave the rule its response-side half: a server MUST NOT list such an algorithm in `Accept-Signature-Alg`, which would otherwise advertise that it accepts unsigned requests as signed.
+  - Named the registry these identifiers come from, citing the IANA "JSON Web Signature and Encryption Algorithms" registry itself rather than [@!RFC7518], which established it but no longer holds all of it. This document uses the JOSE signing algorithms of [@!RFC9421], Section 3.3.7 and does not use the HTTP Signature Algorithms registry.
   - Corrected `Accept-Signature-Alg` to carry identifiers from that same JOSE registry rather than from the HTTP Signature Algorithms registry. A server has to advertise algorithms in the namespace a conveyed key uses, or a client cannot compare what the server accepts against the keys it holds.
   - Replaced the requirement that a Signature-Input `alg` parameter be "consistent with the key material" with the rule of [@!RFC9421], Section 3.3.7: signers MUST NOT send it and verifiers MUST ignore it. The consistency rule had no testable meaning, since Section 3.3.7 states that JWA values are not registered in the HTTP Signature Algorithms registry and so no mapping between the two namespaces exists. Cited Section 1.4, which names deriving the algorithm from the key material as one of the three approaches an application may take.
   - Removed the Editor's Note that made the post-quantum paragraph contingent on ML-DSA being registered for HTTP Message Signatures. Under [@!RFC9421], Section 3.3.7 the JOSE path never consults that registry, so the pending registration does not gate ML-DSA here: [@!RFC9964] registers ML-DSA in the JOSE registry, which is the one that applies.
@@ -1459,7 +1470,8 @@ For the Signature Error Code registry, the expert should additionally verify tha
 
   Other changes:
 
-  - Required a verifier resolving a key from a JWKS to select the member matching `kid` without requiring any other member to be usable, and forbade failing because an unselected member names an unimplemented `kty` or `alg`. Without this the accommodation for unimplemented key types is unreachable in deployment: an issuer adding a post-quantum key alongside a classical one would break every verifier that does not implement the new type, including those that were only ever going to use the classical key, so no issuer could publish one. Noted that an unknown member within a single JWK is ignored per [@!RFC7517], Section 4, which is distinct from a member this document forbids.
+  - Required a verifier resolving a key from a JWKS to select the member matching `kid` without requiring any other member to be usable, and forbade failing because an unselected member names an unimplemented `kty` or `alg`. Without it no issuer could add a post-quantum key alongside a classical one, since doing so would break every verifier that does not implement the new type, including those that were only ever going to use the classical key. Noted that an unknown member within a single JWK is ignored per [@!RFC7517], Section 4, which is distinct from a member this document forbids.
+  - Stated that an `Accept-Signature-Alg` Token is the registered identifier verbatim, case included: `ES256`, not `es256`. Structured Field parsing preserves a Token's case, and the value is compared against the `alg` member of a JWK, a case-sensitive JSON string, so a case-folded token matches no key.
   - Corrected the claim that `kty` and `crv` underdetermine the algorithm for EC keys. Within JOSE they do not: `ES256`, `ES384`, and `ES512` correspond one to one with `P-256`, `P-384`, and `P-521`, and no registered signing algorithm pairs a curve with another hash. Genuine underdetermination is limited to RSA, which has no `crv`, and to the `AKP` key type of [@!RFC9964].
   - Stated that requiring `alg` of every conveyed key is therefore a choice rather than a necessity, and gave the reasons in a new Design Rationale section, (#why-alg-is-required): the set of underdetermined key types grows as algorithms are registered, `Accept-Signature-Alg` comparison has to be total, a verifier keeps one code path, and the signer bears no cost. Said plainly that this tightens [@!RFC9864], which RECOMMENDS rather than requires the member.
   - Required a verifier to reject an `alg` it does not support with `unsupported_algorithm`, and stated that `Accept-Signature-Alg` names exactly that set, neither a subset nor a superset. Replaced the vague "validate the algorithm against policy" verifier obligations with the specific checks.
