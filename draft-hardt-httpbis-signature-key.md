@@ -862,11 +862,11 @@ Accept-Signature-Scheme: jwks_uri, jwt
 Accept-Signature-Alg: ES256
 ```
 
-A client that understands both mechanisms distinguishes two cases by the `WWW-Authenticate` auth-scheme. Because the rule applies only where the client understands the scheme, the client knows what that scheme does.
+What a client that understands both mechanisms does depends on what the `WWW-Authenticate` auth-scheme does. Nothing on the wire says which, and this document defines no signal for it, but a client only faces the choice for a scheme it already understands.
 
-- Where the challenge is an authentication or authorization challenge, such as `Basic` or `Bearer`, the two are alternatives and either satisfies the server. The client MUST sign the request rather than present the credential. A signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it; signing also puts no credential on the wire that the exchange did not require.
+- Where the challenge is an authentication or authorization challenge, such as `Basic` or `Bearer`, the two are alternatives. The client SHOULD sign the request rather than present the credential: a signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it, and signing puts no credential on the wire that the exchange did not require. A response carrying both does not assert that the two grant the same access, so a client that needs what only the credential grants MAY present it instead, and a server that is not satisfied by the choice challenges again.
 
-- Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]), the two are complements and satisfying one does not satisfy the other. The client MUST satisfy both.
+- Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]), the two are complements: satisfying one does not satisfy the other, and a client that wants the resource satisfies both.
 
 A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]) alongside a signature challenge. Payment is not authentication, so this is the complementary case and a client satisfies both:
 
