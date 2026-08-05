@@ -322,7 +322,7 @@ The enclave key's JWK Thumbprint URI (`urn:jkt:<hash-algorithm>:<thumbprint>`) s
 
 - `jwt` (REQUIRED, String) - Compact-serialized JWT
 
-- `cache` (OPTIONAL, Boolean) - As for the jwt scheme ((#jwt-confirmation-key-jwt)): the caller indicates it can present a cache identifier on subsequent requests and requests that the verifier issue one. A JWT presented with `cache` MUST contain a `jti` claim. See (#signature-key-cache-response-header).
+- `cache` (OPTIONAL, Boolean) - As for the jwt scheme ((#jwt-confirmation-key-jwt)): the caller indicates it can present a cache identifier on subsequent requests, using the cached scheme ((#cached-scheme)), and requests that the verifier issue one. A JWT presented with `cache` MUST contain a `jti` claim. See (#signature-key-cache-response-header).
 
 **JWT requirements:**
 
@@ -431,7 +431,7 @@ The stable (enclave) key algorithm in the JWT `alg` header is determined by what
 
 **Caching:**
 
-Caching ((#signature-key-cache-response-header)) keeps an assertion off the wire in the steady state, and the saving grows with the size of the keys and signatures the assertion carries ((#pqc-sizes)). This applies to any cacheable assertion, not only to jkt-jwt. What is specific to jkt-jwt is that the assertion carries a public key in its header and is signed by that key, so caching it also removes the thumbprint computation and the verification of that signature, which the jwt scheme does not perform. That part of the saving is small, since post-quantum verification is comparable to classical; the bytes are the reason to cache. The per-request signature continues to use the ephemeral `cnf.jwk` key.
+Caching — the cached scheme ((#cached-scheme)) together with the `Signature-Key-Cache` response header ((#signature-key-cache-response-header)) — keeps an assertion off the wire in the steady state, and the saving grows with the size of the keys and signatures the assertion carries ((#pqc-sizes)). This applies to any cacheable assertion, not only to jkt-jwt. What is specific to jkt-jwt is that the assertion carries a public key in its header and is signed by that key, so caching it also removes the thumbprint computation and the verification of that signature, which the jwt scheme does not perform. That part of the saving is small, since post-quantum verification is comparable to classical; the bytes are the reason to cache. The per-request signature continues to use the ephemeral `cnf.jwk` key.
 
 **Use cases:**
 
@@ -513,13 +513,13 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
 
 Under the jwks scheme the signer's identity is the JWKS URL itself. A verifier that allowlists or policies by identity is doing so against `url`. Because identity and key location are the same string, moving the JWKS to a different URL changes the signer's identity. Signers that need identity to remain stable while key location changes independently should use the jwks_uri scheme ((#jwks-uri-scheme)), whose indirection exists for that purpose (see (#why-jwks-uri)). The jwks scheme trades that decoupling for a single fetch and zero configuration.
 
+The `url` is compared as presented, by byte equality of the String value: a verifier MUST NOT canonicalize or normalize it before comparison. No case folding, percent-encoding normalization, dot-segment removal, or addition or removal of a default port is applied, and two values that differ in any byte name different identities. A signer MUST present the same bytes on every request for which it intends the same identity. This is the comparison rule of an identifier, not of a location: canonicalization would let several spellings collapse into one identity under rules that differ across implementations, which is exactly the disagreement an identifier comparison must not admit.
+
 **Use cases:**
 
 - Signers that want a self-describing identifier with no metadata to host
 
 - Deployments where the JWKS URL is an acceptable stable identity
-
-- Single-hop verification where discovery indirection is unnecessary
 
 ## JWT Confirmation Key (jwt)
 
@@ -529,7 +529,7 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 - `jwt` (REQUIRED, String) - Compact-serialized JWT
 
-- `cache` (OPTIONAL, Boolean) - When true, the caller indicates it can present a cache identifier on subsequent requests and requests that the verifier issue one. Absent means the caller does not want one. Boolean true is indicated by omitting the value ([@!RFC8941], Section 4.1.1.2), so the parameter is serialized as `cache` rather than `cache=?1`. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. A JWT presented with `cache` MUST contain a `jti` claim ([@!RFC7519], Section 4.1.7); a verifier MUST NOT issue a cache identifier for a JWT without one. See (#signature-key-cache-response-header).
+- `cache` (OPTIONAL, Boolean) - When true, the caller indicates it can present a cache identifier on subsequent requests, using the cached scheme ((#cached-scheme)), and requests that the verifier issue one. Absent means the caller does not want one. Boolean true is indicated by omitting the value ([@!RFC8941], Section 4.1.1.2), so the parameter is serialized as `cache` rather than `cache=?1`. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. A JWT presented with `cache` MUST contain a `jti` claim ([@!RFC7519], Section 4.1.7); a verifier MUST NOT issue a cache identifier for a JWT without one. See (#signature-key-cache-response-header).
 
 ```
 Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
@@ -547,7 +547,7 @@ Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
 
 - SHOULD contain standard claims: `sub`, `iat`
 
-- Verifiers MAY verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, following the explicit-typing guidance of [@!RFC8725], Section 3.11. The check is a defence against token confusion — an assertion minted for one context being accepted in another — and also rejects a wrong token before any cryptographic work.
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
@@ -627,7 +627,7 @@ The self-jwt scheme carries a signed JWT where the JWT issuer and the HTTP reque
 
 The self-jwt scheme does not support the `cache` parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. A self-jwt embeds no key: its signing key is the confirmation key and is discovered from the issuer's JWKS by `iss` and `kid`. That key is already cacheable on those two values ((#caching-and-performance)), so caching the assertion in addition would save only the assertion's own bytes, of which there are few. A self-jwt also typically carries claims specific to the request it accompanies, so a cached copy would be stale for the next request rather than reusable.
 
-- Verifiers MAY verify the JWT `typ` header parameter has an expected value per deployment policy, to optimize for a quick rejection
+- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, following the explicit-typing guidance of [@!RFC8725], Section 3.11. The check is a defence against token confusion — an assertion minted for one context being accepted in another — and also rejects a wrong token before any cryptographic work.
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
 
@@ -773,7 +773,7 @@ Order carries the server's preference: a server SHOULD list schemes in descendin
 
 A client MUST ignore tokens it does not recognize, so that a server may list schemes registered after the client was written without breaking it. A client that recognizes no listed scheme SHOULD NOT sign the request, since no scheme it can produce will be accepted.
 
-Listing the `cached` scheme ((#cached-scheme)) states that the server implements assertion caching. A client that sees it can set the `cache` signal ((#jwt-confirmation-key-jwt)) on its first request rather than probing. `cached` is a capability announcement rather than a scheme a client can choose to present: a client MUST NOT present it until a verifier has issued it a cache identifier, whatever the list order. A server that lists `cached` first is stating a preference for the steady state, not for the first request, and the client selects any scheme it can satisfy from the remainder.
+Listing the `cached` scheme ((#cached-scheme)) states that the server implements assertion caching. A client that sees it can set the `cache` signal ((#jwt-confirmation-key-jwt), (#jkt-jwt-scheme)) on its first request rather than probing. `cached` is a capability announcement rather than a scheme a client can choose to present: a client MUST NOT present it until a verifier has issued it a cache identifier, whatever the list order. A server that lists `cached` first is stating a preference for the steady state, not for the first request, and the client selects any scheme it can satisfy from the remainder.
 
 ## Accept-Signature-Alg {#accept-signature-alg}
 
@@ -1486,12 +1486,13 @@ For the Signature Error Code registry, the expert should additionally verify tha
   - Rewrote the justification in Algorithm Determination. [@!RFC9864] RECOMMENDS rather than requires the JWK `alg` member, and allows a deployment to rely on some other mechanism for ensuring a key is used as intended, so citing it as the basis for a MUST overstated it. The requirement now says what it is — a tightening — and gives the reason: keys conveyed in band come from a party the verifier has no prior relationship with, so no such other mechanism exists, and `kty` and `crv` underdetermine the algorithm for RSA, EC, and `AKP` keys alike. Noted that [@?I-D.richer-oauth-httpsig] reaches the same requirement independently for JWK-bound keys.
   - Audited every BCP 14 SHOULD against RFC 2119 Section 6. Each retained SHOULD now names the circumstance under which it may be ignored: omitting `Signature-Error` or `required_input` where diagnostics to an unauthenticated caller are a disclosure risk, returning a non-Problem-Details body under content negotiation, the general-purpose verifier that has no authorized-origin list to check `id` against, and the deployment that keeps an inline scheme because it has confirmed its headers fit.
   - Downgraded to lowercase the statements that were not interoperability requirements, per RFC 2119 Section 6 and the RFC 8174 convention that only uppercase is normative: single-signature deployment advice, the recommendation to document enclave stable-key algorithms, the "shortest practical lifetime" guidance, which was unmeasurable as written, and header buffer sizing.
-  - Changed the `typ` header check from SHOULD to MAY in the jwt and self-jwt schemes. The text identifies it as an optimization for quick rejection, and step 2 of each verification procedure already states the check.
+  - Grounded the `typ` header check of the jwt and self-jwt schemes in the JWT BCP: verifiers SHOULD require an expected `typ`, per the explicit-typing guidance of [@!RFC8725], Section 3.11. The check is a token-confusion defence, not the optimization the text previously called it.
   - Corrected the layered cryptographic agility rationale: post-quantum verification is not the expensive part, since ML-DSA verification is comparable to Ed25519. What caching saves the verifier is the assertion's bytes on the wire and the repeated resolution, not verification time. The signer's per-request cost is time and the verifier's is size.
   - Corrected the basis of the classical hot path: what bounds exposure is the lifetime of the confirmation key, not the expiry of the assertion carrying it. A signer that rebinds one long-lived key into successive assertions leaves that key acceptable indefinitely whatever each `exp` says, and gains nothing from short assertion lifetimes. jkt-jwt has the intended shape by construction.
   - Removed the archived IETF 125 presentation from the repository.
 
   - Added the `jwks` scheme: a direct JWKS fetch whose HTTPS `url` is both the signer identity and the key location, under the same egress-admission rules as `jwks_uri`.
+  - Stated that the jwks `url` is compared as presented, by byte equality, with no canonicalization or normalization: values differing in any byte name different identities, and a signer presents the same bytes wherever it intends the same identity.
   - Added the `unsupported_scheme` error code and made unknown-scheme rejection mandatory and conformance-testable, scoped to the `Signature-Key` member the verifier selected. A member the verifier did not select is ignored, so a signer can offer a signature under a new scheme without breaking verifiers that lack it.
   - Added an Algorithm Determination section as the single home for the fully-specified algorithm rules, referenced from every scheme that conveys or references a JWK.
   - Required defined rejection of unimplemented JWK key types, including `AKP` [@!RFC9964], reported as `unsupported_algorithm`.
