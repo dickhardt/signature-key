@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 6 February 2027                                      Cloudflare
-                                                           5 August 2026
+Expires: 7 February 2027                                      Cloudflare
+                                                           6 August 2026
 
 
                           HTTP Signature Keys
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 February 2027.
+   This Internet-Draft will expire on 7 February 2027.
 
 Copyright Notice
 
@@ -2894,13 +2894,19 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
 11.  Acknowledgments
 
-   The author would like to thank Joshua Gay, Ted Hardie, Yaron Sheffer,
-   and Martin Thomson for their feedback on this specification.  Ted
-   Hardie raised the question of client behaviour when WWW-Authenticate
-   and a signature challenge coexist, which Section 4.7 answers.  Martin
-   Thomson suggested the guidance of [RFC9170], which shaped the
-   extensibility design, and this document's repository is built on his
-   i-d-template.
+   The author would like to thank Joshua Gay, Ted Hardie, Thibault
+   Meunier, Mikkel Albrechtsen, Yaron Sheffer, and Martin Thomson for
+   their feedback on this specification.  Ted Hardie raised the question
+   of client behaviour when WWW-Authenticate and a signature challenge
+   coexist, which Section 4.7 answers.  Thibault Meunier's review shaped
+   much of -08: citing the JOSE registry itself rather than [RFC7518],
+   closing the none case on the response side, scoping the unknown-
+   scheme rejection to the selected member, restoring what keyid means
+   alongside Signature-Key, and untangling the key cache expiry from the
+   assertion cache expiry.  Mikkel Albrechtsen raised the question of
+   adding signatures independently of one another.  Martin Thomson
+   suggested the guidance of [RFC9170], which shaped the extensibility
+   design, and this document's repository is built on his i-d-template.
 
 12.  References
 
