@@ -1,0 +1,1891 @@
+{
+  "magic": "E!vIA5L86J2I",
+  "timestamp": "2026-09-03T16:31:05.049211+00:00",
+  "repo": "dickhardt/signature-key",
+  "labels": [
+    {
+      "name": "bug",
+      "description": "Something isn't working",
+      "color": "d73a4a"
+    },
+    {
+      "name": "documentation",
+      "description": "Improvements or additions to documentation",
+      "color": "0075ca"
+    },
+    {
+      "name": "duplicate",
+      "description": "This issue or pull request already exists",
+      "color": "cfd3d7"
+    },
+    {
+      "name": "enhancement",
+      "description": "New feature or request",
+      "color": "a2eeef"
+    },
+    {
+      "name": "good first issue",
+      "description": "Good for newcomers",
+      "color": "7057ff"
+    },
+    {
+      "name": "help wanted",
+      "description": "Extra attention is needed",
+      "color": "008672"
+    },
+    {
+      "name": "invalid",
+      "description": "This doesn't seem right",
+      "color": "e4e669"
+    },
+    {
+      "name": "question",
+      "description": "Further information is requested",
+      "color": "d876e3"
+    },
+    {
+      "name": "wontfix",
+      "description": "This will not be worked on",
+      "color": "ffffff"
+    }
+  ],
+  "issues": [
+    {
+      "number": 1,
+      "id": "I_kwDOQaOp9s7h35rk",
+      "title": "Future: Key Transparency / Mirroring Considerations",
+      "url": "https://github.com/dickhardt/signature-key/issues/1",
+      "state": "OPEN",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n\nConsider adding key transparency mechanisms to detect key mirroring attacks and provide auditability.\n\n## Background\n\nKey transparency (inspired by Certificate Transparency in the TLS ecosystem) provides:\n- Append-only public logs where signers register their public keys\n- Ability for verifiers to check that presented keys appear in logs\n- Ability for key owners to monitor logs for unauthorized keys\n- Auditor detection of misbehavior (duplicate keys, unauthorized changes)\n\n## Relevance by Scheme\n\n| Scheme | Mirroring Risk | Transparency Benefit |\n|--------|---------------|---------------------|\n| **hwk** | Low (pseudonymous) | Could prove key ownership over time |\n| **jwks_uri** | Medium (DNS/CA spoofing) | Verify key is logged for that identity |\n| **x509** | Already has CT | Existing CT infrastructure applies |\n| **jwt** | Depends on issuer | Log JWT issuance for auditability |\n\n## Scope Consideration\n\nKey transparency may be better addressed at the JWK/JWKS layer rather than in this specification. Signaling key transparency source in the `.well-known` metadata document or JWKS file would:\n- Apply to any protocol using JWKs (not just Signature-Key)\n- Avoid adding complexity to this specification\n- Allow broader ecosystem adoption\n\nThis suggests key transparency is a JWK/JWT scope problem rather than a Signature-Key problem.\n\n## Possible Approaches\n\n1. **In Signature-Key** (original idea): Optional `kt_proof` parameter\n2. **In .well-known metadata**: Add `key_transparency_log` property\n3. **In JWKS**: Add transparency metadata per key or at JWKS level\n4. **Out of scope**: Leave to JWK/JWT specifications\n\n## Notes\n\n- The x509 scheme already benefits from existing Certificate Transparency infrastructure\n- This would add significant complexity and should be considered carefully\n\n---\n\ncc @thibmeu",
+      "createdAt": "2026-01-07T16:52:59Z",
+      "updatedAt": "2026-01-07T17:17:21Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 6,
+      "id": "I_kwDOQaOp9s76pY9_",
+      "title": "fix example  of dwk=\"aauth-agent\"  to be dwk=\"aauth-agent.json\"",
+      "url": "https://github.com/dickhardt/signature-key/issues/6",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [
+        "dickhardt"
+      ],
+      "labels": [],
+      "body": "or use a more generic .well-known ",
+      "createdAt": "2026-04-04T15:17:39Z",
+      "updatedAt": "2026-04-09T14:39:19Z",
+      "closedAt": "2026-04-09T14:39:19Z",
+      "comments": []
+    },
+    {
+      "number": 7,
+      "id": "I_kwDOQaOp9s761gE3",
+      "title": "Should this spec define a baseline HTTP Message Signatures profile?",
+      "url": "https://github.com/dickhardt/signature-key/issues/7",
+      "state": "OPEN",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Question\n\nThis spec defines three headers \u2014 Signature-Key, Signature-Requirement, and Signature-Error \u2014 but does not define a baseline HTTP Message Signatures profile (minimum covered components, timestamp requirements, verification steps). Currently, every protocol using these headers must independently profile how signatures are constructed and verified. AAuth does this in its protocol spec.\n\n## Options\n\n1. **No baseline profile** \u2014 each protocol profiles independently. Signature-Requirement's `required_input` parameter enables runtime discovery of the server's requirements, reducing the need for a predefined profile.\n\n2. **Define a recommended baseline** \u2014 specify a minimum set of covered components (e.g., `@method`, `@authority`, `@path`, `signature-key`), require the `created` parameter, and provide basic verification steps. Protocols can extend but not reduce this baseline.\n\n3. **Define the baseline as a separate document** \u2014 keep this spec focused on the headers and publish a companion \"HTTP Message Signatures Baseline Profile\" spec.\n\n## Context\n\nWithout a baseline, two independent implementations of Signature-Requirement may not interoperate unless they agree on a profile out of band. The `required_input` parameter in Signature-Requirement partially addresses this by allowing runtime negotiation, but doesn't cover verification-side requirements (e.g., timestamp validation, replay protection).",
+      "createdAt": "2026-04-05T18:50:23Z",
+      "updatedAt": "2026-04-05T18:50:23Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 9,
+      "id": "I_kwDOQaOp9s78Tpex",
+      "title": "Should sigkey=uri be split into distinct values?",
+      "url": "https://github.com/dickhardt/signature-key/issues/9",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Context\n\nFrom PR #8 review by @thibmeu: the `sigkey=uri` value groups together `jwks_uri`, `jwt`, and `x509` (with URI SAN) under a single umbrella. This may be too broad.\n\n## Concern\n\n> uri seems quite risky as defined. maybe we should better characterise the content-type, or have distinct sigkey. the latter is simpler to handle, and cleaner imo. from a server perspective, being able to directly specify the content they would accept seems better than generalising on the discovery transport.\n\n## Options\n\n1. **Keep as-is**: Three ordered levels (jkt/uri/x509) representing increasing identification requirements. Simpler model, fewer values.\n2. **Split uri into distinct values**: e.g. `sigkey=jwks_uri`, `sigkey=jwt`, `sigkey=x509`. Gives servers precise control over what they accept. Cleaner from a server implementation perspective.\n3. **Hybrid**: Keep the levels but allow servers to specify specific schemes via an additional parameter.\n\n## Discussion\n\nThe trade-off is between simplicity of the model (3 ordered levels) vs. server-side specificity (explicit scheme selection). A server that only wants `jwks_uri` currently has to accept `jwt` and `x509-with-URI` as well under `sigkey=uri`.",
+      "createdAt": "2026-04-09T14:39:10Z",
+      "updatedAt": "2026-08-05T16:34:52Z",
+      "closedAt": "2026-08-05T16:34:52Z",
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "perhaps url then instead of uri?\n\nboth a jwks_uri and a jwt will provide the identifier used to resolve the dwk and then the jwks_uri -- hence the goal was a value that worked for both jwks_uri or jwt -- and the client can use whichever it wants which give the client to have the abstraction or not.\n\nSince an x509 can contain a domain name it could provide a similar identifier.",
+          "createdAt": "2026-04-09T14:53:42Z",
+          "updatedAt": "2026-04-09T14:53:42Z"
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "id": "I_kwDOQaOp9s8AAAABAmoXhw",
+      "title": "Allow multiple signatures to be added independently of each other",
+      "url": "https://github.com/dickhardt/signature-key/issues/10",
+      "state": "OPEN",
+      "author": "The0mikkel",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Currently, the draft specifies that the `Signature-Key` field MUST be populated before signatures are added, and that signatures MUST cover the full `Signature-Key` field (section 3.2).\n\nThis goes against principles outlined in RFC 9421, which is specifically designed to allow for multiple signatures being added and removed independently of each other, and by different signers, such as by reverse proxies (RFC 9421 section 4.3).\n\nHowever, the risks associated with not including the `Signature-Key` field in the signature is real and significant.\n\nThe HTTP Message Signature standard (RFC 9421) does support only covering *parts* of the `Signature-Key`. With the `key` parameter on component identifiers, it is possible to target only a single key in a `Dictionary Structured Field`, which `Signature-Key` is.\nThe standard should therefore at a minimum mention that individual Signature keys can be covered, independently of each other, using the `key` parameter on component identifiers, following the algorithm defined in RFC 9421 section 2.1.2, and thus allowing for multiple signatures being added or removed independently of each other.\n\nThe following example uses the `key` parameter on `Signature-Key` component identifier:\n\n```\nSignature-Input: sig1=(... \"signature-key\";key=\"sig1\"), sig2=(... \"signature-key\";key=\"sig2\")\nSignature: sig1=:...:, sig2=:...:\nSignature-Key: sig1=jwt;jwt=\"eyJ...\", sig2=jwks_uri;id=\"https://example.com\";dwk=\"eg-config\";kid=\"k1\"\n```\n\nThis will result in the following signature base:\n\n```\n...\n\"signature-key\";key=\"sig1\": jwt;jwt=\"eyJ...\"\n\"@signature-params\": (... \"signature-key\";key=\"sig1\")\n```\n\nBy using the `key` parameter, it is therefore possible to both achieve the currently defined integrity guarantees, as well as allowing for new signatures to be added by sepereate signers.",
+      "createdAt": "2026-04-27T11:46:55Z",
+      "updatedAt": "2026-04-27T11:57:34Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 12,
+      "id": "I_kwDOQaOp9s8AAAABFg_QZg",
+      "title": "jwks_uri scheme: metadata document should specify issuer as a SHOULD field",
+      "url": "https://github.com/dickhardt/signature-key/issues/12",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Problem\n\nThe `jwks_uri` scheme (\u00a7 JWKS URI Discovery) says the metadata document must contain a `jwks_uri` property (step 3: \"Extract `jwks_uri` property\"). It says nothing about an `issuer` field in the metadata document.\n\nThe `iss` and `dwk` mentioned in the spec are JWT claims (in the `jwt` scheme), not metadata document fields.\n\n## Why `issuer` belongs in the metadata document spec\n\nA verifier receiving a `Signature-Key` header with a `dwk` parameter fetches `{id}/.well-known/{dwk}` and needs two things:\n\n1. `jwks_uri` \u2014 to retrieve the public keys for signature verification\n2. `issuer` \u2014 to confirm the fetched document actually belongs to the claimed signer (`id`)\n\nWithout checking that `issuer` in the document matches `id` from the Signature-Key header, a verifier is vulnerable to host-poisoned metadata: an attacker hosts a metadata document at their domain that contains a `jwks_uri` pointing at a legitimate signer's keys, causing the verifier to attribute requests to the wrong party.\n\n## Proposed change\n\nIn the `jwks_uri` scheme's verification steps, add:\n\n- Step 3a: The metadata document SHOULD contain an `issuer` field (HTTPS URL string).\n- Step 3b: If `issuer` is present, verifiers MUST verify that `issuer` matches the `id` parameter from the Signature-Key header. If they do not match, the metadata document MUST be rejected.\n\nAnd in the metadata document schema section, document `issuer` as a SHOULD field: the HTTPS URL identifying the owner of the metadata document, used to prevent host-poisoned metadata attacks.\n\n## References\n\n- AAuth Protocol draft already requires `issuer` in all its dwk files and specifies this check (draft-hardt-oauth-aauth-protocol \u00a7Metadata)\n- This issue requests that the baseline behavior be defined at the Signature-Key layer so any `jwks_uri`-scheme implementation gets the security property, not just AAuth implementations",
+      "createdAt": "2026-06-15T12:34:37Z",
+      "updatedAt": "2026-08-05T16:34:51Z",
+      "closedAt": "2026-08-05T16:34:51Z",
+      "comments": []
+    },
+    {
+      "number": 15,
+      "id": "I_kwDOQaOp9s8AAAABJS64WQ",
+      "title": "Add designated expert instructions for IANA registries (IANA review feedback)",
+      "url": "https://github.com/dickhardt/signature-key/issues/15",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "IANA reviewed the draft ahead of IETF 126 and asked:\n\n> Could guidelines be provided for designated experts for the new Specification Required registries? Please see Section 4.5 of RFC 8126.\n\nThe draft establishes two registries \u2014 the **HTTP Signature-Key Scheme** registry and the **Signature Error Code** registry \u2014 under the Specification Required policy, which includes designated expert review (RFC 8126 Section 4.6), but provides no instructions to the designated expert as recommended by RFC 8126 Section 4.5.\n\nChanges needed:\n\n- Add a Designated Expert Instructions section covering both registries: submission path via IANA, expected response time, denial handling, and review criteria (syntax conformance, no confusing similarity or semantic duplication, spec stability and sufficiency for interop, security/privacy properties of schemes).\n- Change the Signature Error Code registry policy from Specification Required to **Expert Review** (RFC 8126 Section 4.5) \u2014 error codes are simple tokens and do not warrant a full specification.\n- Add a registration template to the Signature Error Code registry.\n- Cite the specific RFC 8126 sections (4.5 / 4.6) where the policies are invoked.",
+      "createdAt": "2026-07-18T15:06:42Z",
+      "updatedAt": "2026-08-05T16:34:50Z",
+      "closedAt": "2026-08-05T16:34:50Z",
+      "comments": []
+    },
+    {
+      "number": 17,
+      "id": "I_kwDOQaOp9s8AAAABKAWzLg",
+      "title": "Section 4.6 text",
+      "url": "https://github.com/dickhardt/signature-key/issues/17",
+      "state": "CLOSED",
+      "author": "hardie",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "The text in this section indicates that WWW-Authenticate and this mechanism may both be used, but it doesn't describe the behavior for clients which understand both.  If this is going to be supported, additional detail on the appropriate behavior would be useful.",
+      "createdAt": "2026-07-24T07:52:43Z",
+      "updatedAt": "2026-08-05T16:34:52Z",
+      "closedAt": "2026-08-05T16:34:52Z",
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Good catch, and the fix took a turn worth recording.\n\nThe obvious answer is \"the client picks the more secure challenge,\" following the advice in RFC 9110 Section 11.4 that a user agent \"ought to\" select \"what it considers to be the most secure auth-scheme that it understands.\" That does not work here, because `WWW-Authenticate` is multiplexed and not everything in it is authentication:\n\n- `Basic`, `Bearer`, `Digest` are **alternatives** to a signature challenge. Either satisfies the server.\n- A payment challenge (x402, Micropayment Protocol) is a **complement**. Paying does not authenticate you.\n\nA single ranking rule collapses the two, and applied to the 402 example already in the draft it would tell a client to choose between paying and signing when the server wants both.\n\nSo the text now splits on what the auth-scheme does:\n\n> A client that understands both mechanisms distinguishes two cases by the `WWW-Authenticate` auth-scheme.\n>\n> - Where the challenge is an authentication or authorization challenge, such as `Basic` or `Bearer`, the two are alternatives and either satisfies the server. The client SHOULD sign the request rather than present the credential.\n>\n> - Where the challenge is not an authentication or authorization challenge, such as a payment challenge, the two are complements and satisfying one does not satisfy the other. The client SHOULD satisfy both.\n\nTwo notes on why this is stateable at all:\n\n**The classification needs no registry flag.** There is no machine-readable way to tell `Payment` from `Bearer` \u2014 both are registered auth-schemes. But the rule is conditioned on the client understanding the scheme, and a client that understands `Payment` knows it is not authentication. The precondition carries the classification. A client that does not understand the scheme can neither classify nor satisfy it, so it signs and lets the server challenge again.\n\n**The preference is a property, not a judgement.** Rather than \"more secure,\" which is not determinable from the wire (a DPoP-bound five-minute bearer token versus an `hwk` signature with a self-asserted key is genuinely arguable), the draft says the signature demonstrates possession of a private key over this request whereas a bearer credential authenticates whoever holds it. Signing also puts no credential on the wire that the exchange did not require.\n\nFinally, since the presence of both fields does not itself say which case applies, a server that requires both MUST re-challenge naming only what is still outstanding, so a wrong first choice costs a round trip rather than a failure.\n\nIn #21, section \"Coexistence with WWW-Authenticate\".",
+          "createdAt": "2026-07-29T16:24:50Z",
+          "updatedAt": "2026-07-29T16:24:50Z"
+        },
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Now split out into its own PR: #23. (The change was briefly folded into #21; it is separate now so it can be reviewed on its own.)",
+          "createdAt": "2026-07-29T16:30:35Z",
+          "updatedAt": "2026-07-29T16:30:35Z"
+        }
+      ]
+    },
+    {
+      "number": 25,
+      "id": "I_kwDOQaOp9s8AAAABLSm1oQ",
+      "title": "Publish test vectors for each Signature-Key scheme",
+      "url": "https://github.com/dickhardt/signature-key/issues/25",
+      "state": "OPEN",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "There are now several independent implementations \u2014 JS (`@hellocoop/httpsig`), Swift (`swift-httpsig`), a Go implementation, and sidecat \u2014 and interop is currently checked bilaterally and ad hoc. `swift-httpsig/cross-test/` pulls the JS package from npm and diffs behaviour, which breaks whenever either side moves and does not help a fourth implementation.\n\nPublished vectors would make interop principled, and would give httpbis a concrete maturity signal: \"these implementations agree on these bytes\" is a stronger argument than \"these implementations exist.\"\n\nRFC 9421 Appendix B is the model. Its vectors cannot serve this purpose because they predate this document and do not cover `signature-key`.\n\n## Positive vectors, one per scheme\n\n`hwk`, `jkt-jwt`, `jwks_uri`, `jwks`, `jwt`, `self-jwt`, and `x509` if it stays.\n\nEach should publish:\n\n- the full request\n- **the signature base, verbatim**, RFC 8792 wrapped\n- key material including the private key, so others can reproduce\n- the expected `Signature-Input`, `Signature`, and `Signature-Key` header fields\n- for discovery schemes, the `.well-known` document and JWKS the vector resolves against\n\nPublishing the base is the part that matters most. Without it an implementer who fails a vector cannot tell whether the fault is in canonicalization or in the crypto. That diagnostic split is most of the value.\n\n## Negative vectors\n\nThis is where this document has teeth, and where implementations will diverge. RFC 9421 publishes none, but every MUST-reject here should be conformance-testable, with the expected `Signature-Error` code:\n\n| Vector | Expected |\n| --- | --- |\n| `signature-key` absent from covered components | `invalid_input`, `required_input` naming it |\n| `hwk` carrying a `kid` parameter | rejected |\n| `alg=\"EdDSA\"` (polymorphic) | rejected |\n| `alg` disagreeing with `kty` or `crv` | rejected |\n| `alg` absent from a conveyed JWK | rejected |\n| symmetric key (`oct` / `HS256`) | rejected |\n| unknown scheme token | `unsupported_scheme` |\n| JWT with no `exp` | rejected |\n| expired JWT | `expired_jwt` |\n\nThis turns \"MUST reject\" from prose into something a test harness can check, which is the same argument that motivated the BCP 14 audit in #24.\n\n## A JWKS containing an ML-DSA-44 key\n\nHighest-value single vector, and its value is mostly for implementations that **cannot** do ML-DSA \u2014 which is nearly all of them today. Libraries are reported to blow up on the `AKP` key type rather than declining it.\n\n(#algorithm-determination) already requires that a verifier encountering a `kty` it does not implement \"MUST reject the key with defined error feedback and MUST NOT fail in an undefined manner\". Nothing tests it.\n\nTwo variants, and the second is the important one:\n\n1. A JWKS containing only an ML-DSA-44 key. An implementation without ML-DSA must report `unsupported_algorithm`, not throw.\n2. **A JWKS containing an Ed25519 key and an ML-DSA-44 key, where the vector selects the Ed25519 one by `kid`.** An implementation must find the usable key and ignore the one it cannot parse. The failure mode being tested is a library that hits the unknown `kty` while enumerating and abandons a perfectly good key sitting next to it.\n\nThis is a forward-compatibility test in the spirit of GREASE ([@?RFC9170] is already cited in the draft): exercise the unknown-value path routinely so it does not rot.\n\n## ML-DSA vectors, and what determinism actually constrains\n\nVerification is deterministic; only signature *generation* is randomized. A randomized algorithm therefore constrains whether a vector can be **regenerated**, never whether it can be **checked**. Three categories, and only the third is affected.\n\n### 1. Key-handling vectors \u2014 determinism does not apply\n\nNothing is signed. The `AKP` JWKS cases above are these: the key sits in a JWKS and the test is whether an implementation declines it cleanly or falls over. Every implementation can run them today, including \u2014 especially \u2014 those with no ML-DSA support at all.\n\n### 2. Verify-only signature vectors \u2014 publish these for every algorithm\n\nThe vector carries the request, its signature base, the public key, and the signature. Any implementation supporting the algorithm checks it and gets a definite answer.\n\n**ML-DSA belongs here**, on exactly the same footing as ECDSA and RSA-PSS. Neither of those is deterministic either, and nobody treats that as a reason to omit them.\n\n### 3. Reproduce-the-bytes vectors \u2014 only these need determinism\n\n- **Ed25519** is deterministic. This is the primary reproducible set, and the reason to lead with it.\n- **ECDSA and RSA-PSS** are not. RFC 9421 Section 3.3.4 says so outright: \"the output of ECDSA signature algorithms is non-deterministic; therefore, it is not correct to recalculate a new signature on the signature base and compare the results to an existing signature.\"\n- **ML-DSA** is hedged by default. FIPS 204 specifies the hedged variant, where `rnd` comes from an RBG, as the default, plus an optional deterministic variant for platforms without one. The hedged variant degrades to the deterministic one when the RBG returns all zeros, so an implementation able to inject `rnd` can reproduce a deterministic vector. Most libraries do not expose that knob, so such a vector can be published as optional but should not be required to pass.\n\nThe appendix must state which category each vector is in. Otherwise implementers will write tests that cannot pass \u2014 recomputing an ES256 or hedged ML-DSA signature and comparing bytes.\n\n### What verify-only costs, and how to close it\n\nA verify-only vector proves a **verifier** correct, not a **signer**. A signer-side bug in a randomized algorithm will not be caught by a static file. Two ways to cover it, neither needing determinism:\n\n- **Self-consistency** \u2014 an implementation signs and verifies with itself. Catches internal incoherence, nothing cross-implementation.\n- **Pairwise round-trip** \u2014 A signs, B verifies. Catches signer bugs directly. Not a static vector, but `swift-httpsig/cross-test/` is already structurally this; the vector file could carry a \"sign this base, have a peer verify it\" case alongside the static ones.\n\n## Time-dependent vectors\n\nStatic vectors and expiry validation are in tension: a vector with a fixed `created`, `exp`, or `iat` is stale the moment it is published.\n\nProposal \u2014 **each vector declares the instant it is to be evaluated at**:\n\n```json\n{ \"name\": \"...\", \"now\": 1618884473, \"request\": { ... }, \"expect\": { ... } }\n```\n\nA conforming harness verifies the vector as if the current time were `now`. This is what RFC 9421 implicitly requires of its own 2021-dated vectors, and what implementations already do informally by setting an enormous clock skew \u2014 see `maxClockSkew: 999999999` in the JS test suite, which is that convention without the convention.\n\nKeeping the two concerns in separate vector categories matters:\n\n- **Canonicalization and crypto vectors** should not carry meaningful expiry at all, so they never fail because a clock moved.\n- **Time-validation vectors** express times relative to the declared `now`: `exp = now - 1` must yield `expired_jwt`, `exp = now + 300` must pass, `iat = now + 3600` must be rejected as future-dated.\n\nDoing this well probably means saying somewhere that an implementation ought to expose a way to inject the verification time. That is a test-harness concern rather than a protocol requirement, but the appendix should state the convention.\n\n## Form\n\nTwo artifacts, both in this repository:\n\n- **An appendix in the draft**, human-readable, in the style of RFC 9421 Appendix B. This is what survives into the RFC, and publishing the signature base verbatim is the part that matters most \u2014 without it an implementer who fails a vector cannot tell whether the fault is in canonicalization or in the crypto.\n- **A machine-readable JSON file in this repository** that harnesses consume directly, so a test suite never needs network access.\n\nAnything requiring a live endpoint is out of scope here. The `jwks_uri`, `jwks`, and `self-jwt` schemes resolve a URL, and testing a *signer* needs a peer rather than a file \u2014 neither is something a specification repository should host, and no RFC should cite a URL that can rot. That work is [aauth-dev/conformance#1](https://github.com/aauth-dev/conformance/issues/1), which will also mirror the static artifacts here so the two never disagree.\n\n## Caveat worth stating up front\n\nVectors generated from a single implementation encode that implementation is bugs as normative. The JS `v2` branch is the most complete `-07` implementation and so the natural generator, which is precisely the risk.\n\nBefore publishing anything: hand-verify the signature bases against the spec text rather than trusting the generator, and have a second implementation independently reproduce the Ed25519 vectors. That step is the one that makes the vectors worth having.\n\n## Sequencing\n\nNot before the open `-07` PRs land (#21, #22, #23, #24) \u2014 the `hwk` `alg` parameter and the negotiation headers are still moving, and vectors generated now would be regenerated.\n\n---\n\n**Revision correction:** this work lands in **`-08`**, not `-07`. `-07` was published to the datatracker on 2026-07-05 and was editorial (an Introduction paragraph citing AAuth and Email Verification). The `hwk` `alg` parameter was forbidden in `-06` **and** `-07` and becomes required in `-08`, so the break is `-07` \u2192 `-08`. References to `-07` below should be read as `-08`.\n\n",
+      "createdAt": "2026-08-03T17:47:40Z",
+      "updatedAt": "2026-08-05T15:37:02Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 33,
+      "id": "I_kwDOQaOp9s8AAAABLmKtrQ",
+      "title": "Add Ted Hardie and Martin Thomson to Acknowledgments",
+      "url": "https://github.com/dickhardt/signature-key/issues/33",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "The Acknowledgments section currently thanks Joshua Gay and Yaron Sheffer. Add:\n\n- **Ted Hardie** (@hardie) \u2014 raised issue #17 on client behaviour when `WWW-Authenticate` and a signature challenge coexist, which led to the Coexistence section (PR #23/#28, landed in -08).\n- **Martin Thomson** \u2014 this repository is built on his [i-d-template](https://github.com/martinthomson/i-d-template).\n\n(Note the spelling: Thomson, not Thompson.)",
+      "createdAt": "2026-08-05T16:44:21Z",
+      "updatedAt": "2026-08-05T20:34:54Z",
+      "closedAt": "2026-08-05T20:34:54Z",
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Additional context for the Martin Thomson acknowledgment: he suggested looking at RFC 9170 (Maintaining Robust Protocols), and the draft now engages with it substantively \u2014 the Introduction cites it for exercising the extension point on ordinary traffic, and the Design Rationale relies on it in the single-header-vs-per-scheme-header argument, the unsupported_scheme feedback argument, the fewer-namespaces argument, and the decision not to reserve grease values (per its Section 3.3 caution). The acknowledgment should credit this suggestion.",
+          "createdAt": "2026-08-05T16:47:46Z",
+          "updatedAt": "2026-08-05T16:47:46Z"
+        }
+      ]
+    },
+    {
+      "number": 35,
+      "id": "I_kwDOQaOp9s8AAAABPhTvtA",
+      "title": "update x509 scheme to take certificate chain in header",
+      "url": "https://github.com/dickhardt/signature-key/issues/35",
+      "state": "OPEN",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "### Proposal\n\n1. Rename `x5t` \u2192 `t`. Semantics unchanged (SHA-256 of DER-encoded\n   end-entity cert, `sf-binary`). Drop the JOSE `x5` prefix \u2014 unneeded\n   here since the `x509` scheme token already scopes these parameters,\n   the way `hwk`'s `kty`/`crv`/`x`/`alg` carry no prefix; the prefix\n   only earns its keep in JOSE's flat JSON namespace.\n\n2. Drop `x5u` entirely. No URL-fetch path for this scheme.\n\n3. Add `c` (Inner List of Byte Sequences) \u2014 the certificate chain\n   conveyed inline, DER-encoded, leaf-first, self-signed root omitted\n   (verifier's trust anchor assumed already held, same convention JWS\n   `x5c` follows for the same reason).\n\n4. `c` and `t` are alternatives, mutually exclusive; exactly one MUST\n   be present.\n\n   - `c`: full chain inline. Self-verifying via the signature that\n     covers `signature-key` (\u00a77.8) \u2014 no separate integrity check\n     needed on top of the bytes actually signed over.\n   - `t`: a bare reference, valid only when the verifier already\n     possesses the identified cert \u2014 via a prior `c` on this\n     connection, via the `cached` scheme's `cid` handshake (\u00a73.11),\n     or via out-of-band distribution (enterprise PKI, pre-provisioned\n     trust). A verifier that does not recognize `t` returns\n     `unknown_key` (\u00a75.4.8), generalized from its current\n     `jwks_uri`-specific wording to cover any scheme's unresolvable\n     key reference.\n\n   Signature-Key: sig=x509;c=(:MIIC...: :MIIB...:)\n   Signature-Key: sig=x509;t=:bWcoon4QTVn8Q6xiY0ekMD6L8bNLMkuDV2KtvsFc1nM=:",
+      "createdAt": "2026-09-03T12:20:22Z",
+      "updatedAt": "2026-09-03T12:20:22Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
+  "pulls": [
+    {
+      "number": 2,
+      "id": "PR_kwDOQaOp9s7Ow0FV",
+      "title": "Rename well-known parameter to dwk, add discovery to jwt scheme",
+      "url": "https://github.com/dickhardt/signature-key/pull/2",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Problem\n\nWhen a verifier receives an HTTP message signature with a `jwt` scheme Signature-Key, it needs to verify the JWT before it can verify the HTTP signature. Previously, discovering the issuer's keys required understanding the JWT type \u2014 different JWT types use different `.well-known` documents for key discovery. This couples HTTP message signature verification to JWT-type-specific knowledge, making it impossible to build a generic verifier that works across JWT types.\n\nThe `jwks_uri` scheme already solved this problem with its `well-known` parameter. The `dwk` rename aligns naming across both schemes and replaces the provisional name (which had a note about future shortening).\n\n## Solution\n\nIntroduce the `dwk` (dot well-known) parameter \u2014 a short, descriptive name for the `.well-known` metadata document used for key discovery.\n\nIn the `jwks_uri` scheme, `dwk` replaces `well-known` with a stable name.\n\nIn the `jwt` scheme, `dwk` is added as a REQUIRED claim alongside `iss`. The verifier constructs `{iss}/.well-known/{dwk}` to discover the issuer's `jwks_uri` and retrieve signing keys \u2014 without needing to understand the JWT type. This makes HTTP message signature verification independent of JWT-type-specific discovery logic.\n\nAdditional changes:\n- Explicit 8-step jwt verification procedure using dwk-based discovery\n- `typ` header check recommendation for jwt scheme\n- Editorial: clarify Signature-Key is not required for out-of-band key distribution; use \"end-entity certificate\" consistently in x509\n- Add Document History and Design Rationale appendices\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-03-30T21:31:37Z",
+      "updatedAt": "2026-04-04T13:45:50Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "7c69c1549736cc59018febfd747a885c76bd70ac",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "dwk",
+      "headRefOid": "3b7e089b6667c2b3597170ef1fbd8c676abcea98",
+      "closedAt": "2026-04-04T13:45:40Z",
+      "mergedAt": "2026-04-04T13:45:40Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "cf0306c3159a1695a83a6a655e70793e86fde77c"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s7x0SIe",
+          "commit": {
+            "abbreviatedOid": "d64d6d4"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "mostly one question on JWK requiring dwk. the rest looks good",
+          "createdAt": "2026-04-03T19:34:08Z",
+          "updatedAt": "2026-04-03T19:37:11Z",
+          "comments": [
+            {
+              "originalPosition": 87,
+              "body": "this change is intereting. instead of leveraging iss to discover the well-known, the JWT MUST contain a new dwk\n\nshould we be more leaniant here to ease integration with existing JWT>",
+              "createdAt": "2026-04-03T19:34:08Z",
+              "updatedAt": "2026-04-03T19:37:11Z"
+            },
+            {
+              "originalPosition": 94,
+              "body": "small precision. typ validation is hapenning before signature validation\n\n```suggestion\n- Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, to optimise for a quick rejection\n```",
+              "createdAt": "2026-04-03T19:36:16Z",
+              "updatedAt": "2026-04-03T19:37:11Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "id": "PR_kwDOQaOp9s7Ow0Mg",
+      "title": "Add jkt-jwt scheme for self-issued key delegation",
+      "url": "https://github.com/dickhardt/signature-key/pull/3",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Problem\n\nThe existing Signature-Key schemes require either no delegation (`hwk`), a discoverable issuer (`jwks_uri`, `jwt`), or a certificate authority (`x509`). There is no scheme for self-issued key delegation \u2014 where a long-lived identity key delegates signing authority to a shorter-lived key, without requiring any external authority or registration.\n\nThis gap matters for several scenarios. Devices with hardware-backed secure enclaves (Apple Secure Enclave, Android StrongBox, TPM) can generate keys with strong protection guarantees, but enclave signing is slow and may require user interaction \u2014 impractical for per-request HTTP message signatures. More broadly, any context where a stable pseudonymous identity wants to delegate to rotating or ephemeral keys has no standard mechanism today.\n\n## Solution\n\nThe `jkt-jwt` scheme (\"jacket jot\") provides general-purpose self-issued key delegation via JWT. The identity key signs a JWT that binds an ephemeral key via the `cnf` claim. HTTP requests are signed with the fast ephemeral key; the JWT proves delegation from the identity key.\n\nKey features:\n- **Self-issued**: No issuing authority or registration required \u2014 the signing key is embedded in the JWT header\n- **Stable pseudonymous identity**: The identity key's JWK Thumbprint URI (`urn:jkt:<alg>:<thumbprint>`) serves as a persistent, globally unique identifier across sessions\n- **Hardware enclave support**: Enables enclave-backed keys to be used for HTTP message signatures by delegating to software keys, avoiding per-request enclave operations\n- **TOFU model**: Verifiers build trust in the thumbprint identity over time, similar to `hwk` but with delegation capability\n- **Algorithm-agnostic**: The `typ` header encodes the thumbprint hash algorithm; identity and ephemeral keys can use different algorithms\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-03-30T21:31:46Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "06b43654e090aecaef63a678c980e7bbde4e85aa",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "jkt-jwt",
+      "headRefOid": "b4dc2447a3a8104773383472d13c8a613db404ba",
+      "closedAt": "2026-04-04T13:27:47Z",
+      "mergedAt": "2026-04-04T13:27:47Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "7c69c1549736cc59018febfd747a885c76bd70ac"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s7x0X4_",
+          "commit": {
+            "abbreviatedOid": "1746c33"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-03T19:40:45Z",
+          "updatedAt": "2026-04-03T19:44:18Z",
+          "comments": [
+            {
+              "originalPosition": 35,
+              "body": "nits: might be worth adding a reference",
+              "createdAt": "2026-04-03T19:40:46Z",
+              "updatedAt": "2026-04-03T19:44:18Z"
+            },
+            {
+              "originalPosition": 173,
+              "body": "i like this consideration about pseudonymn and not verified",
+              "createdAt": "2026-04-03T19:42:13Z",
+              "updatedAt": "2026-04-03T19:44:18Z"
+            },
+            {
+              "originalPosition": 4,
+              "body": "the potential for illustration is great here",
+              "createdAt": "2026-04-03T19:43:48Z",
+              "updatedAt": "2026-04-03T19:44:18Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "id": "PR_kwDOQaOp9s7PhG4e",
+      "title": "Add jwks_uri design rationale, jkt-jwt scheme, and updates",
+      "url": "https://github.com/dickhardt/signature-key/pull/4",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "- Add **\"Why jwks_uri Instead of Inline JWKS?\"** design rationale explaining separation of concerns \r\n## Test plan\r\n",
+      "createdAt": "2026-04-02T10:30:14Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "cf0306c3159a1695a83a6a655e70793e86fde77c",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "add-jwks-uri-rationale-and-updates",
+      "headRefOid": "e0d671d1a305f23a40306ae85cafda8dadd2b042",
+      "closedAt": "2026-04-04T13:48:06Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "All content covered by PRs #2, #3, and #5. Closing as superseded.",
+          "createdAt": "2026-04-04T13:48:05Z",
+          "updatedAt": "2026-04-04T13:48:05Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 5,
+      "id": "PR_kwDOQaOp9s7PhQ6U",
+      "title": "Add design rationale for jwks_uri vs inline JWKS",
+      "url": "https://github.com/dickhardt/signature-key/pull/5",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n- Adds a **\"Why jwks_uri Instead of Inline JWKS?\"** section to the Design Rationale appendix\n- Explains the separation of concerns: key rotation and management can happen independently of `.well-known` configuration\n\n## Test plan\n- [ ] Review rationale text for accuracy and completeness\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-04-02T10:40:57Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "06b43654e090aecaef63a678c980e7bbde4e85aa",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "add-jwks-uri-design-rationale",
+      "headRefOid": "ddfa2b738fd2f9f6546c9fa380296324ae621f00",
+      "closedAt": "2026-04-04T13:45:42Z",
+      "mergedAt": "2026-04-04T13:45:42Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "6dfacdccf01005c14c9ad74bc34fdddb352c3f01"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s7x0OGI",
+          "commit": {
+            "abbreviatedOid": "ddfa2b7"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "that's a good change. thanks!",
+          "createdAt": "2026-04-03T19:28:20Z",
+          "updatedAt": "2026-04-03T19:29:28Z",
+          "comments": [
+            {
+              "originalPosition": 16,
+              "body": "seems this could be the first point",
+              "createdAt": "2026-04-03T19:28:20Z",
+              "updatedAt": "2026-04-03T19:29:28Z"
+            },
+            {
+              "originalPosition": 10,
+              "body": "nits: consistency of \"metadata document\"\n\n```suggestion\n1. **Independent key rotation**: Keys can be rotated by updating the JWKS endpoint without modifying the `.well-known` metadata document. This decouples key lifecycle management from configuration management, allowing operations teams to rotate keys on their own schedule without republishing the metadata document.\n```",
+              "createdAt": "2026-04-03T19:29:04Z",
+              "updatedAt": "2026-04-03T19:29:28Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "id": "PR_kwDOQaOp9s7QFARn",
+      "title": "Add Accept-Signature sigkey parameter and Signature-Error header",
+      "url": "https://github.com/dickhardt/signature-key/pull/8",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n\n- Replaces `Signature-Requirement` header with `sigkey` parameter on `Accept-Signature` (RFC 9421 Section 5), registered in the HTTP Signature Metadata Parameters registry (Section 6.3)\n- Defines three `sigkey` values: `jkt` (pseudonymous), `uri` (URI-identified), `x509` (PKI certificate)\n- Adds **Signature-Error** response header with 8 error codes and RFC 9457 Problem Details response body\n- Renames spec to \"HTTP Signature Keys\"\n- Adds incremental adoption story (429\u2192401\u2192identity) using Accept-Signature\n- Adds `keyid` guidance: SHOULD NOT be included when `sigkey` is present\n- Uses RFC 9421 HTTP Signature Algorithms registry identifiers in Signature-Error\n- Adds RFC references to Key Validation (RFC 7517, 5280, 7519, 7638)\n- Removes cert pinning recommendation, adds key-copying risk guidance\n- Establishes Signature Error Code Registry\n\nAddresses all review feedback from @thibmeu.\n\nCloses #6",
+      "createdAt": "2026-04-05T21:04:56Z",
+      "updatedAt": "2026-04-09T14:39:20Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "2dc378d620c3b381ef73b7f892506bdbf8c3615d",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "add-signature-requirement-error",
+      "headRefOid": "39907029fcca3ed547a196ae68afba3cbbc5129a",
+      "closedAt": "2026-04-09T14:39:17Z",
+      "mergedAt": "2026-04-09T14:39:17Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "68b1c66a18db6ebd189578bfe0d5b6a271b559f7"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s7yMgz1",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-06T17:17:32Z",
+          "updatedAt": "2026-04-06T17:35:48Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "agree that's a more generic example",
+              "createdAt": "2026-04-06T17:17:32Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 142,
+              "body": "it seems worth describing how this defers from `Accept-Signature` in [Section 5 of RFC9421](https://www.rfc-editor.org/rfc/rfc9421.html#name-requesting-signatures)\n\nmy understanding lis this is a different format to request algorithm, and components. For requirement, this could be an additional component that we define, instead of a whole new header",
+              "createdAt": "2026-04-06T17:20:27Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 155,
+              "body": "while this table targets specific scheme (hwk, jwks_uri, ...), I feel both could be a pseudonym or an identity. I could know the identity associated to a pseudonym, or have an identity proxy.\n\nwhy not simply requiring a specific value wi;th dictionarry in the signature-input?",
+              "createdAt": "2026-04-06T17:22:00Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 167,
+              "body": "beyond sign request, the interaction are complex i think. best to simply refer to RFC9110 status code that we cover, and state that a signing client would sign these requests\n\nthe interaction is also interesting in the way that this implies the client signs opportunistically, when receiving a 4xx, and not by default",
+              "createdAt": "2026-04-06T17:24:09Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 183,
+              "body": "i like the incremental adoption story. i feel it could still be part of an extension to `Accept-Signature`",
+              "createdAt": "2026-04-06T17:25:15Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 258,
+              "body": "this is what [WBA with HTTP message signature](https://www.ietf.org/archive/id/draft-meunier-web-bot-auth-architecture-05.html#name-generating-http-message-sig) does, but for a narrow application",
+              "createdAt": "2026-04-06T17:28:21Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 268,
+              "body": "might be worth following https://www.rfc-editor.org/rfc/rfc9457.html even if this is not an httpapi",
+              "createdAt": "2026-04-06T17:30:06Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 354,
+              "body": "this part should be moved up. this is the first thing i thought of when think ing of signature-related error",
+              "createdAt": "2026-04-06T17:31:04Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 367,
+              "body": "we should not recommend pinning especially with certs going to fasten their rotation\nthe other security consideration with jwks_uri is the fact that beyond https validating the server, there's nothing preventing copyineg of the keys and serving them from malicious.example.com.\n\npart of why [signature-agent](https://datatracker.ietf.org/doc/html/draft-meunier-http-message-signatures-directory-05#name-binding-keys-to-the-directo) has some consideration around binding",
+              "createdAt": "2026-04-06T17:33:37Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 358,
+              "body": "thinking of this now, but this section would benefit from quoting external references",
+              "createdAt": "2026-04-06T17:34:08Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            },
+            {
+              "originalPosition": 421,
+              "body": "```suggestion\n- Signers can observe when and from where keys are fetched. In particular, when a server fetches a client's JWKS from `jwks_uri` at verification time, the fetch reveals to the JWKS host that someone is verifying signatures for that client.\n```\n\nthis is one use case for a registry for instance, which allow discovery and pure-loading https://datatracker.ietf.org/doc/html/draft-meunier-webbotauth-registry-01",
+              "createdAt": "2026-04-06T17:35:44Z",
+              "updatedAt": "2026-04-06T17:35:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7yco_s",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:03:50Z",
+          "updatedAt": "2026-04-07T11:03:50Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "\ud83d\udc4d",
+              "createdAt": "2026-04-07T11:03:50Z",
+              "updatedAt": "2026-04-07T11:03:50Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpC3",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:03:52Z",
+          "updatedAt": "2026-04-07T11:03:52Z",
+          "comments": [
+            {
+              "originalPosition": 142,
+              "body": "Agreed. Replaced `Signature-Requirement` entirely \u2014 now using a `sigkey` parameter on `Accept-Signature` (RFC 9421 Section 5), registered in the HTTP Signature Metadata Parameters registry (Section 6.3). No new header needed.",
+              "createdAt": "2026-04-07T11:03:52Z",
+              "updatedAt": "2026-04-07T11:03:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpGT",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:03:55Z",
+          "updatedAt": "2026-04-07T11:03:55Z",
+          "comments": [
+            {
+              "originalPosition": 155,
+              "body": "Good point. Replaced the pseudonym/identity levels with three `sigkey` parameter values: `jkt` (pseudonymous key by JWK Thumbprint), `uri` (URI-identified key), `x509` (PKI certificate). These are ordered levels of identification rather than mapping to specific schemes.",
+              "createdAt": "2026-04-07T11:03:55Z",
+              "updatedAt": "2026-04-07T11:03:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpKe",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:03:59Z",
+          "updatedAt": "2026-04-07T11:03:59Z",
+          "comments": [
+            {
+              "originalPosition": 167,
+              "body": "Kept the status code table as a guide for when `Accept-Signature` with `sigkey` appears in responses (401/402/429), but the semantics are now those of `Accept-Signature` per RFC 9421 rather than a custom header. The opportunistic signing pattern (client signs after receiving a 4xx) is preserved in the Client Processing section.",
+              "createdAt": "2026-04-07T11:03:59Z",
+              "updatedAt": "2026-04-07T11:03:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpL7",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:04:00Z",
+          "updatedAt": "2026-04-07T11:04:00Z",
+          "comments": [
+            {
+              "originalPosition": 183,
+              "body": "Done \u2014 the incremental adoption story is now part of `Accept-Signature` with the `sigkey` parameter, exactly as you suggested.",
+              "createdAt": "2026-04-07T11:04:00Z",
+              "updatedAt": "2026-04-07T11:04:00Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpOS",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:04:02Z",
+          "updatedAt": "2026-04-07T11:04:02Z",
+          "comments": [
+            {
+              "originalPosition": 258,
+              "body": "Thanks for the reference. The open issue on a baseline profile (issue #7) remains \u2014 useful to see how WBA approaches this for a narrower application.",
+              "createdAt": "2026-04-07T11:04:02Z",
+              "updatedAt": "2026-04-07T11:04:02Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpRy",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:04:05Z",
+          "updatedAt": "2026-04-07T11:04:05Z",
+          "comments": [
+            {
+              "originalPosition": 268,
+              "body": "Added. Servers SHOULD now use RFC 9457 (`application/problem+json`) for the response body when returning `Signature-Error`. Defined `type` URN pattern `urn:ietf:params:sig-error:<error-code>`. The header remains the authoritative source for machine-readable error info; the body provides human-readable detail.",
+              "createdAt": "2026-04-07T11:04:05Z",
+              "updatedAt": "2026-04-07T11:04:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpTI",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:04:06Z",
+          "updatedAt": "2026-04-07T11:04:06Z",
+          "comments": [
+            {
+              "originalPosition": 354,
+              "body": "Moved. Access Denied (403) now appears before the Error Codes section.",
+              "createdAt": "2026-04-07T11:04:06Z",
+              "updatedAt": "2026-04-07T11:04:06Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpVf",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:04:07Z",
+          "updatedAt": "2026-04-07T11:04:07Z",
+          "comments": [
+            {
+              "originalPosition": 367,
+              "body": "Agreed on both points. Removed the certificate pinning recommendation. Replaced with guidance about the key-copying risk: nothing prevents an attacker from copying public keys and serving them from a different domain, so verifiers SHOULD verify that the `id` parameter matches an expected or authorized origin.",
+              "createdAt": "2026-04-07T11:04:07Z",
+              "updatedAt": "2026-04-07T11:04:07Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpYG",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:04:09Z",
+          "updatedAt": "2026-04-07T11:04:09Z",
+          "comments": [
+            {
+              "originalPosition": 358,
+              "body": "Added RFC references: RFC 7517 (JWK) for hwk/jwks_uri/jwt, RFC 5280 (X.509) for x509, RFC 7519 (JWT) for jwt/jkt-jwt, RFC 7638 (JWK Thumbprint) for jkt-jwt.",
+              "createdAt": "2026-04-07T11:04:09Z",
+              "updatedAt": "2026-04-07T11:04:09Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7ycpat",
+          "commit": {
+            "abbreviatedOid": "e5f54af"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-07T11:04:11Z",
+          "updatedAt": "2026-04-07T11:04:11Z",
+          "comments": [
+            {
+              "originalPosition": 421,
+              "body": "Applied the suggested wording \u2014 added \"at verification time\". Thanks for the pointer to the webbotauth registry as a solution for the discovery/pre-loading use case.",
+              "createdAt": "2026-04-07T11:04:11Z",
+              "updatedAt": "2026-04-07T11:04:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7zUi-J",
+          "commit": {
+            "abbreviatedOid": "fa54c2d"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "thanks for the changes. they seems to align better with rfc9421",
+          "createdAt": "2026-04-09T12:26:07Z",
+          "updatedAt": "2026-04-09T12:38:36Z",
+          "comments": [
+            {
+              "originalPosition": 158,
+              "body": "uri seems quite risky as defined. maybe we should better caracterise the content-type, or have distinct sigkey. the latter is simpler to handle, and cleaner imo\n\nfrom a server perspective, being able to directly specify the content they would accept seems better than generalising on the discovery transport",
+              "createdAt": "2026-04-09T12:26:07Z",
+              "updatedAt": "2026-04-09T12:38:36Z"
+            },
+            {
+              "originalPosition": 146,
+              "body": "nit: a link would be handy\n\n```suggestion\n[@!RFC 9421] Section 5 defines the `Accept-Signature` response header for requesting HTTP Message Signatures. This document extends `Accept-Signature` with a `sigkey` parameter that indicates the type of Signature-Key the server requires.\n```",
+              "createdAt": "2026-04-09T12:28:35Z",
+              "updatedAt": "2026-04-09T12:38:36Z"
+            },
+            {
+              "originalPosition": 184,
+              "body": "trying to say this is non normative\n\n```suggestion\n`Accept-Signature` with a `sigkey` parameter can be set for any response. Below is a list of what it MAY mean on responses with the following status codes:\n```",
+              "createdAt": "2026-04-09T12:29:47Z",
+              "updatedAt": "2026-04-09T12:38:36Z"
+            },
+            {
+              "originalPosition": 280,
+              "body": "avoinding saying dos is ok as long as there is an accept-signature header\n\n```suggestion\nWhen a `429` response includes both `Retry-After` and `Accept-Signature` with `sigkey`, the client MAY retry one time with a signed request without waiting for the `Retry-After` interval. Signing the request provides a key thumbprint that enables per-client rate limiting, which may result in a higher rate limit for the client.\n```",
+              "createdAt": "2026-04-09T12:31:42Z",
+              "updatedAt": "2026-04-09T12:38:36Z"
+            },
+            {
+              "originalPosition": 208,
+              "body": "could be relevant to add a line one client that do not support specific sigkey. RFC9421 hints that it's ok to ignore, but worth restarting https://datatracker.ietf.org/doc/html/rfc9421#section-5.2\n\n```\n[@!RFC9421] Section 5.2 defines the processing of `Accept-Signature` header by client. If sigkey parameter is unsupported, the client MAY ignore it.\n```\n\n",
+              "createdAt": "2026-04-09T12:35:20Z",
+              "updatedAt": "2026-04-09T12:38:36Z"
+            },
+            {
+              "originalPosition": 307,
+              "body": "should this be registered with iana?\n\nif not, maybe use urn:examples:...",
+              "createdAt": "2026-04-09T12:37:05Z",
+              "updatedAt": "2026-04-09T12:38:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7zX6Qp",
+          "commit": {
+            "abbreviatedOid": "fa54c2d"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-09T14:35:19Z",
+          "updatedAt": "2026-04-09T14:35:19Z",
+          "comments": [
+            {
+              "originalPosition": 158,
+              "body": "perhaps url then instead of uri? \r\n\r\nboth a jwks_uri and a jwt will provide the identifier used to resolve the dwk and then the jwks_uri -- hence the goal was a value that worked for both jwks_uri or jwt -- and the client can use whichever it wants which give the client to have the abstraction or not. \r\n\r\nSince an x509 can contain a domain name it could provide a similar identifier. \r\n\r\n",
+              "createdAt": "2026-04-09T14:35:19Z",
+              "updatedAt": "2026-04-09T14:35:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7zYARw",
+          "commit": {
+            "abbreviatedOid": "3990702"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-09T14:38:37Z",
+          "updatedAt": "2026-04-09T14:38:37Z",
+          "comments": [
+            {
+              "originalPosition": 146,
+              "body": "Done \u2014 changed to `[@!RFC9421] Section 5` for a normative reference link.",
+              "createdAt": "2026-04-09T14:38:37Z",
+              "updatedAt": "2026-04-09T14:38:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7zYAWG",
+          "commit": {
+            "abbreviatedOid": "3990702"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-09T14:38:39Z",
+          "updatedAt": "2026-04-09T14:38:39Z",
+          "comments": [
+            {
+              "originalPosition": 184,
+              "body": "Done \u2014 updated to clarify it can appear on any response and the table is illustrative.",
+              "createdAt": "2026-04-09T14:38:39Z",
+              "updatedAt": "2026-04-09T14:38:39Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7zYAaR",
+          "commit": {
+            "abbreviatedOid": "3990702"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-09T14:38:41Z",
+          "updatedAt": "2026-04-09T14:38:41Z",
+          "comments": [
+            {
+              "originalPosition": 280,
+              "body": "Good catch \u2014 changed to \"retry one time\" and \"may result in\" to avoid implying unlimited retries are OK.",
+              "createdAt": "2026-04-09T14:38:41Z",
+              "updatedAt": "2026-04-09T14:38:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7zYAda",
+          "commit": {
+            "abbreviatedOid": "3990702"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-09T14:38:43Z",
+          "updatedAt": "2026-04-09T14:38:44Z",
+          "comments": [
+            {
+              "originalPosition": 208,
+              "body": "Added \u2014 clients that don't support `sigkey` MAY ignore it per RFC 9421 Section 5.2.",
+              "createdAt": "2026-04-09T14:38:44Z",
+              "updatedAt": "2026-04-09T14:38:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7zYAhQ",
+          "commit": {
+            "abbreviatedOid": "3990702"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-09T14:38:46Z",
+          "updatedAt": "2026-04-09T14:38:46Z",
+          "comments": [
+            {
+              "originalPosition": 307,
+              "body": "Good point \u2014 added IANA registration for `urn:ietf:params:sig-error` URN sub-namespace per RFC 3553.",
+              "createdAt": "2026-04-09T14:38:46Z",
+              "updatedAt": "2026-04-09T14:38:46Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s7zYAmn",
+          "commit": {
+            "abbreviatedOid": "3990702"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-04-09T14:38:48Z",
+          "updatedAt": "2026-04-09T14:38:48Z",
+          "comments": [
+            {
+              "originalPosition": 258,
+              "body": "Acknowledged as related work. The 429 rate-limiting pattern here is intentionally more general than WBA's bot-specific application, but good to be aware of the overlap.",
+              "createdAt": "2026-04-09T14:38:48Z",
+              "updatedAt": "2026-04-09T14:38:48Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "id": "PR_kwDOQaOp9s7mHSSq",
+      "title": "chore: bump GitHub Actions to Node-24-compatible majors",
+      "url": "https://github.com/dickhardt/signature-key/pull/11",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Why\nGitHub forces JS actions to Node 24 on 2026-06-16 and removes Node 20 on 2026-09-16. This repo's workflows pinned GitHub-maintained actions on Node-20 (or older) majors.\n\n## Changes\n- `actions/checkout` \u2192 **v6**\n- `actions/cache` \u2192 **v5**\n- `actions/upload-artifact` \u2192 **v7**\n- Added `.github/**` to `ghpages.yml` paths-ignore (push & pull_request) so CI-config-only changes don't rebuild/republish the editor's copy \u2014 matches the `openid/connect-*` repos and makes this branch deploy-safe.\n\n`martinthomson/i-d-template@v1` (Docker action) left as-is. `upload-artifact` bump reviewed: each workflow has a single upload per run with a unique/default name, no matrix or merge reliance \u2014 safe. Remaining `actionlint` notes (deprecated `set-output`) are pre-existing and out of scope.\n\n## Validation\n`actionlint` clean on bumped lines. `publish.yml` (tag `draft-*`), `archive.yml` (schedule/dispatch), `update.yml` (dispatch) don't deploy on a branch push; `ghpages.yml` now path-ignores `.github/**`.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-06-13T18:17:49Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "73b18aa6aafa785bcc279122dec6d74b34e9607b",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "chore/actions-node24",
+      "headRefOid": "4889bfe1e4c60e28a90a8a61dd3316ce8cbc36c9",
+      "closedAt": "2026-08-05T16:34:50Z",
+      "mergedAt": "2026-08-05T16:34:50Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "e31a5996f743b822aba39d464bfec6df976bbe9e"
+      },
+      "comments": [
+        {
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "can be merged as is",
+          "createdAt": "2026-08-05T10:46:09Z",
+          "updatedAt": "2026-08-05T10:46:09Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABFD-0_Q",
+          "commit": {
+            "abbreviatedOid": "4889bfe"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "straightforward",
+          "createdAt": "2026-07-06T09:51:05Z",
+          "updatedAt": "2026-07-06T09:51:05Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "id": "PR_kwDOQaOp9s7q2gMj",
+      "title": "jwt scheme: add self-issued mode (dwk without cnf)",
+      "url": "https://github.com/dickhardt/signature-key/pull/13",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n\n- Extends the `jwt` scheme with a **self-issued mode**: when a JWT has `iss`, `dwk`, and `kid` but no `cnf` claim, the verifier resolves the HTTP signing key from `{iss}/.well-known/{dwk}` using `kid` \u2014 the same key that signed the JWT. This avoids redundant `cnf.jwk` when the JWT issuer and HTTP request signer are the same party (e.g. a resource delivering AAuth events).\n- Existing **delegated mode** behavior (`cnf.jwk` present) is unchanged in semantics, but `iss`, `dwk`, and `kid` are now **MUST** for both modes (previously SHOULD).\n- Verification procedure restructured to 10 steps with explicit mode detection at step 5 and key resolution at step 9.\n\n## Key decisions\n\n- Mode is determined solely by presence/absence of `cnf` (step 5). `cnf` present but `cnf.jwk` absent \u2192 Reject (unambiguous third branch).\n- `dwk` is MUST for all jwt JWTs (both modes), since the verifier cannot discover the issuer's JWKS without it.\n- The application-specific fallback for absent `iss`/`dwk` is removed \u2014 that path is no longer supported.\n\n## Open review questions (from deep review)\n\nThe following issues were identified in a pre-PR review and are **not yet addressed** \u2014 flagging for discussion:\n\n1. **SSRF controls**: the six-bullet SSRF egress-admission checklist lives under `jwks_uri`; jwt self-issued mode fetches the same type of signer-controlled URL but the `jwt` security paragraph doesn't cross-reference it.\n2. **JWKS refresh rule**: the same-`kid` failure refresh rule is scoped to `scheme=jwks_uri` only; should it also apply to jwt self-issued mode?\n3. **`unknown_key` error code**: scoped to `jwks_uri`; jwt self-issued `kid`-not-found is unnamed.\n4. **`typ` inconsistency** (pre-existing): requirements say SHOULD, procedure says `Reject if unexpected`.\n5. **Change history**: no entry yet for this change \u2014 should be added before publishing as a new draft.\n\n## Test plan\n\n- [ ] Review jwt scheme section (requirements, verification procedure, both examples)\n- [ ] Check that delegated-mode example is clear even though it lacks a JWT header block (reader needs to know `kid` in header is MUST)\n- [ ] Confirm self-issued mode security model is adequately described\n- [ ] Decide whether open questions above need to be resolved before this draft ships\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-06-26T05:43:07Z",
+      "updatedAt": "2026-08-05T20:58:54Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "33115abfd469ce6e55dd336ad63097a39ed7a8d9",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "jwt-self-issued-mode",
+      "headRefOid": "c419bfc0fd82eadd49b800b4c27e09131288941a",
+      "closedAt": "2026-07-29T15:31:36Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "this need is addressed by #14. this PR should be ok to close imo",
+          "createdAt": "2026-07-06T09:51:38Z",
+          "updatedAt": "2026-07-06T09:51:38Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABEQsc0g",
+          "commit": {
+            "abbreviatedOid": "c419bfc"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "the change seems to achieven the goal of self issued attenuation\n\nhowever, I'm under the impression that doing the distinction between self issued or not solely based on `cnf` is brittle and error prone\n\nsimply having `mode=self` (with an enum) should achieve the same goal without relying on `cnf`",
+          "createdAt": "2026-06-26T16:06:57Z",
+          "updatedAt": "2026-06-26T16:14:17Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "should we mandate a `dwk` given that any URL can host a JWKS?",
+              "createdAt": "2026-06-26T16:06:57Z",
+              "updatedAt": "2026-06-26T16:14:17Z"
+            },
+            {
+              "originalPosition": 54,
+              "body": "trying to understand here: this is about attenuation rather than specifically self issuance, is this correct? otherwise, that'd be similar to the `jwks_uri` mode.\n\nthe confusion comes from \"SHOULD contain standard claims\". If it doesn't, it's very close to what `jwks_uri` provides",
+              "createdAt": "2026-06-26T16:08:55Z",
+              "updatedAt": "2026-06-26T16:14:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABEQ2bVw",
+          "commit": {
+            "abbreviatedOid": "c419bfc"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-06-26T16:31:52Z",
+          "updatedAt": "2026-06-26T16:31:52Z",
+          "comments": [
+            {
+              "originalPosition": 54,
+              "body": "this is about self issuance only -- not attenuation -- I am using it here \r\n\r\nhttps://dickhardt.github.io/AAuth/draft-hardt-aauth-events.html\r\n\r\nI want the resource to send and event token to the AP that can send the same token to the agent that can independently verify the event \r\n\r\nI would like the payload of the call from the resource to the AP to be AsyncAPI defined -- so want all the transport aspects to be in the event token in the Signature-Key header",
+              "createdAt": "2026-06-26T16:31:52Z",
+              "updatedAt": "2026-06-26T16:31:52Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "id": "PR_kwDOQaOp9s7r4uio",
+      "title": "draft-06: add self-jwt scheme",
+      "url": "https://github.com/dickhardt/signature-key/pull/14",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "## Summary\n\n- Adds `self-jwt` as a new standalone Signature-Key scheme (sixth scheme alongside hwk, jkt-jwt, jwks_uri, jwt, x509)\n- In `self-jwt`, the JWT issuer and HTTP request signer are the same party \u2014 no `cnf` claim is present or permitted\n- The JWT signing key is discovered via `{iss}/.well-known/{dwk}` and reused to verify both the JWT and the HTTP Message Signature\n\n## Motivation\n\nThe `jwt` scheme already handles delegated keys (issuer \u2260 signer). Rather than overloading it with a mode-switch on the presence/absence of `cnf`, `self-jwt` gives the self-issued pattern its own scheme name \u2014 cleaner negotiation, clearer intent, no ambiguity about which verification path to take.\n\n## Changes\n\n- Abstract and intro updated: five \u2192 six schemes\n- New `## Self-Issued JWT (self-jwt)` section with parameters, JWT requirements, 9-step verification procedure, example (header + payload), and use cases\n- IANA Signature-Key Scheme Registry: `self-jwt` row added\n- Security Considerations: `self-jwt` bullet in Key Validation, Caching, Scheme-Specific Risks\n- Privacy Considerations: `self-jwt` added to identity-revealing and key-discovery-tracking scheme lists\n- `sigkey` table: `self-jwt` added to the `uri` row\n- Algorithm Selection: `self-jwt` added to the JWK-based scheme list\n- Document History: draft-06 entry\n\n## Test plan\n\n- [ ] Review the new scheme section for correctness against the jwt and jkt-jwt sections\n- [ ] Confirm the verification procedure rejects JWTs with a `cnf` claim (step 5)\n- [ ] Check that all scheme lists in Security/Privacy/IANA are consistent\n- [ ] Build the draft (`make`) and check for rendering issues\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+      "createdAt": "2026-06-29T17:23:45Z",
+      "updatedAt": "2026-07-03T03:47:46Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "33115abfd469ce6e55dd336ad63097a39ed7a8d9",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "self-jwt",
+      "headRefOid": "c10797ca70b35413d703ecaca57fabace9c7420d",
+      "closedAt": "2026-07-03T03:47:44Z",
+      "mergedAt": "2026-07-03T03:47:44Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "f851bc2aed940188718e01af640618d49eee2656"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABE2q27w",
+          "commit": {
+            "abbreviatedOid": "4992120"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "thanks for the drafting. this is better than #13 imo.\n\ni've added a few nits, mostly for consistency",
+          "createdAt": "2026-07-02T19:54:05Z",
+          "updatedAt": "2026-07-02T19:56:53Z",
+          "comments": [
+            {
+              "originalPosition": 56,
+              "body": "nits: `SHOULD reject`\n\nthis is meant to be consistent with `Verifiers SHOULD verify the JWT typ header parameter has an expected value per deployment policy, to optimize for a quick rejection`",
+              "createdAt": "2026-07-02T19:54:05Z",
+              "updatedAt": "2026-07-02T19:56:54Z"
+            },
+            {
+              "originalPosition": 66,
+              "body": "probably worth pointing to `error=unknown_key` error code",
+              "createdAt": "2026-07-02T19:55:51Z",
+              "updatedAt": "2026-07-02T19:56:54Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABE4evWQ",
+          "commit": {
+            "abbreviatedOid": "c10797c"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T03:41:47Z",
+          "updatedAt": "2026-07-03T03:41:48Z",
+          "comments": [
+            {
+              "originalPosition": 56,
+              "body": "Good catch \u2014 updated to \"Verifiers SHOULD reject if\" for consistency.",
+              "createdAt": "2026-07-03T03:41:48Z",
+              "updatedAt": "2026-07-03T03:41:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABE4eviA",
+          "commit": {
+            "abbreviatedOid": "c10797c"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-03T03:41:49Z",
+          "updatedAt": "2026-07-03T03:41:49Z",
+          "comments": [
+            {
+              "originalPosition": 66,
+              "body": "Done \u2014 added `(error: `unknown_key`)` to step 6.",
+              "createdAt": "2026-07-03T03:41:49Z",
+              "updatedAt": "2026-07-03T03:41:49Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "id": "PR_kwDOQaOp9s7zWWcl",
+      "title": "Add designated expert instructions for IANA registries",
+      "url": "https://github.com/dickhardt/signature-key/pull/16",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #15\n\nResponds to IANA's pre-IETF-126 review, which asked for designated expert guidelines for the new Specification Required registries per RFC 8126 Section 4.5.\n\n- Adds a **Designated Expert Instructions** section covering both registries: submission via IANA, two-week expert response expectation, denial handling, and review criteria \u2014 shared criteria (syntax conformance, no confusing similarity, no semantic duplication) plus per-registry criteria (key authenticity, parameter completeness, and trust-model/security properties for schemes; token syntax, broad applicability, and no sensitive-information leakage for error codes).\n- Changes the **Signature Error Code** registry policy from Specification Required to **Expert Review** (RFC 8126 Section 4.5) \u2014 error codes are simple tokens and don't warrant requiring a full specification.\n- Adds a registration template to the Signature Error Code registry.\n- Cites the specific RFC 8126 sections (4.5 / 4.6) where each policy is invoked.\n- Adds a Document History entry under -08.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_012Z2ehDiWSSRXqec94VhEYE",
+      "createdAt": "2026-07-18T15:07:03Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "84f2d831e22741435660c1f160344d98c69db4d1",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "iana-expert-instructions",
+      "headRefOid": "56764bb11e21c4c1a06d628bca3d4ddf51e49e01",
+      "closedAt": "2026-08-05T16:34:50Z",
+      "mergedAt": "2026-08-05T16:34:50Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "e4a99c6c4767b64d793c8cea2896598eeabbdef7"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABH9SScg",
+          "commit": {
+            "abbreviatedOid": "40902f9"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-31T13:43:17Z",
+          "updatedAt": "2026-07-31T13:43:18Z",
+          "comments": [
+            {
+              "originalPosition": 53,
+              "body": "nits: the error may be unrelated to signature verification (such as [invalid_request](https://github.com/dickhardt/signature-key/blob/40902f9dc304262c4b0961098e2882ec5b1b0d80/draft-hardt-httpbis-signature-key.md#invalid_request))\n\nmight be worth tweaking the words here.",
+              "createdAt": "2026-07-31T13:43:17Z",
+              "updatedAt": "2026-07-31T13:43:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABH9SsPQ",
+          "commit": {
+            "abbreviatedOid": "40902f9"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2026-07-31T13:44:05Z",
+          "updatedAt": "2026-07-31T13:44:05Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 18,
+      "id": "PR_kwDOQaOp9s73slIu",
+      "title": "sigkey names schemes directly; add jwks scheme and unsupported_scheme error",
+      "url": "https://github.com/dickhardt/signature-key/pull/18",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Three related changes to `sigkey` and the scheme registry, plus supporting rationale. Builds clean under `mmark` + `xml2rfc`; new cross-references resolve to real section numbers.\n\n## 1. `sigkey` names a scheme directly\n\n`sigkey` previously took one of three abstract tokens (`jkt`, `uri`, `x509`) that mapped to sets of schemes. That abstraction is removed. `sigkey` now names a scheme from the Signature-Key Scheme registry as a single Token.\n\nStructured Fields parameter values cannot be Inner Lists, so a server that accepts several schemes names the one it prefers. The full accepted set is enumerated only in the `unsupported_scheme` error, whose `supported_schemes` lives in a dictionary member where a list is legal.\n\n- Rewrote \u00a74.1 Parameter Definition; dropped the `jkt`/`uri`/`x509` mapping table.\n- Deleted \u00a74.4 `sigkey Semantics` and its three subsections. Its two client-facing points (a client MAY ignore an unsupported `sigkey`; a client that already knows the requirement MAY sign the initial request directly) moved into \u00a74.7 Client Processing.\n- Examples throughout \u00a74 now use registered scheme names: `sigkey=hwk`, `sigkey=jwks_uri`.\n- Updated the IANA `sigkey` registration description.\n\n## 2. `unsupported_scheme` error\n\nNew \u00a75.4.2 with a REQUIRED `supported_schemes` member, registered in the Signature Error Code registry.\n\n```\nSignature-Error: error=unsupported_scheme, supported_schemes=(\"jwks_uri\" \"jwt\")\n```\n\nUnknown-scheme handling is now mandatory and defined rather than left open: \u00a73 says a verifier encountering an unimplemented or unregistered scheme MUST return `unsupported_scheme` and MUST NOT fail in a scheme-specific or undefined way, and SHOULD dispatch through a registry lookup rather than a fixed set of branches. \u00a74.7 adds a conformance line so the unknown-scheme path is exercised directly.\n\nThis is deliberately used **in place of** reserving grease values. Rationale is recorded in A.5.\n\n## 3. New `jwks` scheme\n\nA direct JWKS fetch (\u00a73.6), sitting next to `jwks_uri` as the no-discovery-hop variant. Its `url` parameter is both the signer's identity and the key location.\n\n```\nSignature-Key: sig=jwks;url=\"https://client.example/keys.jwks\";kid=\"key-1\"\n```\n\nThe tradeoff is called out explicitly: `jwks` removes a hop and all metadata hosting, at the cost of tying identity to the JWKS URL. Signers needing identity stable across key-location changes should stay on `jwks_uri`.\n\nSecurity: \u00a76.3 egress admission (HTTPS, size/timeout limits, redirect policy, private/loopback/link-local rejection, DNS-rebinding pinning, cross-origin admission) now covers both schemes, with a note that `jwks` carries the same SSRF exposure and arguably more directly, since there is no metadata step to anchor the fetch.\n\n## 4. Rationale\n\n- **A.2 Why Both `jwks` and `jwks_uri`?** \u2014 the simplicity/decoupling axis.\n- **A.5 Why a Scheme Token Instead of a Header per Scheme?** \u2014 the RFC 9170 write-up. Four arguments: ignorability is the wrong property for keying material; the covered-component invariant stays fixed; label correlation stays a single dictionary lookup; fewer namespaces. Closes with why grease was considered and not adopted.\n\nRFC 9170 and RFC 8701 resolve as informative references (mmark pulls them from the RFC index; no manual `<reference>` block needed).\n\n---\n\n## Two things for you to decide\n\n1. **`supported_schemes` type.** Typed as **Inner List of String**, to parallel `supported_algorithms` in `unsupported_algorithm`. Inner List of *Token* would be more consistent with the scheme registry, which holds schemes as tokens. Left at the default; `unsupported_algorithm` untouched either way.\n\n2. **`jwks` token collision.** Checked \u2014 no collision. The only prior uses of the bare string were the JSON property name `jwks_uri` and the acronym \"JWKS\" in prose. No scheme named plain `jwks` existed.\n\n## Beyond the literal instructions\n\nTwo things I did that weren't spelled out, both easy to revert:\n\n- **Added `jwks` to the other scheme enumerations** \u2014 \u00a76.1 Key Validation, \u00a76.2 Caching and Performance, and the two Privacy lists. A new scheme missing from lists that enumerate every scheme reads as an oversight.\n- **Used mmark's `(#anchor)` xref syntax for new cross-references.** The draft's existing `[Text](#anchor)` links compile to `<eref target=\"#anchor\">`, which renders literally as `Signature-Key Integrity (#signature-key-integrity)` in the txt output and is a dead link in HTML. Bare `(#anchor)` compiles to `<xref>` and renders as `Section 6.5`. New text uses the working form.\n\n  This leaves the style mixed. There are **5 pre-existing broken links** (intro \u00d73, \u00a73.2, plus `(\u00a7Scheme-Specific Risks)` written as literal text in \u00a76.2). I left them alone to keep this diff scoped \u2014 happy to fix them in a separate PR.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01JUw6whXVWSf3syRDMQHY8S\n",
+      "createdAt": "2026-07-28T22:44:25Z",
+      "updatedAt": "2026-07-29T16:04:57Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "84f2d831e22741435660c1f160344d98c69db4d1",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "sigkey-scheme-names",
+      "headRefOid": "28efe92a6dbf2eed978eb72c801afecacfaa91a1",
+      "closedAt": "2026-07-29T15:17:15Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Superseded by #21 and #22, which reorganise the same work into two PRs so related changes stay together. The old split had assertion caching spread across #19 and #20, and #18 redefining sigkey only for #20 to remove it.",
+          "createdAt": "2026-07-29T15:17:14Z",
+          "updatedAt": "2026-07-29T15:17:14Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 19,
+      "id": "PR_kwDOQaOp9s7356xA",
+      "title": "Algorithm agility, problem statement, PQC handling, and assertion caching",
+      "url": "https://github.com/dickhardt/signature-key/pull/19",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Stacked on #18 (`sigkey-scheme-names`) \u2014 **merge that first**; the base here is its final commit, so this diff shows only the new work.\n\nFour independent additions. Builds clean under `mmark` + `xml2rfc`; every new cross-reference resolves to a real section number, and all six new RFC references resolve against the RFC index.\n\n## Part A: fully-specified algorithm requirement\n\nNew scheme-independent **\u00a74.3 Algorithm Determination**, placed in \u00a74 common material before the individual schemes, per the structural intent \u2014 not inside `hwk`, so no scheme looks exempt. Every JWK-bearing scheme carries only a one-line pointer to it; the EdDSA/RSA/ECDSA specifics are stated once.\n\n- Polymorphic `EdDSA` forbidden; `Ed25519`/`Ed448` from RFC 9864 required.\n- RSA `alg` must name padding and hash (`PS256`, `RS256`). Kept clearly separate from 9864, which registers no RSA identifiers \u2014 the RSA bullet cites nothing, and 9864 is cited only for the EdDSA replacement and the single-algorithm principle.\n- `ES256`/`ES384`/`ES512` used as-is. No `ESP*`/`ESB*` anywhere (those are COSE-only).\n- `x509` gets its own separate sentence, not swept into the JWK rule.\n- Security Considerations paragraph on downgrade and confused-verifier conditions.\n\n## Part B: problem statement\n\nNew **\u00a73 Problem Statement** with the four gaps, plus **\u00a73.5 Design Consequences** stating the three invariants. Names no other draft, product, or mechanism.\n\n## Part C: post-quantum\n\nKept inside Algorithm Determination and the considerations sections \u2014 no standalone PQC section, and no enumeration of FN-DSA/SLH-DSA/hybrids.\n\n- ML-DSA-44/65/87 are fully specified and satisfy the rule with no special case.\n- **The actual gap:** unimplemented `kty`, including `AKP` from RFC 9964, MUST be rejected on a defined path rather than crashing a parser. Reported via `unsupported_algorithm` (see below).\n- **\u00a78.6** deployment consideration on PQC key/signature sizes, which Part D's rationale then references.\n\nRFC 9881 is not referenced, since x509 PQC is not discussed.\n\n## Part D: assertion caching\n\nFinished normative text with the four encoding decisions as specified: `cached` scheme (opaque Byte Sequence `handle`), `cache` Boolean on the `jwt` scheme, `Signature-Key-Cache` response Dictionary keyed by label (handle value plus optional `jti`, `thumbprint`, `expires`), and `cache_miss`.\n\nThe two processing stages are kept explicitly distinct \u2014 resolution answers hit/miss, validation answers valid/invalid, and the draft states they MUST NOT be conflated. Implementation is OPTIONAL; the degradation behavior in \u00a77.2 is not. Appendix A.6 states layered cryptographic agility and is careful never to call Ed25519 post-quantum, resolving long-term audit to a transparency ledger above this layer. A.7 cites RFC 7924 and TLS session tickets as informative precedent.\n\n---\n\n## [Decision] resolved: reuse `unsupported_algorithm`\n\nThe instructions recommended a distinct `unsupported_key_type` code on the grounds that the client's remedy differs. Working it through, that rationale does not survive Part A's own rule: **a fully-specified algorithm identifier determines the key type.**\n\n| `alg` | implies |\n|---|---|\n| `ES256` | `kty=EC`, `crv=P-256` |\n| `Ed25519` | `kty=OKP`, `crv=Ed25519` |\n| `PS256` | `kty=RSA` |\n| `ML-DSA-44` | `kty=AKP` |\n\nSo `supported_algorithms` is strictly more informative than a `supported_key_types` list would be, since it pins the curve as well. A separate member would be a coarser projection of data the client already has, plus one more thing to reconcile against the first list.\n\nThe \"retry with a different algorithm on the same key\" remedy is also thinner than it sounds under Part A: an Ed25519 key can only ever do `Ed25519`. That remedy is real mainly for RSA (`PS256` vs `RS256` on one key) and for clients holding several keys.\n\n**Resolved as reuse.** `unsupported_algorithm` gains a sentence stating it covers unimplemented key types and explaining why `supported_algorithms` answers the client's question. The mandatory defined-rejection requirement in \u00a74.3 is unchanged; only the code it points at moved.\n\nThe one argument that did survive, for the record: the `kty` check happens in the JWK parser, before algorithm policy is consulted, so a library may want to decline from that layer. That is an implementation-shape argument rather than a client-remedy one, and it did not seem worth a second registry entry and a second list member.\n\n## Contradictions I had to resolve\n\nPart A's rule collided head-on with two existing statements. Both had to change or the draft would have been self-contradictory:\n\n1. **hwk said `alg` MUST NOT be present** (\"algorithm is derived from the key type and curve\"). Now inverted: `alg` is REQUIRED and fully specified. This also means **all three hwk parameter lists and examples gained an `alg`** \u2014 `alg=\"Ed25519\"`, `alg=\"ES256\"`, `alg=\"PS256\"`. This is a normative reversal for the simplest scheme, so it deserves your eye.\n2. **\u00a78.4 Algorithm Selection derived the algorithm from `kty` + `crv`.** Rewritten to take it from the JWK `alg` and to forbid deriving it, and its \"if absent, derive from the key\" sentence is gone.\n\n## Where I went past the literal instructions\n\n- **Pointers added to `jkt-jwt` and `self-jwt` too.** A.2 enumerated hwk/jwks_uri/jwks/jwt, but the stated criterion is \"each scheme subsection that conveys or references a JWK\", and both of these do (`jkt-jwt` carries a header `jwk` and `cnf.jwk`; `self-jwt` resolves one from the issuer's JWKS). Leaving them out would recreate exactly the \"looks exempt\" problem the structural note warns about. Easy to drop if you disagree.\n- **`(see Section 4.2)` in B.2 dropped.** No section in this draft enumerates the invariants, so the placeholder had no referent. Instead each of the three numbered items carries its own targeted cross-reference. Same for D.1's `Section 4.2`, which now points at Signature-Key Integrity \u2014 the section that actually specifies `signature-key` as a covered component.\n- **D.2's example used a Byte Sequence `jwt`** (`jwt=:ZXlK...:`). The draft types the `jwt` parameter as String, so I kept String and only added `cache=?1`. Worth a look if the Byte Sequence was deliberate.\n- **Housekeeping the new material forced:** abstract now says three header fields and eight schemes; `cached` added to the intro list, ToC, and scheme registry; `Signature-Key-Cache` registered in the HTTP Field Name registry.\n\n## Verification\n\n- Build clean; zero literal `(#anchor)` strings leak into the rendered output.\n- Normative: RFC 9864, RFC 9964. Informative: RFC 9170, RFC 8701, RFC 7924, RFC 5077, RFC 8446.\n- Auto-fetched reference metadata matches your stated facts (9864 Jones/Steele; 9964 Prorock/Steele).\n- No em-dashes in any new text.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01JUw6whXVWSf3syRDMQHY8S\n",
+      "createdAt": "2026-07-29T09:41:55Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "sigkey-scheme-names",
+      "baseRefOid": "28efe92a6dbf2eed978eb72c801afecacfaa91a1",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "algorithm-agility-and-caching",
+      "headRefOid": "aa4904363219e776caae9683bc0306e4754cdc2b",
+      "closedAt": "2026-07-29T15:17:17Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Superseded by #21 and #22, which reorganise the same work into two PRs so related changes stay together. The old split had assertion caching spread across #19 and #20, and #18 redefining sigkey only for #20 to remove it.",
+          "createdAt": "2026-07-29T15:17:16Z",
+          "updatedAt": "2026-07-29T15:17:16Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 20,
+      "id": "PR_kwDOQaOp9s738XDA",
+      "title": "Replace sigkey with Accept-Signature-Scheme and Accept-Signature-Alg",
+      "url": "https://github.com/dickhardt/signature-key/pull/20",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Stacked on #19. Merge #18, then #19, then this.\n\n## Why sigkey had to go\n\nA Structured Fields parameter value is a bare Item ([RFC8941], Section 3.1.2) and cannot be a list. That is why `sigkey` could name only one scheme. RFC 9421's `alg` parameter is singular for exactly the same reason.\n\nSo a server could say \"I want Ed25519 and hwk\" and nothing more. A client holding the wrong scheme *and* the wrong algorithm could spend two round trips discovering that, through two different error codes.\n\nTwo response headers, each a List of Tokens, carry the full set for both dimensions:\n\n```http\nHTTP/1.1 401 Unauthorized\nAccept-Signature-Scheme: hwk, jwks_uri, jwt\nAccept-Signature-Alg: ed25519, ecdsa-p256-sha256\n```\n\n- **Order is preference.** A server SHOULD list in descending preference; a client SHOULD take the earliest it can satisfy. Not a requirement, so any listed value is acceptable.\n- **Unknown tokens MUST be ignored**, so a server can list schemes registered after a client was written without breaking it.\n- **Listing `cached` advertises assertion caching.** A client previously had no way to learn this except by setting `cache` and seeing whether a handle came back.\n- **Neither is keyed by signature label.** They state a server-wide capability, which does not vary per signature. `Accept-Signature` keeps carrying the per-label, what-to-sign detail.\n\n## What else this removed\n\n**`sigkey` and its registration** in the HTTP Signature Metadata Parameters registry.\n\n**`supported_schemes` and `supported_algorithms` members of `Signature-Error`.** These are now redundant: the same two headers carry the information and work identically on a challenge and on an error. The split is cleaner as a result:\n\n```http\nHTTP/1.1 401 Unauthorized\nSignature-Error: error=unsupported_scheme\nAccept-Signature-Scheme: jwks_uri, jwt\n```\n\n`Signature-Error` says what went wrong. `Accept-Signature-*` says what would succeed.\n\n## Two calls worth your eye\n\n**Singular `Accept-Signature-Alg`, not `-Algs`.** You wrote `-Algs`; I went singular for HTTP idiom, where the header name is singular and the value is a list (`Accept-Encoding: gzip, br`, `Accept-Language`). Since this is heading to httpbis, idiom is worth more than it would be otherwise. One-word change if you disagree.\n\n**`supported_algorithms` shipped in -04.** Removing it is a compat break on published behavior, unlike `supported_schemes`, which is new in this series and never shipped. Given the draft is pre-adoption and the replacement is strictly more capable, I judged this the right time to take the break, but it is your call. Keeping it as a deprecated alias is the alternative.\n\n## Also in here\n\n`cache=?1` becomes bare `cache`. RFC 8941 Section 4.1.1.2 omits the value when a parameter is Boolean true, so `cache=?1` was the non-canonical form and a conforming serializer would have rewritten it. RFC 9421 does the same with `created;` in `Accept-Signature`. The parameter definition now says so explicitly.\n\n## Document History\n\nThe -08 entry is written to describe the end state rather than the path taken. It says `sigkey` was removed and why, not that it was first redefined (in #18) and then deleted. The three PRs are one version.\n\n## Verification\n\n- Build clean under `mmark` + `xml2rfc`; zero literal `(#anchor)` strings in the rendered output.\n- No `sigkey`, `supported_schemes`, or `supported_algorithms` remain outside the historical -04 through -07 changelog entries.\n- Both new headers registered in the HTTP Field Name registry. The draft now defines five header fields.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01JUw6whXVWSf3syRDMQHY8S\n",
+      "createdAt": "2026-07-29T11:05:53Z",
+      "updatedAt": "2026-08-05T20:58:54Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "algorithm-agility-and-caching",
+      "baseRefOid": "aa4904363219e776caae9683bc0306e4754cdc2b",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "remove-sigkey",
+      "headRefOid": "391d8f9600ae55a850ba1bcffa5fb01c6de50e0e",
+      "closedAt": "2026-07-29T15:17:19Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Superseded by #21 and #22, which reorganise the same work into two PRs so related changes stay together. The old split had assertion caching spread across #19 and #20, and #18 redefining sigkey only for #20 to remove it.",
+          "createdAt": "2026-07-29T15:17:18Z",
+          "updatedAt": "2026-07-29T15:17:18Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 21,
+      "id": "PR_kwDOQaOp9s74ED68",
+      "title": "Add jwks scheme; replace sigkey with Accept-Signature-Scheme and Accept-Signature-Alg",
+      "url": "https://github.com/dickhardt/signature-key/pull/21",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "First of two. Merge this, then #22.\n\nThree related changes to how key distribution schemes are named, negotiated, and reported. All of it is one draft version, `-07`.\n\n## 1. New `jwks` scheme\n\nA direct JWKS fetch, sitting next to `jwks_uri` as the no-discovery-hop variant. Its `url` is both the signer's identity and the key location.\n\n```\nSignature-Key: sig=jwks;url=\"https://client.example/keys.jwks\";kid=\"key-1\"\n```\n\nThe tradeoff is stated explicitly: `jwks` removes a hop and all metadata hosting, at the cost of tying identity to the JWKS URL. Signers needing identity stable across key-location changes stay on `jwks_uri`. \u00a76.3 egress admission now covers both, with a note that `jwks` carries the same SSRF exposure and arguably more directly, since there is no metadata step to anchor the fetch. Rationale in A.2.\n\n## 2. `sigkey` replaced by `Accept-Signature-Scheme` and `Accept-Signature-Alg`\n\n**This is a breaking change.**\n\nA Structured Fields parameter value is a bare Item and cannot be a list, so `sigkey` could name only one scheme. RFC 9421's `alg` parameter is singular for the identical reason. A server could say \"I want Ed25519 and hwk\" and nothing more, so a client with the wrong scheme *and* the wrong algorithm could spend two round trips discovering that, through two different error codes.\n\nTwo response headers, each a List of Tokens:\n\n```http\nHTTP/1.1 401 Unauthorized\nAccept-Signature-Scheme: hwk, jwks_uri, jwt\nAccept-Signature-Alg: ed25519, ecdsa-p256-sha256\n```\n\n- Order is preference; unknown tokens MUST be ignored, so a server can list values registered after a client was written.\n- Neither is keyed by signature label. They state a server-wide capability. `Accept-Signature` keeps the per-label, what-to-sign detail.\n- The same headers work on a challenge and on an error, which is what `supported_schemes` and `supported_algorithms` could never do from inside `Signature-Error`. Both members are therefore removed; `Signature-Error` now states only what went wrong.\n\n## 3. `unsupported_scheme`, and defined unknown-scheme handling\n\nNew error code, registered. \u00a73 now requires that a verifier meeting an unimplemented or unregistered scheme MUST return `unsupported_scheme` and MUST NOT fail in a scheme-specific or undefined way, and SHOULD dispatch through a registry lookup rather than a fixed branch set. \u00a75.7 adds a conformance line so the path is exercised directly. This is used deliberately **in place of** reserving grease values; A.5 records why.\n\n## Also here\n\n- **Problem Statement** (\u00a72): the four gaps this document addresses and the three invariants that follow. Names no other draft or mechanism.\n- **Rationale**: A.5 why a scheme token rather than a header per scheme (RFC 9170), A.6 why the accepted sets live in header fields rather than parameters or error members.\n- **`algs` \u2192 `alg`**: RFC 9421 \u00a75.1 defines the parameter as `alg`. The draft had the wrong name.\n- **Cross-references fixed**: the draft used `[Text](#anchor)`, which mmark compiles to a dead `<eref>` rendering as literal `Signature-Key Integrity (#signature-key-integrity)`. Now bare `(#anchor)`, which compiles to `<xref>` and renders as a section number.\n\n## Note on versioning\n\nEarlier revisions of this work numbered themselves `-07` and `-08` across separate PRs. Since the published version is `-06` and none of this has shipped, it is now a single `-07` entry, with breaking changes listed separately from the rest.\n\n## Verification\n\n- Build clean under `mmark` + `xml2rfc`; zero literal `(#anchor)` strings in rendered output.\n- No `sigkey`, `supported_schemes`, or `supported_algorithms` outside the historical -04 changelog entries.\n- Both new headers registered in the HTTP Field Name registry.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01JUw6whXVWSf3syRDMQHY8S\n",
+      "createdAt": "2026-07-29T15:16:38Z",
+      "updatedAt": "2026-08-05T20:58:54Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "84f2d831e22741435660c1f160344d98c69db4d1",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "schemes-and-negotiation",
+      "headRefOid": "a3dae12b560ac777615be0b5b4f20c3c40dafbc9",
+      "closedAt": "2026-08-05T16:34:50Z",
+      "mergedAt": "2026-08-05T16:34:50Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "c4c1dd58fe50f5a1b3982ee77dfbd22e9c8c4335"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 22,
+      "id": "PR_kwDOQaOp9s74EE96",
+      "title": "Algorithm agility, post-quantum handling, and assertion caching",
+      "url": "https://github.com/dickhardt/signature-key/pull/22",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Second of two, stacked on #21. Merge #21 first.\n\nThree related changes, all about which algorithm a key means and how to avoid resending large assertions.\n\n## 1. Fully-specified algorithms\n\n**Breaking.** New scheme-independent **Algorithm Determination** subsection, placed in \u00a74 common material before the individual schemes, so no scheme looks exempt. Every JWK-bearing scheme carries a one-line pointer to it; the specifics are stated once.\n\n- Every conveyed or referenced JWK MUST carry a present, fully-specified `alg`.\n- Polymorphic `EdDSA` forbidden; `Ed25519`/`Ed448` from RFC 9864 required.\n- RSA `alg` must name padding and hash (`PS256`, `RS256`). Kept clearly separate from RFC 9864, which registers **no** RSA identifiers \u2014 the RSA bullet cites nothing, and 9864 is cited only for the EdDSA replacement and the single-algorithm principle.\n- `ES256`/`ES384`/`ES512` used as-is. No `ESP*`/`ESB*`, which are COSE-only.\n- `kty` and `crv` MUST be consistent with `alg`, and a verifier MUST reject on disagreement. `ES256` with `kty=RSA` is obvious; `ES256` with `crv=P-384` is the one that slips through and leaves the verifier free to pick either reading.\n- `x509` gets its own sentence, since a certificate is not a JWK.\n\nThis forced two reversals, both listed as breaking: **hwk said `alg` MUST NOT be present** (so all three hwk parameter lists and examples gained an `alg`), and **\u00a78.4 derived the algorithm from `kty` + `crv`**.\n\n## 2. Post-quantum\n\nKept inside Algorithm Determination and the considerations sections. No standalone PQC section, and no enumeration of FN-DSA/SLH-DSA/hybrids.\n\n- ML-DSA-44/65/87 are fully specified and satisfy the rule with no special case.\n- **The real gap:** an unimplemented `kty`, including `AKP` from RFC 9964, MUST be rejected on a defined path rather than crashing a parser. Reported via `unsupported_algorithm` \u2014 a fully-specified `alg` determines the key type, so `Accept-Signature-Alg` already tells the client which keys are usable and a separate list would be a coarser projection of what it already has.\n- \u00a78.6 deployment consideration on PQC key and signature sizes, which the caching rationale then references.\n\nRFC 9881 is not referenced, since x509 PQC is not discussed.\n\n## 3. Assertion caching\n\n```http\nSignature-Key: sig1=jwt;jwt=\"eyJ...\";cache            \u2192 client asks\nSignature-Key-Cache: sig1=\"2f9c8a1e-a7b3\";jti=\"2f9c8a1e\";expires=...   \u2192 server issues\nSignature-Key: sig1=cached;cid=\"2f9c8a1e-a7b3\"        \u2192 client presents\n```\n\n- The identifier is a **String** named `cid`, consistent with `jti` and `kid`. A verifier may still make it self-contained; a compact encrypted value is textual and needs no second base64 layer.\n- **A JWT is cacheable only if it carries a `jti`.** That removed the need for a `thumbprint` fallback, which also collided with the JWK-thumbprint sense the word carries everywhere else in this document.\n- **Two processing stages kept distinct.** Resolution answers hit/miss; validation answers valid/invalid. They MUST NOT be conflated, and `cache_miss` is never returned for an assertion that resolved but failed validation.\n- **`jkt-jwt` is included.** With a post-quantum enclave key it is the largest assertion here (the key rides in the JWT header and signs it) and the most expensive to verify. Caching removes both from the steady state. `jti` added to its payload, REQUIRED when cacheable, since `iss` names the enclave key and is shared across successive delegations.\n- **`self-jwt` is excluded, and says so.** It MUST NOT contain `cnf` and its signing key comes from the issuer's JWKS, so resolution could not recover a confirmation key. It is also small and usually carries request-specific claims.\n- Implementation is OPTIONAL; the degradation behaviour in \u00a77.2 is not.\n\nRationale in A.7 (layered cryptographic agility, careful never to call Ed25519 post-quantum), A.8 (why the verifier issues the identifier, not the caller reusing `jti`), A.9 (RFC 7924 and TLS session tickets as precedent).\n\n### One correction worth flagging\n\nAn earlier draft of this work required a verifier to \"check that a resolved assertion belongs to the presenting caller.\" There is no such check, and demanding one is worse than silence, since an implementer would go looking for it. The assertion carries the confirmation key and the request signature must verify against it, so a caller presenting an identifier it did not receive simply fails verification. Restated as the requirement that does apply: **a verifier MUST NOT treat resolution as authentication.** Unpredictable identifiers are still MUST, but for closing an existence oracle and as defence in depth, not for preventing impersonation.\n\n## Verification\n\n- Build clean; zero literal `(#anchor)` strings in rendered output.\n- Normative: RFC 9864, RFC 9964. Informative: RFC 9170, 8701, 7924, 5077, 8446.\n- Auto-fetched reference metadata matches the stated facts (9864 Jones/Steele; 9964 Prorock/Steele).\n- No em-dashes in new text.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01JUw6whXVWSf3syRDMQHY8S\n",
+      "createdAt": "2026-07-29T15:17:13Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "schemes-and-negotiation",
+      "baseRefOid": "928cca5272b8b1f01eee3f40fe0750d300f3f0fc",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "algorithm-pqc-caching",
+      "headRefOid": "d8f031102575587e40770f979c9aa6f50ed1eea6",
+      "closedAt": "2026-08-05T16:36:57Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Add that the cache is a strawman and starting point of discussion -- caching may be better served at another layer or done differently. Caching is hard. :) ",
+          "createdAt": "2026-07-31T14:28:44Z",
+          "updatedAt": "2026-07-31T14:28:44Z"
+        },
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Merged into main via the integration PR #31 (with review fixes from #30 folded in); closing since GitHub does not auto-detect merges for PRs based on a non-default branch.",
+          "createdAt": "2026-08-05T16:36:56Z",
+          "updatedAt": "2026-08-05T16:36:56Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABH9V0qA",
+          "commit": {
+            "abbreviatedOid": "24c772b"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-31T13:50:20Z",
+          "updatedAt": "2026-07-31T13:56:40Z",
+          "comments": [
+            {
+              "originalPosition": 63,
+              "body": "note: while ml-dsa is indeed registered for JOSE, it is not for HTTP Message Signatures (yet, there's an ongoing thread)",
+              "createdAt": "2026-07-31T13:50:20Z",
+              "updatedAt": "2026-07-31T13:56:40Z"
+            },
+            {
+              "originalPosition": 22,
+              "body": "caching is complex. I think it should be a dedicated change",
+              "createdAt": "2026-07-31T13:53:34Z",
+              "updatedAt": "2026-07-31T13:56:40Z"
+            },
+            {
+              "originalPosition": 140,
+              "body": "that's true for non enclave as well",
+              "createdAt": "2026-07-31T13:54:04Z",
+              "updatedAt": "2026-07-31T13:56:40Z"
+            },
+            {
+              "originalPosition": 167,
+              "body": "note: i like the idea of having a cache. i really feel it should be a dedicated change",
+              "createdAt": "2026-07-31T13:54:44Z",
+              "updatedAt": "2026-07-31T13:56:40Z"
+            },
+            {
+              "originalPosition": 215,
+              "body": "note: sounds like a fingerprint vector, which is likely ok given we see the key material anyway. i wonder if we could not draw learnings from etags and thumbprints",
+              "createdAt": "2026-07-31T13:55:32Z",
+              "updatedAt": "2026-07-31T13:56:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABH9lPYw",
+          "commit": {
+            "abbreviatedOid": "24c772b"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-31T14:19:55Z",
+          "updatedAt": "2026-07-31T14:19:55Z",
+          "comments": [
+            {
+              "originalPosition": 63,
+              "body": "ban -> hmac-sha256",
+              "createdAt": "2026-07-31T14:19:55Z",
+              "updatedAt": "2026-07-31T14:19:55Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "id": "PR_kwDOQaOp9s74GKGU",
+      "title": "Define client behaviour when WWW-Authenticate and a signature challenge coexist",
+      "url": "https://github.com/dickhardt/signature-key/pull/23",
+      "state": "CLOSED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Closes #17.\n\nStacked on #21 because the section it edits is rewritten there: on `main` this text still refers to `Accept-Signature` with `sigkey`, which #21 replaces with `Accept-Signature-Scheme` and `Accept-Signature-Alg`. Sibling of #22, not dependent on it. Merge #21 first; this and #22 can then merge in either order.\n\n## The problem\n\nThe section said the two header fields coexist, and what a *legacy* client does, but nothing about a client that understands both.\n\n## Why \"pick the more secure one\" does not work\n\nThat is the obvious answer, and RFC 9110 Section 11.4 supports it in spirit, advising that a user agent \"ought to\" select \"what it considers to be the most secure auth-scheme that it understands.\" Two problems:\n\n**`WWW-Authenticate` is multiplexed, and not all of it is authentication.** `Basic`, `Bearer`, and `Digest` are alternatives to a signature challenge. A payment challenge (x402, Micropayment Protocol) is a complement: paying does not authenticate you. One ranking rule collapses the two, and applied to the `402` example already in this section it would tell a client to choose between paying and signing when the server wants both.\n\n**\"More secure\" is not determinable from the wire.** A DPoP-bound five-minute bearer token versus an `hwk` signature with a self-asserted key is genuinely arguable, and `WWW-Authenticate: Bearer realm=\"api\"` does not say which flavour it is.\n\n## What this does instead\n\nSplits on what the auth-scheme does:\n\n> - Where the challenge is an authentication or authorization challenge, such as `Basic` or `Bearer`, the two are alternatives and either satisfies the server. The client SHOULD sign the request rather than present the credential.\n>\n> - Where the challenge is not an authentication or authorization challenge, such as a payment challenge, the two are complements and satisfying one does not satisfy the other. The client SHOULD satisfy both.\n\nThree supporting points:\n\n**The classification needs no registry flag.** There is no machine-readable way to tell `Payment` from `Bearer`; both are registered auth-schemes. But the rule applies only where the client understands the scheme, and a client that understands `Payment` knows it is not authentication. The precondition carries the classification.\n\n**The preference is a property, not a judgement.** Rather than \"more secure,\" the text says a signature demonstrates possession of a private key over this request whereas a bearer credential authenticates whoever holds it. Signing also puts no credential on the wire that the exchange did not require. Both are checkable claims.\n\n**Unknown schemes and the both-required case converge.** A client that does not understand the auth-scheme can neither classify nor satisfy it, so it signs and lets the server challenge again. Since the presence of both fields does not itself say which case applies, a server requiring both MUST re-challenge naming only what is still outstanding, so a wrong first choice costs a round trip rather than a failure.\n\n## Verification\n\nBuild clean under `mmark` + `xml2rfc`; zero literal `(#anchor)` strings in rendered output.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01JUw6whXVWSf3syRDMQHY8S\n",
+      "createdAt": "2026-07-29T16:30:24Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "schemes-and-negotiation",
+      "baseRefOid": "928cca5272b8b1f01eee3f40fe0750d300f3f0fc",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "coexistence-www-authenticate",
+      "headRefOid": "1ec905368c35b1db21609fa90e66a44003241381",
+      "closedAt": "2026-08-05T16:36:59Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "body": "Merged into main via the integration PR #31 (with review fixes from #28 folded in); closing since GitHub does not auto-detect merges for PRs based on a non-default branch.",
+          "createdAt": "2026-08-05T16:36:58Z",
+          "updatedAt": "2026-08-05T16:36:58Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABH9VCKA",
+          "commit": {
+            "abbreviatedOid": "c94f42d"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "i think i understand the intent of this PR, but it seems to be defining multiple profiles: client chooses, serves needs both, etc\n\nI feel that the PR text is correct stating that both coexist. but i'm not yet convinced more text to define client behaviour can actually overwrite this properly (over specific protocols).",
+          "createdAt": "2026-07-31T13:48:28Z",
+          "updatedAt": "2026-07-31T13:48:28Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABH9fABw",
+          "commit": {
+            "abbreviatedOid": "c94f42d"
+          },
+          "author": "dickhardt",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2026-07-31T14:08:04Z",
+          "updatedAt": "2026-07-31T14:08:04Z",
+          "comments": [
+            {
+              "originalPosition": 11,
+              "body": "remove this and the following paragraphs ",
+              "createdAt": "2026-07-31T14:08:04Z",
+              "updatedAt": "2026-07-31T14:08:04Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 24,
+      "id": "PR_kwDOQaOp9s76EvcK",
+      "title": "BCP 14 audit of every SHOULD, and post-quantum rationale corrections",
+      "url": "https://github.com/dickhardt/signature-key/pull/24",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Based on `integration-all-prs`, a local integration branch merging main with all five open PRs (#11, #16, #21, #22, #23), so this reviews the merged text rather than any single branch. Retarget to `main` once those land.\n\n## BCP 14 audit\n\nEvery `SHOULD` in the document reviewed against RFC 2119 Section 6 \u2014 imperatives only where required for interoperation or to limit harm \u2014 and the review convention that a `SHOULD` names the circumstance under which it may be ignored. If no such circumstance exists, it is a `MUST`; if ignoring it has no consequence, it is not normative.\n\n**Raised to MUST** (no valid exception exists):\n\n| Change | Why |\n|---|---|\n| `signature-key` coverage, signer and verifier | The section documents two working attacks against verifiers that accept an uncovered header. Also resolves a contradiction: `Accept-Signature-Scheme` already described coverage as a requirement of this specification. |\n| `exp` in `jwt` and `self-jwt` | For `jwt`, `exp` is what bounds acceptance of the confirmation key the assertion carries. |\n| hwk `kid` prohibition | Key is inline, so `kid` selects nothing and a disagreeing `kid` has no defined resolution. |\n| Reject a malformed JWT | A value that does not parse cannot be verified. The early-rejection rationale was the actual point and is kept as such. |\n| Cache limits | Entries are created by unauthenticated callers. |\n| Problem Details `type` URN form | Whether to return the body stays a SHOULD; the format of the member once present is not optional, since another form cannot be resolved against the registry. |\n\n**Exception clause added** to each retained SHOULD: omitting `Signature-Error` or `required_input` where diagnostics to an unauthenticated caller are a disclosure risk; a non-Problem-Details body under content negotiation; the general-purpose verifier with no authorized-origin list to check `id` against; the deployment keeping an inline scheme because it confirmed its headers fit.\n\n**Downgraded to lowercase** (not interoperability requirements, per RFC 2119 Section 6 and the RFC 8174 uppercase-only convention): single-signature advice, documenting enclave stable-key algorithms, \"shortest practical lifetime\" (unmeasurable as written), header buffer sizing. `typ` checking went SHOULD to MAY \u2014 the text calls it an optimization, and step 2 of each verification procedure already states the check.\n\n**Contradiction resolved:** `required_input` was both `OPTIONAL` and \"the response SHOULD include this member.\"\n\n## Post-quantum rationale corrections\n\nTwo claims in Layered Cryptographic Agility were wrong:\n\n1. *\"checking a post-quantum delegation is expensive\"* \u2014 it is not. ML-DSA verification is comparable to Ed25519. What caching saves the verifier is the assertion's bytes on the wire and the repeated resolution, not verification time. The signer's per-request cost is time; the verifier's is size.\n\n2. *\"its exploitable lifetime is bounded by the assertion's expiry\"* \u2014 it is bounded by the lifetime of the **key**, not of the assertion carrying it. A confirmation key's public value is harvestable today, so exposure is bounded by how long a verifier still accepts it. A signer that rebinds one long-lived key into successive assertions leaves it acceptable indefinitely whatever each `exp` says, and gains nothing from short assertion lifetimes. `jkt-jwt` has the intended shape by construction.\n\nA sentence in `#pqc-sizes` now states that the cost is size rather than verification time.\n\n## Housekeeping\n\nIETF 125 presentation moved out of the repository, `/archive/` ignored. IETF 126 was already removed on `schemes-and-negotiation`.\n\nBuilds clean through mmark and xml2rfc.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01LXExbWHeem2SNb7tZ2LGnc\n\n---\n\n**Revision correction:** this work lands in **`-08`**, not `-07`. `-07` was published to the datatracker on 2026-07-05 and was editorial (an Introduction paragraph citing AAuth and Email Verification). The `hwk` `alg` parameter was forbidden in `-06` **and** `-07` and becomes required in `-08`, so the break is `-07` \u2192 `-08`. References to `-07` below should be read as `-08`.\n",
+      "createdAt": "2026-08-03T15:07:00Z",
+      "updatedAt": "2026-08-05T12:33:31Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "integration-all-prs",
+      "baseRefOid": "6c6e24d7b19d8ef68a454329a0a832938aedc125",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "should-review-pqc-corrections",
+      "headRefOid": "4fe5954caf06f6e7fb65cc141a2d4df00cb7122b",
+      "closedAt": "2026-08-05T12:33:31Z",
+      "mergedAt": "2026-08-05T12:33:31Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "c3c9cbf56c11e2afe2728510db9da39c4b0f5fdf"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 26,
+      "id": "PR_kwDOQaOp9s77BoAF",
+      "title": "Cite the JOSE registry itself, and close the none case on the response side",
+      "url": "https://github.com/dickhardt/signature-key/pull/26",
+      "state": "MERGED",
+      "author": "thibmeu",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "1. Cite the IANA registry directly instead of its creation so the pointer stays correct as entries are added.\r\n2.  Adding detail about server response given that `none` is a MUST NOT\r\n3. Explain that Accept-Signature-Alg is case sensitive\r\n4. Slightly tighten the JWKS paragraph\r\n\r\nRelates to #24 ",
+      "createdAt": "2026-08-05T10:54:18Z",
+      "updatedAt": "2026-08-05T12:32:38Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "should-review-pqc-corrections",
+      "baseRefOid": "7382f1bce5a6c111080ae1caea20cb5d11f4d939",
+      "headRepository": "thibmeu/signature-key",
+      "headRefName": "should-review-pqc-corrections",
+      "headRefOid": "de5349bd8b15b0827c0d618ad175b2d6618c9670",
+      "closedAt": "2026-08-05T12:32:38Z",
+      "mergedAt": "2026-08-05T12:32:38Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "532cdf2a291eca8085d93685666466e9fefcc641"
+      },
+      "comments": [
+        {
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@dickhardt ",
+          "createdAt": "2026-08-05T10:54:50Z",
+          "updatedAt": "2026-08-05T10:54:50Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 27,
+      "id": "PR_kwDOQaOp9s77Brk_",
+      "title": "iana: don't imply error codes must be verification failures",
+      "url": "https://github.com/dickhardt/signature-key/pull/27",
+      "state": "MERGED",
+      "author": "thibmeu",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Addressing the nit that was raised during review. `invalid_request` reports missing information unrelated to the signature, so the expert criterion should not require the error condition to be a signature verification failure.\r\n\r\nrelates to #16 \r\n\r\nfor review @dickhardt ",
+      "createdAt": "2026-08-05T10:56:34Z",
+      "updatedAt": "2026-08-05T12:32:38Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "iana-expert-instructions",
+      "baseRefOid": "40902f9dc304262c4b0961098e2882ec5b1b0d80",
+      "headRepository": "thibmeu/signature-key",
+      "headRefName": "iana-expert-instructions",
+      "headRefOid": "b0a789931b8d4de1b336678abcce004c3c532b5a",
+      "closedAt": "2026-08-05T12:32:38Z",
+      "mergedAt": "2026-08-05T12:32:38Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "56764bb11e21c4c1a06d628bca3d4ddf51e49e01"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 28,
+      "id": "PR_kwDOQaOp9s77B_L-",
+      "title": "Remove MUST on www-authenticate vs Signature, which is unclear for clients",
+      "url": "https://github.com/dickhardt/signature-key/pull/28",
+      "state": "MERGED",
+      "author": "thibmeu",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "A MUST must be testable. The precondition, \"where the challenge is an authentication or authorization challenge,\" is a human classification with no wire signal, as the section itself now acknowledges.\r\n\r\nThis commits therefore uses a SHOULD on the signature preference, with the same reasoning.\r\n\r\nRelates to #23 \r\n\r\nfor review @dickhardt ",
+      "createdAt": "2026-08-05T11:09:02Z",
+      "updatedAt": "2026-08-05T12:32:38Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "coexistence-www-authenticate",
+      "baseRefOid": "48366c2d03a04582cce6e93b59f240869fa1f8d2",
+      "headRepository": "thibmeu/signature-key",
+      "headRefName": "coexistence-www-authenticate",
+      "headRefOid": "ff528bb74953fdd14e724f087d38ff55b5afb037",
+      "closedAt": "2026-08-05T12:32:38Z",
+      "mergedAt": "2026-08-05T12:32:38Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "1ec905368c35b1db21609fa90e66a44003241381"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 29,
+      "id": "PR_kwDOQaOp9s77CM_h",
+      "title": "Scope the unknown-scheme rejection, and restore what keyid means",
+      "url": "https://github.com/dickhardt/signature-key/pull/29",
+      "state": "MERGED",
+      "author": "thibmeu",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "1. Scope the unknown scheme to the selected member.\r\n2. Keep text around keyid, as that's one member of RFC9421. Mostly for consistency\r\n3. Clarify that the order of `Acceot-Signature-Scheme` is a server preference, not anything that binds the client.\r\n\r\nrelates to #21 \r\n\r\n@dickhardt for review/merge",
+      "createdAt": "2026-08-05T11:17:03Z",
+      "updatedAt": "2026-08-05T12:32:38Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "schemes-and-negotiation",
+      "baseRefOid": "bac1e4022b13515595a8ab08b2593602b0c64aa9",
+      "headRepository": "thibmeu/signature-key",
+      "headRefName": "review/schemes-and-negotiation",
+      "headRefOid": "629cef25e12fd1ab85716b988494f5c4c8482549",
+      "closedAt": "2026-08-05T12:32:38Z",
+      "mergedAt": "2026-08-05T12:32:38Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "a3dae12b560ac777615be0b5b4f20c3c40dafbc9"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 30,
+      "id": "PR_kwDOQaOp9s77CSMq",
+      "title": "Clarify the two cache expiries (key vs assertion), and fix why self-jwt is excluded",
+      "url": "https://github.com/dickhardt/signature-key/pull/30",
+      "state": "MERGED",
+      "author": "thibmeu",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Small correction to the text\r\n\r\nRelates to #22 \r\n\r\n@dickhardt for review",
+      "createdAt": "2026-08-05T11:19:59Z",
+      "updatedAt": "2026-08-05T12:32:38Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "algorithm-pqc-caching",
+      "baseRefOid": "1551fdd837b50546c44e2c0ae30d8ae575f7d88f",
+      "headRepository": "thibmeu/signature-key",
+      "headRefName": "algorithm-pqc-caching-review",
+      "headRefOid": "c8f82e03d4d7f2df2a747cd2869f8f90af00bc09",
+      "closedAt": "2026-08-05T12:32:38Z",
+      "mergedAt": "2026-08-05T12:32:38Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "d8f031102575587e40770f979c9aa6f50ed1eea6"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 31,
+      "id": "PR_kwDOQaOp9s77ELTt",
+      "title": "Integrate all open work: negotiation, caching, PQC corrections, IANA instructions, and review fixes",
+      "url": "https://github.com/dickhardt/signature-key/pull/31",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "One PR containing every open branch, so the full set of changes can be reviewed in one diff.\n\n## Contains\n\n- **#16 / #27** \u2014 Designated expert instructions for the IANA registries, with the review fix that error codes need not be signature verification failures (`invalid_request`).\n- **#21 / #29** \u2014 The `jwks` scheme and `Accept-Signature-Scheme` / `Accept-Signature-Alg` negotiation; unknown-scheme rejection scoped to the selected `Signature-Key` member; `keyid` semantics alongside `Signature-Key`; scheme list order made non-binding on the client.\n- **#22 / #30** \u2014 Algorithm agility, post-quantum handling, and assertion caching; the two cache expiries (entry vs assertion) distinguished; `cached` made a capability announcement; verifier-side cache state bounded per confirmation key; corrected self-jwt exclusion rationale.\n- **#23 / #28** \u2014 Client behaviour when `WWW-Authenticate` and a signature challenge coexist, with the untestable MUST relaxed to SHOULD and the escape hatch for clients that need what only the credential grants.\n- **#24 / #26** \u2014 BCP 14 audit, post-quantum rationale corrections, the JOSE registry switch; citing the IANA registry directly; `none` forbidden in `Accept-Signature-Alg`; Token case sensitivity.\n\n## Cross-branch resolutions\n\nTwo review PRs were written against pre-JOSE-switch text and were reconciled during integration:\n\n- The `Accept-Signature` `alg` paragraph: with `Accept-Signature-Alg` carrying JOSE identifiers and `alg` naming the HTTP Signature Algorithms registry, membership between the two is undefined. Resolution: a server that sends `Accept-Signature-Alg` SHOULD NOT send the `alg` parameter, and a client MAY ignore an `alg` received alongside it.\n- Dropped the Strings-vs-Tokens paragraph from #29, which claimed the identifiers are the same registry value in both fields \u2014 true before the JOSE switch, false after.\n- Reworded the `cached` steady-state sentence from #30 (\"earliest listed\") to match #29 making list order non-binding.\n- The Layered Cryptographic Agility correction in #30 had already been incorporated on the #24 branch; the branch version is kept.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01SoJZyAAHEqS7LUEMWxeJHh\n\nCloses #9, Closes #15, Closes #17\n",
+      "createdAt": "2026-08-05T12:33:54Z",
+      "updatedAt": "2026-08-05T20:34:21Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "84f2d831e22741435660c1f160344d98c69db4d1",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "integration-all-prs",
+      "headRefOid": "6f5e2da7a3316238022733795c51de5362af4137",
+      "closedAt": "2026-08-05T16:34:50Z",
+      "mergedAt": "2026-08-05T16:34:50Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "ba014a841246dbadc001100980d3cd902a64a7b0"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOQaOp9s8AAAABIg1qgA",
+          "commit": {
+            "abbreviatedOid": "66ef2e6"
+          },
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "good for me",
+          "createdAt": "2026-08-05T15:53:00Z",
+          "updatedAt": "2026-08-05T15:53:00Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 32,
+      "id": "PR_kwDOQaOp9s77LSK3",
+      "title": "Require issuer in the discovery metadata document and verify it against the discovery identity",
+      "url": "https://github.com/dickhardt/signature-key/pull/32",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "The discovery metadata document MUST contain `issuer` and `jwks_uri`. Verifiers reject a document without `issuer` (`issuer_missing`) or whose `issuer` does not match the identity it was fetched under (`issuer_mismatch`): the `id` parameter for the jwks_uri scheme, the `iss` claim for the jwt and self-jwt schemes.\n\nThis is the same check RFC 8414 \u00a73.3 requires of authorization server metadata, and it prevents a document served under one identity \u2014 misconfigured shared hosting, subdomain takeover \u2014 from pointing `jwks_uri` at keys that belong to another. The comparison is byte equality as presented, matching the identifier-comparison rule used for the jwks `url`.\n\nDocuments conforming to RFC 8414 or OpenID Connect Discovery already carry `issuer`, so existing metadata remains reusable.\n\nCloses #12\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01SoJZyAAHEqS7LUEMWxeJHh",
+      "createdAt": "2026-08-05T16:29:31Z",
+      "updatedAt": "2026-08-05T20:58:53Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "integration-all-prs",
+      "baseRefOid": "66ef2e6efef9c0104343a038925773eee2a47a91",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "jwks-uri-issuer",
+      "headRefOid": "6b39a7228ef3b601383a8507b65a0a9791b42e9d",
+      "closedAt": "2026-08-05T16:34:40Z",
+      "mergedAt": "2026-08-05T16:34:40Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "6f5e2da7a3316238022733795c51de5362af4137"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 34,
+      "id": "PR_kwDOQaOp9s77TEKi",
+      "title": "Acknowledge Thibault Meunier and Mikkel Albrechtsen",
+      "url": "https://github.com/dickhardt/signature-key/pull/34",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "**Thibault Meunier** (@thibmeu) authored PRs #26\u2013#30, which shaped a large share of -08, and was not acknowledged at all. Added with a specific sentence in the style of the existing Ted Hardie one, naming what the review changed:\n\n- citing the JOSE registry itself rather than RFC 7518\n- closing the `none` case on the response side\n- scoping the unknown-scheme rejection to the selected member\n- restoring what `keyid` means alongside `Signature-Key`\n- untangling the key cache expiry from the assertion cache expiry\n\n**Mikkel Albrechtsen** (@The0mikkel) raised issue #10 on adding signatures independently of one another.\n\nHis GitHub profile gives only \"Thibault\", so the surname is inferred from the handle \u2014 worth confirming before publication.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_011H2BBgoKc7DqXeme5yT9Ls",
+      "createdAt": "2026-08-05T21:39:16Z",
+      "updatedAt": "2026-08-06T08:07:14Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "064f95837a89841cffcb0493c7c4e05371f72e82",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "ack-reviewers",
+      "headRefOid": "5be619e537c34eb0692f2df9dc297ee40a3c27f2",
+      "closedAt": "2026-08-06T08:07:11Z",
+      "mergedAt": "2026-08-06T08:07:11Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "0ff751b571e7fe51336bcc1e526954a202317cc0"
+      },
+      "comments": [
+        {
+          "author": "thibmeu",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "It seems the robot is a bit lost. The \"His GitHub profile gives only \"Thibault\", so the surname is inferred from the handle \" while the name is already in the document and on github commit is funny though.\r\n\r\nWorth having only Mikkel herr",
+          "createdAt": "2026-08-06T04:59:13Z",
+          "updatedAt": "2026-08-06T04:59:13Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 36,
+      "id": "PR_kwDOQaOp9s8AAAABCFbttw",
+      "title": "Update the archive workflow to the current i-d-template",
+      "url": "https://github.com/dickhardt/signature-key/pull/36",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "The existing `archive.yml` predates the template's `permissions` block, so the `gh-archive` push to gh-pages has failed on every scheduled run (see the last five runs of the workflow). This replaces it with the current upstream file, which grants `contents: write` and adds a manual `archive_full` option.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01BdKzq6t78QufwReZ5vDoWs",
+      "createdAt": "2026-09-03T16:30:04Z",
+      "updatedAt": "2026-09-03T16:30:44Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "0ff751b571e7fe51336bcc1e526954a202317cc0",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "archive-workflow",
+      "headRefOid": "6f0ee3bdeae58bb184d2f4e116f128620b6d468b",
+      "closedAt": "2026-09-03T16:30:42Z",
+      "mergedAt": "2026-09-03T16:30:41Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "10a7563beecb2a461d5b412549a69d49f97f500c"
+      },
+      "comments": [],
+      "reviews": []
+    }
+  ]
+}
