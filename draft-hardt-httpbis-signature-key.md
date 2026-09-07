@@ -1086,6 +1086,18 @@ The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jw
 Signature-Error: error=expired_jwt
 ```
 
+### revoked_jwt
+
+The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) verifies and has not expired, but the verifier holds notice from the issuer that it has been withdrawn.
+
+```http
+Signature-Error: error=revoked_jwt
+```
+
+This is distinct from `invalid_jwt` and `expired_jwt`, and the distinction is what the caller needs: nothing about the assertion is malformed and nothing about it has timed out, so a caller told only that the JWT was invalid has no reason not to present it again. `revoked_jwt` says the assertion will not become acceptable with time, and that recovery runs through the issuer that withdrew it.
+
+How a verifier learns of a withdrawal is out of scope for this document. It is not discoverable from the JWT, so a verifier returns this code only where an application protocol gives it that notice.
+
 # Signature-Key-Cache Response Header {#signature-key-cache-response-header}
 
 A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal on the presented scheme ((#jwt-confirmation-key-jwt), (#jkt-jwt-scheme)), MAY return the `Signature-Key-Cache` response header to issue the caller a cache identifier for later reference.
@@ -1432,6 +1444,7 @@ This document establishes the "Signature Error Code" registry. New values may be
 | `issuer_mismatch` | Metadata document issuer does not match the discovery identity | [this document] |
 | `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
 | `expired_jwt` | JWT expired | [this document] |
+| `revoked_jwt` | JWT withdrawn by its issuer | [this document] |
 
 ### Registration Template
 
@@ -1472,6 +1485,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
 *Note: This section is to be removed before publishing as an RFC.*
 
 - draft-hardt-httpbis-signature-key-08
+  - Added the `revoked_jwt` error code, for a JWT that verifies and has not expired but that the verifier has been told its issuer withdrew. `invalid_jwt` and `expired_jwt` both describe the assertion itself, so a verifier acting on a revocation had to report one of them and a caller reading either had no reason not to retry with the same JWT. How the verifier learns of the withdrawal is left to the application protocol.
 
   Not backward compatible with -07. Breaking changes are listed first.
 
