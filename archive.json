@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-03T16:31:05.049211+00:00",
+  "timestamp": "2026-09-08T00:13:16.998025+00:00",
   "repo": "dickhardt/signature-key",
   "labels": [
     {
@@ -1884,6 +1884,32 @@
       "mergeCommit": {
         "oid": "10a7563beecb2a461d5b412549a69d49f97f500c"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 37,
+      "id": "PR_kwDOQaOp9s8AAAABCjm5xA",
+      "title": "Add the revoked_jwt error code",
+      "url": "https://github.com/dickhardt/signature-key/pull/37",
+      "state": "OPEN",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "`invalid_jwt` and `expired_jwt` both describe the assertion itself. A verifier that has been told an issuer withdrew an otherwise-valid JWT had to report one of them, and a caller reading either has no reason not to present the same JWT again \u2014 nothing is malformed and nothing has timed out.\n\n`revoked_jwt` says the assertion will not become acceptable with time, and that recovery runs through the issuer that withdrew it.\n\nHow a verifier learns of a withdrawal is out of scope here \u2014 it is not discoverable from the JWT, so a verifier returns this code only where an application protocol gives it that notice. AAuth's token revocation is the case that prompted this (dickhardt/AAuth#146).\n\nAdded to the Signature Error Code registry's initial contents.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01Vibbcv1TAfcACkkbNTkraE",
+      "createdAt": "2026-09-07T17:24:09Z",
+      "updatedAt": "2026-09-07T17:24:09Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "10a7563beecb2a461d5b412549a69d49f97f500c",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "revoked-jwt-error",
+      "headRefOid": "5a12c3299c324ab0cc0ac40bb733bd62602dafe1",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
