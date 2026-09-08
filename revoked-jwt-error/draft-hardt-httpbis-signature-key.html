@@ -1050,7 +1050,7 @@ svg {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Hardt &amp; Meunier</td>
-<td class="center">Expires 11 March 2027</td>
+<td class="center">Expires 12 March 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1063,12 +1063,12 @@ svg {
 <dd class="internet-draft">draft-hardt-httpbis-signature-key-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-09-07" class="published">7 September 2026</time>
+<time datetime="2026-09-08" class="published">8 September 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-03-11">11 March 2027</time></dd>
+<dd class="expires"><time datetime="2027-03-12">12 March 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1113,7 +1113,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 11 March 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 12 March 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1271,6 +1271,9 @@ svg {
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.4.2.13">
                     <p id="section-toc.1-1.5.2.4.2.13.1"><a href="#section-5.4.13" class="auto internal xref">5.4.13</a>. <a href="#name-revoked_jwt" class="internal xref">revoked_jwt</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.4.2.14">
+                    <p id="section-toc.1-1.5.2.4.2.14.1"><a href="#section-5.4.14" class="auto internal xref">5.4.14</a>. <a href="#name-clock_skew" class="internal xref">clock_skew</a></p>
 </li>
                 </ul>
 </li>
@@ -2812,6 +2815,21 @@ Accept-Signature-Scheme: jwks_uri, jwt
 <p id="section-5.4.13-4">How a verifier learns of a withdrawal is out of scope for this document. It is not discoverable from the JWT, so a verifier returns this code only where an application protocol gives it that notice.<a href="#section-5.4.13-4" class="pilcrow">¶</a></p>
 </section>
 </div>
+<div id="clock-skew">
+<section id="section-5.4.14">
+          <h4 id="name-clock_skew">
+<a href="#section-5.4.14" class="section-number selfRef">5.4.14. </a><a href="#name-clock_skew" class="section-name selfRef">clock_skew</a>
+          </h4>
+<p id="section-5.4.14-1">The JWT in the <code>Signature-Key</code> header (when using <code>scheme=jwt</code> or <code>scheme=jkt-jwt</code>) carries an <code>iat</code> further ahead of the verifier's clock than the verifier's signature validity window, or the signature's <code>created</code> parameter (<span>[<a href="#RFC9421" class="cite xref">RFC9421</a>]</span>) is further ahead of the verifier's clock than that window.<a href="#section-5.4.14-1" class="pilcrow">¶</a></p>
+<div class="lang-http sourcecode" id="section-5.4.14-2">
+<pre>Signature-Error: error=clock_skew
+
+</pre><a href="#section-5.4.14-2" class="pilcrow">¶</a>
+</div>
+<p id="section-5.4.14-3">Nothing about the assertion or the signature is wrong; the sender's clock, or the clock of the issuer that signed the JWT, disagrees with the verifier's. This is distinct from <code>invalid_jwt</code>, <code>expired_jwt</code>, and <code>invalid_signature</code>, and the distinction is what the caller needs: those say to obtain a fresh assertion or sign again, and a fresh assertion from the same issuer carries the same skew. A future <code>iat</code> or <code>created</code> becomes acceptable with time, so the sender MAY wait and present the same assertion again. The <code>Date</code> header on the response is the verifier's clock, and the difference between it and the <code>iat</code> or <code>created</code>, less the window, is how long to wait.<a href="#section-5.4.14-3" class="pilcrow">¶</a></p>
+<p id="section-5.4.14-4">A verifier is not required to bound <code>iat</code> at all; one that does SHOULD use the same window it applies to <code>created</code>, so that a sender faces one skew tolerance rather than two. A <code>created</code> older than the window is a stale or replayed signature, not skew, and is refused with <code>invalid_signature</code>.<a href="#section-5.4.14-4" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 </section>
@@ -3385,6 +3403,13 @@ Accept-Signature-Scheme: jwks_uri, jwt
                 <td class="text-left" rowspan="1" colspan="1">JWT withdrawn by its issuer</td>
                 <td class="text-left" rowspan="1" colspan="1">[this document]</td>
               </tr>
+              <tr>
+                <td class="text-left" rowspan="1" colspan="1">
+                  <code>clock_skew</code>
+</td>
+                <td class="text-left" rowspan="1" colspan="1">JWT <code>iat</code> or signature <code>created</code> too far ahead of the verifier's clock</td>
+                <td class="text-left" rowspan="1" colspan="1">[this document]</td>
+              </tr>
             </tbody>
           </table>
 </section>
@@ -3459,6 +3484,8 @@ Accept-Signature-Scheme: jwks_uri, jwt
           <p id="section-10-2.1.1">draft-hardt-httpbis-signature-key-08<a href="#section-10-2.1.1" class="pilcrow">¶</a></p>
 <ul class="compact">
 <li class="compact" id="section-10-2.1.2.1">Added the <code>revoked_jwt</code> error code, for a JWT that verifies and has not expired but that the verifier has been told its issuer withdrew. <code>invalid_jwt</code> and <code>expired_jwt</code> both describe the assertion itself, so a verifier acting on a revocation had to report one of them and a caller reading either had no reason not to retry with the same JWT. How the verifier learns of the withdrawal is left to the application protocol.<a href="#section-10-2.1.2.1" class="pilcrow">¶</a>
+</li>
+            <li class="compact" id="section-10-2.1.2.2">Added the <code>clock_skew</code> error code: a JWT <code>iat</code>, or a signature <code>created</code>, further ahead of the verifier's clock than its validity window. Distinct from <code>invalid_jwt</code>, <code>expired_jwt</code> and <code>invalid_signature</code> because a fresh assertion from the same issuer carries the same skew, while waiting out the difference — readable from the response <code>Date</code> header — makes the same assertion acceptable. A verifier that bounds <code>iat</code> SHOULD use the <code>created</code> window.<a href="#section-10-2.1.2.2" class="pilcrow">¶</a>
 </li>
           </ul>
 </li>

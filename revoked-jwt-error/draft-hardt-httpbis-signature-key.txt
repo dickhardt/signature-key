@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 11 March 2027                                        Cloudflare
-                                                        7 September 2026
+Expires: 12 March 2027                                        Cloudflare
+                                                        8 September 2026
 
 
                           HTTP Signature Keys
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 March 2027.
+   This Internet-Draft will expire on 12 March 2027.
 
 Copyright Notice
 
@@ -117,6 +117,7 @@ Table of Contents
        5.4.11. invalid_jwt
        5.4.12. expired_jwt
        5.4.13. revoked_jwt
+       5.4.14. clock_skew
    6.  Signature-Key-Cache Response Header
      6.1.  Presenting and Resolving a Cached Assertion
      6.2.  Degradation and Interoperability
@@ -1795,6 +1796,33 @@ Signature: sig1=:MEQCIA5...:
    document.  It is not discoverable from the JWT, so a verifier returns
    this code only where an application protocol gives it that notice.
 
+5.4.14.  clock_skew
+
+   The JWT in the Signature-Key header (when using scheme=jwt or
+   scheme=jkt-jwt) carries an iat further ahead of the verifier's clock
+   than the verifier's signature validity window, or the signature's
+   created parameter ([RFC9421]) is further ahead of the verifier's
+   clock than that window.
+
+   Signature-Error: error=clock_skew
+
+   Nothing about the assertion or the signature is wrong; the sender's
+   clock, or the clock of the issuer that signed the JWT, disagrees with
+   the verifier's.  This is distinct from invalid_jwt, expired_jwt, and
+   invalid_signature, and the distinction is what the caller needs:
+   those say to obtain a fresh assertion or sign again, and a fresh
+   assertion from the same issuer carries the same skew.  A future iat
+   or created becomes acceptable with time, so the sender MAY wait and
+   present the same assertion again.  The Date header on the response is
+   the verifier's clock, and the difference between it and the iat or
+   created, less the window, is how long to wait.
+
+   A verifier is not required to bound iat at all; one that does SHOULD
+   use the same window it applies to created, so that a sender faces one
+   skew tolerance rather than two.  A created older than the window is a
+   stale or replayed signature, not skew, and is refused with
+   invalid_signature.
+
 6.  Signature-Key-Cache Response Header
 
    A verifier that has cached an assertion presented in a signed
@@ -2456,15 +2484,15 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    | invalid_request       | Missing required info         | [this     |
    |                       | unrelated to signature        | document] |
    +-----------------------+-------------------------------+-----------+
-   | invalid_key           | Key cannot be parsed          | [this     |
-   |                       | or doesn't meet trust         | document] |
+   | invalid_key           | Key cannot be parsed or       | [this     |
+   |                       | doesn't meet trust            | document] |
    |                       | requirements                  |           |
    +-----------------------+-------------------------------+-----------+
    | unknown_key           | Key not found at              | [this     |
    |                       | jwks_uri                      | document] |
    +-----------------------+-------------------------------+-----------+
-   | issuer_missing        | Metadata document             | [this     |
-   |                       | lacks an issuer member        | document] |
+   | issuer_missing        | Metadata document lacks       | [this     |
+   |                       | an issuer member              | document] |
    +-----------------------+-------------------------------+-----------+
    | issuer_mismatch       | Metadata document             | [this     |
    |                       | issuer does not match         | document] |
@@ -2479,6 +2507,10 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    +-----------------------+-------------------------------+-----------+
    | revoked_jwt           | JWT withdrawn by its          | [this     |
    |                       | issuer                        | document] |
+   +-----------------------+-------------------------------+-----------+
+   | clock_skew            | JWT iat or signature          | [this     |
+   |                       | created too far ahead         | document] |
+   |                       | of the verifier's clock       |           |
    +-----------------------+-------------------------------+-----------+
 
                                   Table 4
@@ -2551,6 +2583,14 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
          report one of them and a caller reading either had no reason
          not to retry with the same JWT.  How the verifier learns of the
          withdrawal is left to the application protocol.
+      -  Added the clock_skew error code: a JWT iat, or a signature
+         created, further ahead of the verifier's clock than its
+         validity window.  Distinct from invalid_jwt, expired_jwt and
+         invalid_signature because a fresh assertion from the same
+         issuer carries the same skew, while waiting out the difference
+         — readable from the response Date header — makes the same
+         assertion acceptable.  A verifier that bounds iat SHOULD use
+         the created window.
 
    Not backward compatible with -07.  Breaking changes are listed first.
 
