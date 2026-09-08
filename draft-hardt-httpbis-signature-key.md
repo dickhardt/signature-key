@@ -1086,6 +1086,18 @@ The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jw
 Signature-Error: error=expired_jwt
 ```
 
+### clock_skew
+
+The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) carries an `iat` further ahead of the verifier's clock than the verifier's signature validity window, or the signature's `created` parameter ([@!RFC9421]) is further ahead of the verifier's clock than that window.
+
+```http
+Signature-Error: error=clock_skew
+```
+
+Nothing about the assertion or the signature is wrong; the sender's clock, or the clock of the issuer that signed the JWT, disagrees with the verifier's. This is distinct from `invalid_jwt`, `expired_jwt`, and `invalid_signature`, and the distinction is what the caller needs: those say to obtain a fresh assertion or sign again, and a fresh assertion from the same issuer carries the same skew. A future `iat` or `created` becomes acceptable with time, so the sender MAY wait and present the same assertion again. The `Date` header on the response is the verifier's clock, and the difference between it and the `iat` or `created`, less the window, is how long to wait.
+
+A verifier is not required to bound `iat` at all; one that does SHOULD use the same window it applies to `created`, so that a sender faces one skew tolerance rather than two. A `created` older than the window is a stale or replayed signature, not skew, and is refused with `invalid_signature`.
+
 # Signature-Key-Cache Response Header {#signature-key-cache-response-header}
 
 A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal on the presented scheme ((#jwt-confirmation-key-jwt), (#jkt-jwt-scheme)), MAY return the `Signature-Key-Cache` response header to issue the caller a cache identifier for later reference.
@@ -1432,6 +1444,7 @@ This document establishes the "Signature Error Code" registry. New values may be
 | `issuer_mismatch` | Metadata document issuer does not match the discovery identity | [this document] |
 | `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
 | `expired_jwt` | JWT expired | [this document] |
+| `clock_skew` | JWT `iat` or signature `created` too far ahead of the verifier's clock | [this document] |
 
 ### Registration Template
 
@@ -1498,6 +1511,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
 
   Other changes:
 
+  - Added the `clock_skew` error code (issue 38): a JWT `iat`, or a signature `created`, further ahead of the verifier's clock than its validity window. Distinct from `invalid_jwt`, `expired_jwt` and `invalid_signature` because a fresh assertion from the same issuer carries the same skew, while waiting out the difference — readable from the response `Date` header — makes the same assertion acceptable. A verifier that bounds `iat` SHOULD use the `created` window.
   - Required a verifier resolving a key from a JWKS to select the member matching `kid` without requiring any other member to be usable, and forbade failing because an unselected member names an unimplemented `kty` or `alg`. Without it no issuer could add a post-quantum key alongside a classical one, since doing so would break every verifier that does not implement the new type, including those that were only ever going to use the classical key. Noted that an unknown member within a single JWK is ignored per [@!RFC7517], Section 4, which is distinct from a member this document forbids.
   - Stated that an `Accept-Signature-Alg` Token is the registered identifier verbatim, case included: `ES256`, not `es256`. Structured Field parsing preserves a Token's case, and the value is compared against the `alg` member of a JWK, a case-sensitive JSON string, so a case-folded token matches no key.
   - Corrected the claim that `kty` and `crv` underdetermine the algorithm for EC keys. Within JOSE they do not: `ES256`, `ES384`, and `ES512` correspond one to one with `P-256`, `P-384`, and `P-521`, and no registered signing algorithm pairs a curve with another hash. Genuine underdetermination is limited to RSA, which has no `crv`, and to the `AKP` key type of [@!RFC9964].
