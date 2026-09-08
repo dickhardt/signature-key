@@ -1086,6 +1086,18 @@ The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jw
 Signature-Error: error=expired_jwt
 ```
 
+### clock_skew
+
+The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) carries an `iat` further ahead of the verifier's clock than the verifier's signature validity window, or the signature's `created` parameter ([@!RFC9421]) is further ahead of the verifier's clock than that window.
+
+```http
+Signature-Error: error=clock_skew
+```
+
+Nothing about the assertion or the signature is wrong; the sender's clock, or the clock of the issuer that signed the JWT, disagrees with the verifier's. This is distinct from `invalid_jwt`, `expired_jwt`, and `invalid_signature`, and the distinction is what the caller needs: those say to obtain a fresh assertion or sign again, and a fresh assertion from the same issuer carries the same skew. A future `iat` or `created` becomes acceptable with time, so the sender MAY wait and present the same assertion again. The `Date` header on the response is the verifier's clock, and the difference between it and the `iat` or `created`, less the window, is how long to wait.
+
+A verifier is not required to bound `iat` at all; one that does SHOULD use the same window it applies to `created`, so that a sender faces one skew tolerance rather than two. A `created` older than the window is a stale or replayed signature, not skew, and is refused with `invalid_signature`.
+
 # Signature-Key-Cache Response Header {#signature-key-cache-response-header}
 
 A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal on the presented scheme ((#jwt-confirmation-key-jwt), (#jkt-jwt-scheme)), MAY return the `Signature-Key-Cache` response header to issue the caller a cache identifier for later reference.
@@ -1432,6 +1444,7 @@ This document establishes the "Signature Error Code" registry. New values may be
 | `issuer_mismatch` | Metadata document issuer does not match the discovery identity | [this document] |
 | `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
 | `expired_jwt` | JWT expired | [this document] |
+| `clock_skew` | JWT `iat` or signature `created` too far ahead of the verifier's clock | [this document] |
 
 ### Registration Template
 
@@ -1474,6 +1487,8 @@ For the Signature Error Code registry, the expert should additionally verify tha
 - draft-hardt-httpbis-signature-key-08
 
   Not backward compatible with -07. Breaking changes are listed first.
+
+  - Added the `clock_skew` error code (#38): a JWT `iat`, or a signature `created`, further ahead of the verifier's clock than its validity window. Distinct from `invalid_jwt`, `expired_jwt` and `invalid_signature` because a fresh assertion from the same issuer carries the same skew, while waiting out the difference — readable from the response `Date` header — makes the same assertion acceptable. A verifier that bounds `iat` SHOULD use the `created` window.
 
   Breaking changes:
 
