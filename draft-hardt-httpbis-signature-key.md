@@ -1497,8 +1497,11 @@ For the Signature Error Code registry, the expert should additionally verify tha
 
 *Note: This section is to be removed before publishing as an RFC.*
 
-- draft-hardt-httpbis-signature-key-08
+- draft-hardt-httpbis-signature-key-09
   - Added the `revoked_jwt` error code, for a JWT that verifies and has not expired but that the verifier has been told its issuer withdrew. `invalid_jwt` and `expired_jwt` both describe the assertion itself, so a verifier acting on a revocation had to report one of them and a caller reading either had no reason not to retry with the same JWT. How the verifier learns of the withdrawal is left to the application protocol.
+  - Added the `clock_skew` error code (issue 38): a JWT `iat`, or a signature `created`, further ahead of the verifier's clock than its validity window. Distinct from `invalid_jwt`, `expired_jwt` and `invalid_signature` because a fresh assertion from the same issuer carries the same skew, while waiting out the difference — readable from the response `Date` header — makes the same assertion acceptable. A verifier that bounds `iat` SHOULD use the `created` window.
+
+- draft-hardt-httpbis-signature-key-08
 
   Not backward compatible with -07. Breaking changes are listed first.
 
@@ -1525,7 +1528,6 @@ For the Signature Error Code registry, the expert should additionally verify tha
 
   Other changes:
 
-  - Added the `clock_skew` error code (issue 38): a JWT `iat`, or a signature `created`, further ahead of the verifier's clock than its validity window. Distinct from `invalid_jwt`, `expired_jwt` and `invalid_signature` because a fresh assertion from the same issuer carries the same skew, while waiting out the difference — readable from the response `Date` header — makes the same assertion acceptable. A verifier that bounds `iat` SHOULD use the `created` window.
   - Required a verifier resolving a key from a JWKS to select the member matching `kid` without requiring any other member to be usable, and forbade failing because an unselected member names an unimplemented `kty` or `alg`. Without it no issuer could add a post-quantum key alongside a classical one, since doing so would break every verifier that does not implement the new type, including those that were only ever going to use the classical key. Noted that an unknown member within a single JWK is ignored per [@!RFC7517], Section 4, which is distinct from a member this document forbids.
   - Stated that an `Accept-Signature-Alg` Token is the registered identifier verbatim, case included: `ES256`, not `es256`. Structured Field parsing preserves a Token's case, and the value is compared against the `alg` member of a JWK, a case-sensitive JSON string, so a case-folded token matches no key.
   - Corrected the claim that `kty` and `crv` underdetermine the algorithm for EC keys. Within JOSE they do not: `ES256`, `ES384`, and `ES512` correspond one to one with `P-256`, `P-384`, and `P-521`, and no registered signing algorithm pairs a curve with another hash. Genuine underdetermination is limited to RSA, which has no `crv`, and to the `AKP` key type of [@!RFC9964].
