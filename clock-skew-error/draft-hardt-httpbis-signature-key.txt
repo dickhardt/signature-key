@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 12 March 2027                                        Cloudflare
-                                                        8 September 2026
+Expires: 16 March 2027                                        Cloudflare
+                                                       12 September 2026
 
 
                           HTTP Signature Keys
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 March 2027.
+   This Internet-Draft will expire on 16 March 2027.
 
 Copyright Notice
 
@@ -116,7 +116,8 @@ Table of Contents
        5.4.10. issuer_mismatch
        5.4.11. invalid_jwt
        5.4.12. expired_jwt
-       5.4.13. clock_skew
+       5.4.13. revoked_jwt
+       5.4.14. clock_skew
    6.  Signature-Key-Cache Response Header
      6.1.  Presenting and Resolving a Cached Assertion
      6.2.  Degradation and Interoperability
@@ -1776,7 +1777,26 @@ Signature: sig1=:MEQCIA5...:
 
    Signature-Error: error=expired_jwt
 
-5.4.13.  clock_skew
+5.4.13.  revoked_jwt
+
+   The JWT in the Signature-Key header (when using scheme=jwt or
+   scheme=jkt-jwt) verifies and has not expired, but the verifier holds
+   notice from the issuer that it has been withdrawn.
+
+   Signature-Error: error=revoked_jwt
+
+   This is distinct from invalid_jwt and expired_jwt, and the
+   distinction is what the caller needs: nothing about the assertion is
+   malformed and nothing about it has timed out, so a caller told only
+   that the JWT was invalid has no reason not to present it again.
+   revoked_jwt says the assertion will not become acceptable with time,
+   and that recovery runs through the issuer that withdrew it.
+
+   How a verifier learns of a withdrawal is out of scope for this
+   document.  It is not discoverable from the JWT, so a verifier returns
+   this code only where an application protocol gives it that notice.
+
+5.4.14.  clock_skew
 
    The JWT in the Signature-Key header (when using scheme=jwt or
    scheme=jkt-jwt) carries an iat further ahead of the verifier's clock
@@ -2485,6 +2505,9 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    | expired_jwt           | JWT expired                   | [this     |
    |                       |                               | document] |
    +-----------------------+-------------------------------+-----------+
+   | revoked_jwt           | JWT withdrawn by its          | [this     |
+   |                       | issuer                        | document] |
+   +-----------------------+-------------------------------+-----------+
    | clock_skew            | JWT iat or signature          | [this     |
    |                       | created too far ahead         | document] |
    |                       | of the verifier's clock       |           |
@@ -2553,6 +2576,13 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
    _Note: This section is to be removed before publishing as an RFC._
 
    *  draft-hardt-httpbis-signature-key-08
+      -  Added the revoked_jwt error code, for a JWT that verifies and
+         has not expired but that the verifier has been told its issuer
+         withdrew. invalid_jwt and expired_jwt both describe the
+         assertion itself, so a verifier acting on a revocation had to
+         report one of them and a caller reading either had no reason
+         not to retry with the same JWT.  How the verifier learns of the
+         withdrawal is left to the application protocol.
 
    Not backward compatible with -07.  Breaking changes are listed first.
 
