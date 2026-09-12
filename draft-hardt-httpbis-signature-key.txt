@@ -2575,7 +2575,8 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
 
    _Note: This section is to be removed before publishing as an RFC._
 
-   *  draft-hardt-httpbis-signature-key-08
+   *  draft-hardt-httpbis-signature-key-09
+
       -  Added the revoked_jwt error code, for a JWT that verifies and
          has not expired but that the verifier has been told its issuer
          withdrew. invalid_jwt and expired_jwt both describe the
@@ -2583,6 +2584,16 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
          report one of them and a caller reading either had no reason
          not to retry with the same JWT.  How the verifier learns of the
          withdrawal is left to the application protocol.
+      -  Added the clock_skew error code (issue 38): a JWT iat, or a
+         signature created, further ahead of the verifier's clock than
+         its validity window.  Distinct from invalid_jwt, expired_jwt
+         and invalid_signature because a fresh assertion from the same
+         issuer carries the same skew, while waiting out the difference
+         — readable from the response Date header — makes the same
+         assertion acceptable.  A verifier that bounds iat SHOULD use
+         the created window.
+
+   *  draft-hardt-httpbis-signature-key-08
 
    Not backward compatible with -07.  Breaking changes are listed first.
 
@@ -2670,15 +2681,6 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1
       be resolved against the registry.
 
    Other changes:
-
-   *  Added the clock_skew error code (issue 38): a JWT iat, or a
-      signature created, further ahead of the verifier's clock than its
-      validity window.  Distinct from invalid_jwt, expired_jwt and
-      invalid_signature because a fresh assertion from the same issuer
-      carries the same skew, while waiting out the difference — readable
-      from the response Date header — makes the same assertion
-      acceptable.  A verifier that bounds iat SHOULD use the created
-      window.
 
    *  Required a verifier resolving a key from a JWKS to select the
       member matching kid without requiring any other member to be
