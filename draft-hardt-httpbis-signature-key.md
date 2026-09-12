@@ -1086,6 +1086,7 @@ The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jw
 Signature-Error: error=expired_jwt
 ```
 
+<<<<<<< HEAD
 ### clock_skew
 
 The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) carries an `iat` further ahead of the verifier's clock than the verifier's signature validity window, or the signature's `created` parameter ([@!RFC9421]) is further ahead of the verifier's clock than that window.
@@ -1097,6 +1098,19 @@ Signature-Error: error=clock_skew
 Nothing about the assertion or the signature is wrong; the sender's clock, or the clock of the issuer that signed the JWT, disagrees with the verifier's. This is distinct from `invalid_jwt`, `expired_jwt`, and `invalid_signature`, and the distinction is what the caller needs: those say to obtain a fresh assertion or sign again, and a fresh assertion from the same issuer carries the same skew. A future `iat` or `created` becomes acceptable with time, so the sender MAY wait and present the same assertion again. The `Date` header on the response is the verifier's clock, and the difference between it and the `iat` or `created`, less the window, is how long to wait.
 
 A verifier is not required to bound `iat` at all; one that does SHOULD use the same window it applies to `created`, so that a sender faces one skew tolerance rather than two. A `created` older than the window is a stale or replayed signature, not skew, and is refused with `invalid_signature`.
+=======
+### revoked_jwt
+
+The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) verifies and has not expired, but the verifier holds notice from the issuer that it has been withdrawn.
+
+```http
+Signature-Error: error=revoked_jwt
+```
+
+This is distinct from `invalid_jwt` and `expired_jwt`, and the distinction is what the caller needs: nothing about the assertion is malformed and nothing about it has timed out, so a caller told only that the JWT was invalid has no reason not to present it again. `revoked_jwt` says the assertion will not become acceptable with time, and that recovery runs through the issuer that withdrew it.
+
+How a verifier learns of a withdrawal is out of scope for this document. It is not discoverable from the JWT, so a verifier returns this code only where an application protocol gives it that notice.
+>>>>>>> origin/main
 
 # Signature-Key-Cache Response Header {#signature-key-cache-response-header}
 
@@ -1444,7 +1458,11 @@ This document establishes the "Signature Error Code" registry. New values may be
 | `issuer_mismatch` | Metadata document issuer does not match the discovery identity | [this document] |
 | `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
 | `expired_jwt` | JWT expired | [this document] |
+<<<<<<< HEAD
 | `clock_skew` | JWT `iat` or signature `created` too far ahead of the verifier's clock | [this document] |
+=======
+| `revoked_jwt` | JWT withdrawn by its issuer | [this document] |
+>>>>>>> origin/main
 
 ### Registration Template
 
@@ -1485,6 +1503,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
 *Note: This section is to be removed before publishing as an RFC.*
 
 - draft-hardt-httpbis-signature-key-08
+  - Added the `revoked_jwt` error code, for a JWT that verifies and has not expired but that the verifier has been told its issuer withdrew. `invalid_jwt` and `expired_jwt` both describe the assertion itself, so a verifier acting on a revocation had to report one of them and a caller reading either had no reason not to retry with the same JWT. How the verifier learns of the withdrawal is left to the application protocol.
 
   Not backward compatible with -07. Breaking changes are listed first.
 
