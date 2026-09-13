@@ -135,7 +135,7 @@ The mechanisms in this document were designed as general-purpose building blocks
 
 # Signature-Key HTTP Request Header
 
-The `Signature-Key` header provides the public key or key reference needed to verify an HTTP Message Signature. It is a Structured Field Dictionary [@!RFC8941] keyed by signature label, where each member describes how to obtain the verification key for the corresponding signature.
+The `Signature-Key` header provides the public key or key reference needed to verify an HTTP Message Signature. It is a Structured Field Dictionary [@!RFC9651] keyed by signature label, where each member describes how to obtain the verification key for the corresponding signature.
 
 **Format:**
 
@@ -146,9 +146,9 @@ Signature-Key: <label>=<scheme>;<parameters>...
 Where:
 - `<label>` (dictionary key) matches the label in Signature-Input and Signature headers
 - `<scheme>` (token) identifies the key distribution scheme
-- `<parameters>` are semicolon-separated key-value pairs whose values are structured field strings or byte sequences, varying by scheme
+- `<parameters>` are semicolon-separated key-value pairs whose values are structured field strings, byte sequences, or booleans, varying by scheme
 
-Multiple keys are comma-separated per the dictionary format. See [@!RFC8941] for definitions of dictionary, token, string, and byte sequence.
+Multiple keys are comma-separated per the dictionary format. See [@!RFC9651] for definitions of dictionary, token, string, and byte sequence.
 
 **Unknown schemes:**
 
@@ -159,9 +159,9 @@ This rule governs the member the verifier selected, and that member alone. A ver
 **Example:**
 
 ```
-Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
+Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=1732210000
 Signature: sig=:MEQCIA5...
-Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj..."
+Signature-Key: sig=hwk;kty="OKP";crv="Ed25519";x="JrQLj...";alg="Ed25519"
 ```
 
 **Label Correlation:**
@@ -379,7 +379,8 @@ JWT header:
     "kty": "EC",
     "crv": "P-256",
     "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
-    "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0"
+    "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+    "alg": "ES256"
   }
 }
 ```
@@ -395,7 +396,8 @@ JWT payload:
     "jwk": {
       "kty": "OKP",
       "crv": "Ed25519",
-      "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+      "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs",
+      "alg": "Ed25519"
     }
   }
 }
@@ -533,10 +535,10 @@ The jwt scheme embeds a public key inside a signed JWT using the `cnf` (confirma
 
 - `jwt` (REQUIRED, String) - Compact-serialized JWT
 
-- `cache` (OPTIONAL, Boolean) - When true, the caller indicates it can present a cache identifier on subsequent requests, using the cached scheme ((#cached-scheme)), and requests that the verifier issue one. Absent means the caller does not want one. Boolean true is indicated by omitting the value ([@!RFC8941], Section 4.1.1.2), so the parameter is serialized as `cache` rather than `cache=?1`. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. A JWT presented with `cache` MUST contain a `jti` claim ([@!RFC7519], Section 4.1.7); a verifier MUST NOT issue a cache identifier for a JWT without one. See (#signature-key-cache-response-header).
+- `cache` (OPTIONAL, Boolean) - When true, the caller indicates it can present a cache identifier on subsequent requests, using the cached scheme ((#cached-scheme)), and requests that the verifier issue one. Absent means the caller does not want one. Boolean true is indicated by omitting the value ([@!RFC9651], Section 4.1.1.2), so the parameter is serialized as `cache` rather than `cache=?1`. Because it is carried in the Signature-Key header, this signal is covered by the per-request signature. A JWT presented with `cache` MUST contain a `jti` claim ([@!RFC7519], Section 4.1.7); a verifier MUST NOT issue a cache identifier for a JWT without one. See (#signature-key-cache-response-header).
 
 ```
-Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
+Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZDI1NTE5In0...";cache
 ```
 
 **JWT requirements:**
@@ -561,7 +563,7 @@ Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
 
 2. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
 
-3. Validate `exp` claim if present. Reject if the token has expired.
+3. Validate `exp`. Reject if the token has expired.
 
 4. Verify required claims are present (`cnf.jwk`, plus any claims required by deployment policy). Reject if a required claim is missing.
 
@@ -593,7 +595,8 @@ Signature-Key: sig=jwt;jwt="eyJhbGciOiJFUzI1NiI..."
     "jwk": {
       "kty": "OKP",
       "crv": "Ed25519",
-      "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs"
+      "x": "JrQLj5P_89iXES9-vFgrIy29clF9CC_oPPsw3c5D0bs",
+      "alg": "Ed25519"
     }
   }
 }
@@ -629,11 +632,11 @@ The self-jwt scheme carries a signed JWT where the JWT issuer and the HTTP reque
 
 - SHOULD contain standard claims: `sub`, `aud`, `iat`
 
-The self-jwt scheme does not support the `cache` parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. A self-jwt embeds no key: its signing key is the confirmation key and is discovered from the issuer's JWKS by `iss` and `kid`. That key is already cacheable on those two values ((#caching-and-performance)), so caching the assertion in addition would save only the assertion's own bytes, of which there are few. A self-jwt also typically carries claims specific to the request it accompanies, so a cached copy would be stale for the next request rather than reusable.
-
 - Verifiers SHOULD verify the JWT `typ` header parameter has an expected value per deployment policy, following the explicit-typing guidance of [@!RFC8725], Section 3.11. The check is a defence against token confusion — an assertion minted for one context being accepted in another — and also rejects a wrong token before any cryptographic work.
 
 > **Note:** The mechanism by which the JWT is obtained is out of scope of this specification.
+
+The self-jwt scheme does not support the `cache` parameter, and a verifier MUST NOT issue a cache identifier for a self-jwt. A self-jwt embeds no key: its signing key is the confirmation key and is discovered from the issuer's JWKS by `iss` and `kid`. That key is already cacheable on those two values ((#caching-and-performance)), so caching the assertion in addition would save only the assertion's own bytes, of which there are few. A self-jwt also typically carries claims specific to the request it accompanies, so a cached copy would be stale for the next request rather than reusable.
 
 **Verification procedure:**
 
@@ -641,7 +644,7 @@ The self-jwt scheme does not support the `cache` parameter, and a verifier MUST 
 
 2. Verify the JWT `typ` header parameter has an expected value per policy. Reject if unexpected.
 
-3. Validate `exp` claim if present. Reject if the token has expired.
+3. Validate `exp`. Reject if the token has expired.
 
 4. Verify `iss`, `dwk` claims and `kid` JWT header parameter are present. Reject if any is absent.
 
@@ -667,7 +670,7 @@ JWT header:
 {
   "alg": "ES256",
   "kid": "r1",
-  "typ": "aauth-resource+jwt"
+  "typ": "aa-event+jwt"
 }
 ```
 
@@ -676,14 +679,14 @@ JWT payload:
 ```json
 {
   "iss": "https://resource.example",
-  "dwk": "aauth-resource",
+  "dwk": "aauth-resource.json",
   "aud": "https://agent.example",
   "eid": "evt-abc123",
   "exp": 1732210000
 }
 ```
 
-The verifier fetches `https://resource.example/.well-known/aauth-resource`, retrieves the JWKS, finds the key with `kid="r1"`, verifies the JWT signature with it, then uses that same key to verify the HTTP Message Signature.
+The verifier fetches `https://resource.example/.well-known/aauth-resource.json`, retrieves the JWKS, finds the key with `kid="r1"`, verifies the JWT signature with it, then uses that same key to verify the HTTP Message Signature.
 
 **Use cases:**
 
@@ -759,15 +762,15 @@ A caller MUST NOT present a cache identifier unless a verifier has issued one fo
 
 # Accept-Signature-Scheme and Accept-Signature-Alg Response Headers {#accept-signature-scheme-and-accept-signature-alg-response-headers}
 
-[@!RFC9421] Section 5 defines the `Accept-Signature` response header for requesting HTTP Message Signatures. Its signature metadata parameters are Item parameters, whose values are bare Items ([@!RFC8941], Section 3.1.2) and cannot be lists. A server therefore cannot use `Accept-Signature` to state that it accepts any of several Signature-Key schemes, nor any of several algorithms: its `alg` parameter names one algorithm.
+[@!RFC9421] Section 5 defines the `Accept-Signature` response header for requesting HTTP Message Signatures. Its signature metadata parameters are Item parameters, whose values are bare Items ([@!RFC9651], Section 3.1.2) and cannot be lists. A server therefore cannot use `Accept-Signature` to state that it accepts any of several Signature-Key schemes, nor any of several algorithms: its `alg` parameter names one algorithm.
 
-This document defines two response header fields that carry those sets. Both are List Structured Fields ([@!RFC8941], Section 3.1) of Tokens, so a server states everything it accepts in one response, and a client selects a scheme and an algorithm before it signs rather than discovering them through a rejection.
+This document defines two response header fields that carry those sets. Both are List Structured Fields ([@!RFC9651], Section 3.1) of Tokens, so a server states everything it accepts in one response, and a client selects a scheme and an algorithm before it signs rather than discovering them through a rejection.
 
 Both headers are advisory capability statements, not directives. A server that omits them is not asserting that it accepts everything; a client that cannot satisfy them learns the outcome from `Signature-Error` ((#error-codes)) as before.
 
 ## Accept-Signature-Scheme {#accept-signature-scheme}
 
-`Accept-Signature-Scheme` is a List ([@!RFC8941], Section 3.1) of Tokens, each naming a scheme registered in the HTTP Signature-Key Scheme registry ((#scheme-registry)). It states the Signature-Key schemes the server accepts.
+`Accept-Signature-Scheme` is a List ([@!RFC9651], Section 3.1) of Tokens, each naming a scheme registered in the HTTP Signature-Key Scheme registry ((#scheme-registry)). It states the Signature-Key schemes the server accepts.
 
 ```http
 Accept-Signature-Scheme: hwk, jwks_uri, jwt
@@ -781,13 +784,13 @@ Listing the `cached` scheme ((#cached-scheme)) states that the server implements
 
 ## Accept-Signature-Alg {#accept-signature-alg}
 
-`Accept-Signature-Alg` is a List ([@!RFC8941], Section 3.1) of Tokens, each a fully-specified identifier from the IANA "JSON Web Signature and Encryption Algorithms" registry [@!IANA.JOSE.Algorithms] — the same identifiers a conveyed key carries in its `alg` member ((#algorithm-determination)), and not those of the HTTP Signature Algorithms registry, which this document does not use ((#algorithm-selection)). It states the signature algorithms the server accepts. Using the registry the key uses is what lets a client compare what a server accepts against the keys it holds.
+`Accept-Signature-Alg` is a List ([@!RFC9651], Section 3.1) of Tokens, each a fully-specified identifier from the IANA "JSON Web Signature and Encryption Algorithms" registry [@!IANA.JOSE.Algorithms] — the same identifiers a conveyed key carries in its `alg` member ((#algorithm-determination)), and not those of the HTTP Signature Algorithms registry, which this document does not use ((#algorithm-selection)). It states the signature algorithms the server accepts. Using the registry the key uses is what lets a client compare what a server accepts against the keys it holds.
 
 ```http
 Accept-Signature-Alg: Ed25519, ES256
 ```
 
-Each Token is the registered identifier verbatim, including its case: `ES256`, not `es256`. Structured Field parsing preserves the case of a Token ([@!RFC8941], Section 4.2.6), and the comparison a client performs is against the `alg` member of a JWK, a case-sensitive JSON string. A case-folded token names no registered algorithm and matches no key.
+Each Token is the registered identifier verbatim, including its case: `ES256`, not `es256`. Structured Field parsing preserves the case of a Token ([@!RFC9651], Section 4.2.6), and the comparison a client performs is against the `alg` member of a JWK, a case-sensitive JSON string. A case-folded token names no registered algorithm and matches no key.
 
 Order, unknown-token handling, and the no-recognized-value case are as for `Accept-Signature-Scheme`.
 
@@ -874,9 +877,9 @@ What a client that understands both mechanisms does depends on what the `WWW-Aut
 
 - Where the challenge is an authentication or authorization challenge, such as `Basic` or `Bearer`, the two are alternatives. The client SHOULD sign the request rather than present the credential: a signature demonstrates possession of a private key over this request, whereas a bearer credential authenticates whoever holds it, and signing puts no credential on the wire that the exchange did not require. A response carrying both does not assert that the two grant the same access, so a client that needs what only the credential grants MAY present it instead, and a server that is not satisfied by the choice challenges again.
 
-- Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]), the two are complements: satisfying one does not satisfy the other, and a client that wants the resource satisfies both.
+- Where the challenge is not an authentication or authorization challenge, such as the payment challenge defined by the Payment scheme ([@?I-D.ryan-httpauth-payment]), the two are complements: satisfying one does not satisfy the other, and a client that wants the resource satisfies both.
 
-A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Micropayment Protocol ([@?I-D.ryan-httpauth-payment]) alongside a signature challenge. Payment is not authentication, so this is the complementary case and a client satisfies both:
+A `402` response MAY include a payment mechanism such as x402 [@?x402] or the Payment scheme ([@?I-D.ryan-httpauth-payment]) alongside a signature challenge. Payment is not authentication, so this is the complementary case and a client satisfies both:
 
 ```http
 HTTP/1.1 402 Payment Required
@@ -941,9 +944,9 @@ When a server rejects a signed request due to a signature-related error, the res
 
 ## Header Structure
 
-The `Signature-Error` header is a Dictionary ([@!RFC8941], Section 3.2) with the following member:
+The `Signature-Error` header is a Dictionary ([@!RFC9651], Section 3.2) with the following member:
 
-- `error` (REQUIRED): A Token ([@!RFC8941], Section 3.3.4) indicating the error code.
+- `error` (REQUIRED): A Token ([@!RFC9651], Section 3.3.4) indicating the error code.
 
 Additional members are defined per error code. Recipients MUST ignore unknown members.
 
@@ -1022,7 +1025,7 @@ Signature-Error: error=invalid_signature
 
 The Signature-Input is missing required covered components.
 
-- `required_input` (RECOMMENDED): An Inner List of String ([@!RFC8941], Section 3.1.1) listing the covered components the server requires. A server SHOULD include this member, and MAY omit it where enumerating its requirements to an unauthenticated caller is judged a disclosure risk; a client then has to discover the required components by other means.
+- `required_input` (RECOMMENDED): An Inner List of String ([@!RFC9651], Section 3.1.1) listing the covered components the server requires. A server SHOULD include this member, and MAY omit it where enumerating its requirements to an unauthenticated caller is judged a disclosure risk; a client then has to discover the required components by other means.
 
 ```http
 Signature-Error: error=invalid_input,
@@ -1048,7 +1051,7 @@ Signature-Error: error=invalid_key
 
 ### unknown_key
 
-The public key from `Signature-Key` does not match any key at the client's `jwks_uri` (applicable when the client uses `scheme=jwks_uri`). The server SHOULD re-fetch the JWKS once before returning this error, to handle key rotation.
+The public key from `Signature-Key` does not match any key at the client's `jwks_uri` (applicable to the `jwks_uri`, `jwks`, and `self-jwt` schemes). The server SHOULD re-fetch the JWKS once before returning this error, to handle key rotation.
 
 ```http
 Signature-Error: error=unknown_key
@@ -1072,7 +1075,7 @@ Signature-Error: error=issuer_mismatch
 
 ### invalid_jwt
 
-The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) is malformed or its signature verification failed.
+The JWT in the `Signature-Key` header (under any scheme that carries a JWT: `jwt`, `jkt-jwt`, or `self-jwt`) is malformed or its signature verification failed.
 
 ```http
 Signature-Error: error=invalid_jwt
@@ -1080,7 +1083,7 @@ Signature-Error: error=invalid_jwt
 
 ### expired_jwt
 
-The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) has expired (`exp` claim is in the past).
+The JWT in the `Signature-Key` header (under any scheme that carries a JWT: `jwt`, `jkt-jwt`, or `self-jwt`) has expired (`exp` claim is in the past).
 
 ```http
 Signature-Error: error=expired_jwt
@@ -1088,7 +1091,7 @@ Signature-Error: error=expired_jwt
 
 ### revoked_jwt
 
-The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) verifies and has not expired, but the verifier holds notice from the issuer that it has been withdrawn.
+The JWT in the `Signature-Key` header (under any scheme that carries a JWT: `jwt`, `jkt-jwt`, or `self-jwt`) verifies and has not expired, but the verifier holds notice from the issuer that it has been withdrawn.
 
 ```http
 Signature-Error: error=revoked_jwt
@@ -1100,7 +1103,7 @@ How a verifier learns of a withdrawal is out of scope for this document. It is n
 
 ### clock_skew
 
-The JWT in the `Signature-Key` header (when using `scheme=jwt` or `scheme=jkt-jwt`) carries an `iat` further ahead of the verifier's clock than the verifier's signature validity window, or the signature's `created` parameter ([@!RFC9421]) is further ahead of the verifier's clock than that window.
+The JWT in the `Signature-Key` header (under any scheme that carries a JWT: `jwt`, `jkt-jwt`, or `self-jwt`) carries an `iat` further ahead of the verifier's clock than the verifier's signature validity window, or the signature's `created` parameter ([@!RFC9421]) is further ahead of the verifier's clock than that window.
 
 ```http
 Signature-Error: error=clock_skew
@@ -1114,7 +1117,7 @@ A verifier is not required to bound `iat` at all; one that does SHOULD use the s
 
 A verifier that has cached an assertion presented in a signed request, and that was asked to do so by the `cache` signal on the presented scheme ((#jwt-confirmation-key-jwt), (#jkt-jwt-scheme)), MAY return the `Signature-Key-Cache` response header to issue the caller a cache identifier for later reference.
 
-`Signature-Key-Cache` is a Dictionary ([@!RFC8941], Section 3.2) keyed by the signature label whose assertion was cached.
+`Signature-Key-Cache` is a Dictionary ([@!RFC9651], Section 3.2) keyed by the signature label whose assertion was cached.
 
 The member value is the cache identifier itself, a String. It is not a named parameter. The caller presents this same String back to the verifier as the `cid` parameter of the cached scheme ((#cached-scheme)).
 
@@ -1137,7 +1140,7 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
 The caller presents the assertion in full and asks for a cache identifier. The JWT carries a `jti`, without which it is not cacheable:
 
 ```http
-Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZERTQSJ9...";cache
+Signature-Key: sig1=jwt;jwt="eyJhbGciOiJFZDI1NTE5In0...";cache
 ```
 
 The verifier caches the assertion and issues a cache identifier for it:
@@ -1218,7 +1221,7 @@ When the `Signature-Key` scheme is `jwks_uri` and a cached key matching the JWT 
 
 **hwk**: No identity verification - suitable only for scenarios where pseudonymous access is acceptable.
 
-**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Verifiers MUST understand that any party can create a jkt-jwt — the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised, and the lifetime should be no longer than the deployment's re-delegation interval allows. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
+**jkt-jwt**: The security of this scheme depends on the enclave key's private key remaining protected in hardware. If the enclave key is compromised, all delegated ephemeral keys are compromised. Verifiers should be aware that the jkt-jwt scheme implies but does not prove hardware protection — there is no attestation mechanism in this scheme. Unlike the `jwt` scheme where trust is rooted in a discoverable issuer, jkt-jwt trust is rooted in the key itself. Any party can create a jkt-jwt: the scheme provides pseudonymous identity, not verified identity. The `exp` claim on the JWT controls how long the ephemeral key is valid. Shorter lifetimes limit the exposure window if an ephemeral key is compromised, and the lifetime should be no longer than the deployment's re-delegation interval allows. The `iss` value is a JWK Thumbprint URI — a globally unique, collision-resistant identifier. The verifier MUST always compute the expected `iss` from the header `jwk` and compare by string equality — never trust the `iss` value alone.
 
 **jwks_uri**: Relies on HTTPS security — vulnerable to DNS/CA compromise. Beyond HTTPS validation, nothing prevents an attacker from copying a client's public keys and serving them from a different domain. Verifiers SHOULD verify that the `id` parameter in the Signature-Key header matches an expected or authorized origin. A general-purpose verifier that accepts signers it has no prior relationship with has no such list to match against, and cannot apply this check; such a verifier obtains an origin-bound pseudonym rather than an authorized identity, and MUST NOT treat a well-formed `id` as evidence that the origin authorized the request.
 
@@ -1286,7 +1289,7 @@ Post-quantum keys and signatures are substantially larger than classical ones. M
 The Signature-Key header MUST be included as a covered component in Signature-Input:
 
 ```
-Signature-Input: sig=("@method" "@authority" "@path" "signature-key"); created=1732210000
+Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=1732210000
 ```
 
 If `signature-key` is not covered, an attacker can modify the header without invalidating the signature. Attacks include:
@@ -1498,6 +1501,7 @@ For the Signature Error Code registry, the expert should additionally verify tha
 *Note: This section is to be removed before publishing as an RFC.*
 
 - draft-hardt-httpbis-signature-key-09
+  - Editorial, no normative change. Examples now carry the REQUIRED `alg` member and use `Ed25519` in place of `EdDSA`; the self-jwt example matches the AAuth Events event token; RFC 9651 replaces RFC 8941 as the Structured Fields reference; the JWT error codes (`invalid_jwt`, `expired_jwt`, `revoked_jwt`, `clock_skew`) and `unknown_key` state that they apply to self-jwt; `exp` validation in the jwt and self-jwt procedures is unconditional, since `exp` is REQUIRED; prose names schemes as "the `jwt` scheme" rather than `scheme=jwt`.
   - Added the `revoked_jwt` error code, for a JWT that verifies and has not expired but that the verifier has been told its issuer withdrew. `invalid_jwt` and `expired_jwt` both describe the assertion itself, so a verifier acting on a revocation had to report one of them and a caller reading either had no reason not to retry with the same JWT. How the verifier learns of the withdrawal is left to the application protocol.
   - Added the `clock_skew` error code (issue 38): a JWT `iat`, or a signature `created`, further ahead of the verifier's clock than its validity window. Distinct from `invalid_jwt`, `expired_jwt` and `invalid_signature` because a fresh assertion from the same issuer carries the same skew, while waiting out the difference — readable from the response `Date` header — makes the same assertion acceptable. A verifier that bounds `iat` SHOULD use the `created` window.
 
@@ -1668,7 +1672,7 @@ To keep the scheme registry usable despite its narrow traffic, this document rel
 
 Earlier versions of this document carried the server's scheme requirement in a `sigkey` parameter on `Accept-Signature`, and the accepted sets in `supported_schemes` and `supported_algorithms` members of `Signature-Error`. Both were replaced by two response header fields. The reasons are worth recording, because at first reading a new header field looks like the more invasive choice.
 
-1. **A set cannot be expressed in a parameter.** A Structured Fields parameter value is a bare Item ([@!RFC8941], Section 3.1.2) and cannot be an Inner List. A parameter can therefore name one scheme, never a set. This is not a limitation of `sigkey`: the `alg` parameter of `Accept-Signature` ([@!RFC9421], Section 5.1) is singular for the same structural reason. Any design that puts the accepted set in a parameter slot is constrained to a single value, whatever it is named.
+1. **A set cannot be expressed in a parameter.** A Structured Fields parameter value is a bare Item ([@!RFC9651], Section 3.1.2) and cannot be an Inner List. A parameter can therefore name one scheme, never a set. This is not a limitation of `sigkey`: the `alg` parameter of `Accept-Signature` ([@!RFC9421], Section 5.1) is singular for the same structural reason. Any design that puts the accepted set in a parameter slot is constrained to a single value, whatever it is named.
 
 2. **The Accept-Signature member value is already spoken for.** The alternative to a parameter is a Dictionary member value, which may be an Inner List. In `Accept-Signature` that position holds the covered components, so it is unavailable. Carrying the accepted sets there would mean overloading one list with two unrelated kinds of token.
 
@@ -1722,7 +1726,7 @@ The TLS mechanisms above are cited as context for the design, not as normative d
 
 ## Why Strings Instead of Byte Sequences for hwk?
 
-The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per [@!RFC7517], while structured field byte sequences use base64 encoding per [@!RFC8941]. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.
+The hwk parameters use structured field strings rather than byte sequences. JWK key values are base64url-encoded per [@!RFC7517], while structured field byte sequences use base64 encoding per [@!RFC9651]. Using strings allows implementations to pass JWK values directly without converting between base64url and base64, avoiding a potential source of encoding bugs.
 
 ## Why alg Is Required on Every Conveyed Key {#why-alg-is-required}
 
