@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-13T00:14:36.090641+00:00",
+  "timestamp": "2026-09-15T00:13:09.917998+00:00",
   "repo": "dickhardt/signature-key",
   "labels": [
     {
@@ -2011,6 +2011,34 @@
       "mergedBy": "dickhardt",
       "mergeCommit": {
         "oid": "9151769ca7e4d2afc6f5c9c8099d046eaa8fae97"
+      },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 42,
+      "id": "PR_kwDOQaOp9s8AAAABDWfkxA",
+      "title": "Consistency review fixes",
+      "url": "https://github.com/dickhardt/signature-key/pull/42",
+      "state": "MERGED",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "From the 2026-09-13 AAuth family consistency review, reviewed item by item on the Kindle. Builds on the -09 error-code work already merged (#37, #40, #41).\n\n- B4: every conveyed JWK example carries the REQUIRED `alg` (hwk first example, jkt-jwt header `jwk` and `cnf.jwk`, jwt `cnf.jwk`).\n- B3: placeholder JWTs decode to `Ed25519`, not the forbidden `EdDSA`.\n- B5: the self-jwt example matches AAuth Events (`aa-event+jwt`, `aauth-resource.json`).\n- D3: `invalid_jwt`, `expired_jwt`, `revoked_jwt`, `clock_skew` apply to every scheme that carries a JWT, including self-jwt. D2: `unknown_key` applies to jwks_uri, jwks, and self-jwt.\n- D1: `exp` validation is unconditional, as the MUST requires. D4: parameter values include booleans. D5: list no longer interrupted by a paragraph. D6, D7 editorial.\n- B7: the Payment scheme is named by its draft's title. B8: RFC 9651 replaces RFC 8941. J3: prose says \"the X scheme\".\n- One editorial history bullet under -09.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01Hjz8A1SMRyRrT3vj5a4PSP",
+      "createdAt": "2026-09-13T17:17:00Z",
+      "updatedAt": "2026-09-13T17:47:41Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "9151769ca7e4d2afc6f5c9c8099d046eaa8fae97",
+      "headRepository": "dickhardt/signature-key",
+      "headRefName": "consistency-review",
+      "headRefOid": "c2afb70db0bb05037ad84891a806dfd52c542ec5",
+      "closedAt": "2026-09-13T17:47:40Z",
+      "mergedAt": "2026-09-13T17:47:40Z",
+      "mergedBy": "dickhardt",
+      "mergeCommit": {
+        "oid": "69f5ba2647be848feed043fb6d8b0790e43cd0b6"
       },
       "comments": [],
       "reviews": []
