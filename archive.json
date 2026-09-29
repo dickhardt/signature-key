@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-15T00:13:09.917998+00:00",
+  "timestamp": "2026-09-29T00:14:21.410352+00:00",
   "repo": "dickhardt/signature-key",
   "labels": [
     {
@@ -273,6 +273,22 @@
       "createdAt": "2026-09-08T13:11:34Z",
       "updatedAt": "2026-09-12T13:40:12Z",
       "closedAt": "2026-09-12T13:40:12Z",
+      "comments": []
+    },
+    {
+      "number": 43,
+      "id": "I_kwDOQaOp9s8AAAABTrwTNg",
+      "title": "Allow Signature-Key on a response, to identify the signer of a signed response",
+      "url": "https://github.com/dickhardt/signature-key/issues/43",
+      "state": "OPEN",
+      "author": "dickhardt",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Signature-Key is defined as a request header. RFC 9421 Section 2.4 also covers signing responses, and a signed response needs the same thing a signed request does: a way for the verifier to find the signer's key.\n\nProposal: Signature-Key MAY be sent on a signed response, with the same schemes and the same meaning, identifying the responder. Same verifier code in both directions.\n\nMotivating case: the AAuth Supervision companion. A person server makes a signed decision request to a supervision server, and the supervision server signs its decision response so the PS's log holds the SS's signed word. With Signature-Key on the response (jwks_uri scheme, `id` the SS, `dwk=\"aauth-supervisor.json\"`), the stored exchange is self-describing: a later reader finds the responder's key from the response itself, the way it finds the requester's key from the request, without knowing which SS was configured at the time.\n\nThe requester asks for the signed response with RFC 9421 `Accept-Signature`, naming the components to cover (`@status`, `content-digest`, `content-type`, and `;req` components for request binding).\n\nTwo things to say alongside:\n\n- The verifier MUST check the response's `id` is the party it called.\n- Which schemes make sense on a response. jwks_uri, jwks, x509, and self-jwt do. hwk and jkt-jwt identify a pseudonymous requester and probably have no response use, but nothing breaks if they are allowed.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01B4BQ9riebpvXP2Rg98ZTm5",
+      "createdAt": "2026-09-28T14:08:15Z",
+      "updatedAt": "2026-09-28T14:08:15Z",
+      "closedAt": null,
       "comments": []
     }
   ],
