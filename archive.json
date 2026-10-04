@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-09-29T00:14:21.410352+00:00",
+  "timestamp": "2026-10-04T03:31:56.126011+00:00",
   "repo": "dickhardt/signature-key",
   "labels": [
     {
@@ -288,6 +288,38 @@
       "body": "Signature-Key is defined as a request header. RFC 9421 Section 2.4 also covers signing responses, and a signed response needs the same thing a signed request does: a way for the verifier to find the signer's key.\n\nProposal: Signature-Key MAY be sent on a signed response, with the same schemes and the same meaning, identifying the responder. Same verifier code in both directions.\n\nMotivating case: the AAuth Supervision companion. A person server makes a signed decision request to a supervision server, and the supervision server signs its decision response so the PS's log holds the SS's signed word. With Signature-Key on the response (jwks_uri scheme, `id` the SS, `dwk=\"aauth-supervisor.json\"`), the stored exchange is self-describing: a later reader finds the responder's key from the response itself, the way it finds the requester's key from the request, without knowing which SS was configured at the time.\n\nThe requester asks for the signed response with RFC 9421 `Accept-Signature`, naming the components to cover (`@status`, `content-digest`, `content-type`, and `;req` components for request binding).\n\nTwo things to say alongside:\n\n- The verifier MUST check the response's `id` is the party it called.\n- Which schemes make sense on a response. jwks_uri, jwks, x509, and self-jwt do. hwk and jkt-jwt identify a pseudonymous requester and probably have no response use, but nothing breaks if they are allowed.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01B4BQ9riebpvXP2Rg98ZTm5",
       "createdAt": "2026-09-28T14:08:15Z",
       "updatedAt": "2026-09-28T14:08:15Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 44,
+      "id": "I_kwDOQaOp9s8AAAABUgRJ0Q",
+      "title": "keyid with Signature-Key: no test for \"the same key\" for inline keys",
+      "url": "https://github.com/dickhardt/signature-key/issues/44",
+      "state": "OPEN",
+      "author": "joshuagay",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "draft-hardt-httpbis-signature-key.md at 69f5ba2:\n- L295 (Header Web Key (hwk)): \"The `kid` parameter MUST NOT be used.\"\n- L546 (JWT Confirmation Key (jwt)): \"MUST contain `cnf.jwk` claim with embedded JWK.\"\n- L807 (Relationship to Accept-Signature): \"the two MUST identify the same key, and a verifier verifying that label MUST take the key from `Signature-Key`\"\n\nThe draft does not say how \"the same key\" is tested for each scheme. For an inline key without a `kid` (hwk forbids it; jwt does not say `cnf.jwk` carries one) there is no identifier to compare with `keyid`, so verifiers can give different answers to the same message; no wrong key is used, because the key is taken from `Signature-Key`. AAuth's protocol draft restates the rule at L2238 (Signature Parameters), so the answer needs mirroring there.\n\n**Ask:** I propose either that a verifier MUST ignore `keyid` when `Signature-Key` has a member for that label, or that each scheme defines what a signer puts in `keyid` and how a verifier compares it, for example an RFC 7638 thumbprint for inline keys and `kid` for `jwks_uri` and `jwks`.\n\n```\nSignature-Input: sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1000;keyid=\"key-1\"\nSignature-Key: sig=jwt;jwt=\"...\"   (cnf.jwk is an inline key with no kid)\n\nPossible verifier readings:\nVerifier A finds no kid to compare with keyid, and rejects.\nVerifier B ignores keyid, because the key comes from Signature-Key, and accepts.\nVerifier C assumes keyid is an RFC 7638 thumbprint of cnf.jwk, finds a mismatch, and rejects.\n```",
+      "createdAt": "2026-10-02T00:17:03Z",
+      "updatedAt": "2026-10-02T00:17:03Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 45,
+      "id": "I_kwDOQaOp9s8AAAABUgRKPg",
+      "title": "jkt-jwt: request key algorithm sentence conflicts with the flow and example",
+      "url": "https://github.com/dickhardt/signature-key/issues/45",
+      "state": "OPEN",
+      "author": "joshuagay",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "draft-hardt-httpbis-signature-key.md at 69f5ba2:\n- L225 (Algorithm Determination): \"A verifier MUST reject a key whose `alg` names an algorithm it does not support, reporting `unsupported_algorithm` ((#unsupported_algorithm)).\"\n- L314 (JKT JWT Self-Issued Key Delegation (jkt-jwt)): \"The device generates an ephemeral key pair in software (the signing key)\"\n- L406 (JKT JWT Self-Issued Key Delegation (jkt-jwt)): \"the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software)\"\n- L408 (JKT JWT Self-Issued Key Delegation (jkt-jwt)): \"The `cnf.jwk` request key algorithm is likewise enclave-determined.\"\n\nThe last sentence of L408 seems to conflict with the flow and the example, where the request key is generated in software with a different algorithm from the enclave key. An implementer could read it as limiting the request key to what the enclave supports, or as requiring it to match the enclave key's algorithm.\n\n**Ask:** Say that only the stable key's algorithm depends on the enclave, and that the device chooses the request key's algorithm from those the verifier supports (L225 and `Accept-Signature-Alg`).",
+      "createdAt": "2026-10-02T00:17:04Z",
+      "updatedAt": "2026-10-02T00:17:04Z",
       "closedAt": null,
       "comments": []
     }
