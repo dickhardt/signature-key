@@ -1,0 +1,4 @@
+{
+  "issuer": "https://attacker.example",
+  "jwks_uri": "https://attacker.example/jwks.json"
+}

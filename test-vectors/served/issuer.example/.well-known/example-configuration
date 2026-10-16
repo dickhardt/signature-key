@@ -1,0 +1,4 @@
+{
+  "issuer": "https://issuer.example",
+  "jwks_uri": "https://issuer.example/jwks.json"
+}
