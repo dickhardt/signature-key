@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-15T02:29:52.729477+00:00",
+  "timestamp": "2026-10-18T02:17:12.784713+00:00",
   "repo": "dickhardt/signature-key",
   "labels": [
     {
@@ -2096,6 +2096,32 @@
       "mergeCommit": {
         "oid": "69f5ba2647be848feed043fb6d8b0790e43cd0b6"
       },
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 46,
+      "id": "PR_kwDOQaOp9s8AAAABIy95Cw",
+      "title": "Add spec-derived test vectors for the Signature-Key schemes",
+      "url": "https://github.com/dickhardt/signature-key/pull/46",
+      "state": "OPEN",
+      "author": "Mayur021",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Test vectors for each `Signature-Key` scheme, in a new `test-vectors/` directory. Refs #25. The appendix is not here, it follows once the error codes are named.\r\n\r\nSource of truth is the draft text rather than an implementation. Every base was rebuilt from the draft and then checked, not emitted by a signer and trusted.\r\n\r\n## What is in it\r\n\r\n31 vectors, 11 positive and 20 negative, across hwk for OKP and EC, jkt-jwt, jwks_uri, jwks, jwt, jwt with cache requested, self-jwt, a multi-signature case and ML-DSA-44 with real FIPS 204 keys. Of the 20 negatives, 17 are must-reject and 3 are MUST ACCEPT controls, so a verifier that rejects everything cannot pass.\r\n\r\nAll 31 publish the RFC 9421 signature base verbatim with its byte length and SHA-256, which lets an implementation that fails one separate a canonicalization fault from a crypto one. `created` is 1791275958 throughout, covered components are `@method @authority @path signature-key`, and every key comes from a fixed seed, so rerunning the generator reproduces every value.\r\n\r\n10 of the 14 `Signature-Error` codes are exercised. The other four are out of reach of a static file and `test-vectors/README.md` gives the reason for each.\r\n\r\n## The four points from the review\r\n\r\n1. Every negative is a complete signed request with exactly one fault, so an end-to-end verifier reaches the rule under test instead of stopping at  `invalid_signature`. Two exceptions, flagged below. Two counting notes: the three MUST ACCEPT controls were unsigned as well, so 20 vectors needed a signature rather than the 17 must-reject ones, and the 17th must-reject\r\n   carried `sig=:AAAA:` rather than a signature.\r\n2. `jwt-iat-one-hour-after-now-is-clock-skew` carries `applies_to: verifier_bounds_iat`, so it is a must-reject only for a\r\n   verifier that bounds `iat`.\r\n3. `multi-signature-hwk-and-jwks` resolves its two labels to two different keys. `sig2` resolves from its own JWKS under kid `key-2`, so the two signatures over the one shared base differ. The generator asserts they differ, so it cannot collapse back to one key without the run failing.\r\n4. Left for the draft. Seven negatives expect codes the draft does not name yet, and the vectors will follow once it does.\r\n\r\n## Two that carry no signature\r\n\r\n`hwk-symmetric-forbidden` declares `kty` of `oct` and the scheme defines no symmetric mode, so there is no signing procedure for the key that member names. `unknown-scheme-selected` is unknown by construction. In both cases signing under some unrelated key would add a second fault and the vector would stop testing what it says it tests. Each carries `unsigned` and `unsigned_reason` rather than being quietly different from the rest. Happy to take a different reading on either.\r\n\r\n## Two things that came out of making the negatives signable\r\n\r\nEvery vector publishes its base now, up from 27 of 31. And each signed negative publishes `signing_key`, the key that actually made its signature, because the key the faulty header names is usually the fault itself, so a harness needs the real one to establish the signature is sound before it reaches the rule. `field_notes` in the JSON documents both, along with the other fields.\r\n\r\n## Running it\r\n\r\ncd test-vectors\r\npip install -r requirements.txt\r\npython3 gen_vectors.py\r\n\r\nThe generator rewrites the JSON and the `served/` tree, then verifies both directions against the base the file publishes: 15 signatures a signer is expected to produce and 18 a verifier is handed, 33 in all. It exits non-zero if any of them fails, if two vectors claim one discovery path with different documents, or if the multi-signature labels collapse onto one key.\r\n\r\nNothing outside `test-vectors/` is touched, and nothing in it matches the `draft-*` or `rfc*` patterns the Makefile builds from, so the draft build is unaffected. One note on the second commit: the repository ignores `*.txt`, which is aimed at the generated draft text, so `requirements.txt` is added explicitly.\r\n\r\nThe set is CC0. The full set, including the RFC 8792 folded appendix and the harness that runs the aauth-go fixtures, is at\r\nhttps://github.com/Mayur021/signature-key-test-vectors",
+      "createdAt": "2026-10-16T07:56:43Z",
+      "updatedAt": "2026-10-16T08:00:26Z",
+      "baseRepository": "dickhardt/signature-key",
+      "baseRefName": "main",
+      "baseRefOid": "69f5ba2647be848feed043fb6d8b0790e43cd0b6",
+      "headRepository": "Mayur021/signature-key",
+      "headRefName": "test-vectors",
+      "headRefOid": "92637edac57df6d39ef80145aef498834e8e81af",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
       "comments": [],
       "reviews": []
     }
