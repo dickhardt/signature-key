@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-10-18T02:17:12.784713+00:00",
+  "timestamp": "2026-10-27T03:01:53.755261+00:00",
   "repo": "dickhardt/signature-key",
   "labels": [
     {
@@ -328,6 +328,22 @@
       "body": "draft-hardt-httpbis-signature-key.md at 69f5ba2:\n- L225 (Algorithm Determination): \"A verifier MUST reject a key whose `alg` names an algorithm it does not support, reporting `unsupported_algorithm` ((#unsupported_algorithm)).\"\n- L314 (JKT JWT Self-Issued Key Delegation (jkt-jwt)): \"The device generates an ephemeral key pair in software (the signing key)\"\n- L406 (JKT JWT Self-Issued Key Delegation (jkt-jwt)): \"the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software)\"\n- L408 (JKT JWT Self-Issued Key Delegation (jkt-jwt)): \"The `cnf.jwk` request key algorithm is likewise enclave-determined.\"\n\nThe last sentence of L408 seems to conflict with the flow and the example, where the request key is generated in software with a different algorithm from the enclave key. An implementer could read it as limiting the request key to what the enclave supports, or as requiring it to match the enclave key's algorithm.\n\n**Ask:** Say that only the stable key's algorithm depends on the enclave, and that the device chooses the request key's algorithm from those the verifier supports (L225 and `Accept-Signature-Alg`).",
       "createdAt": "2026-10-02T00:17:04Z",
       "updatedAt": "2026-10-02T00:17:04Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 47,
+      "id": "I_kwDOQaOp9s8AAAABaLE3Zg",
+      "title": "Question: how does x509 select a fully specified algorithm for an RSA certificate?",
+      "url": "https://github.com/dickhardt/signature-key/issues/47",
+      "state": "OPEN",
+      "author": "joshuagay",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "What is the intended algorithm-selection rule for an RSA end-entity certificate under `x509`?\n\nIn the current draft, [Algorithm Determination](https://github.com/dickhardt/signature-key/blob/69f5ba2647be848feed043fb6d8b0790e43cd0b6/draft-hardt-httpbis-signature-key.md#L201-L215) explains that an RSA key type alone does not determine padding and hash, and gives `RS256` and `PS256` as distinct fully specified choices. [Algorithm Selection](https://github.com/dickhardt/signature-key/blob/69f5ba2647be848feed043fb6d8b0790e43cd0b6/draft-hardt-httpbis-signature-key.md#L1245-L1253) says the x509 algorithm is determined by the certificate's public key type and that the Signature-Input `alg` parameter is not used.\n\nFor an ordinary RSA certificate whose SubjectPublicKeyInfo uses `rsaEncryption`, where is the choice of padding and hash established? Such a certificate does not carry the JWK `alg` member used by the JWK-based schemes. A certificate with algorithm-restricting parameters is a different case.\n\nIs a deployment expected to bind the certificate to a single algorithm out of band, is another certificate or protocol field intended to supply that choice, or should this certificate form be unsupported by the x509 profile? I am asking which interpretation is intended, not proposing that RSA be excluded. A mapping or short example would make the expected signer/verifier behavior clear.",
+      "createdAt": "2026-10-27T01:52:30Z",
+      "updatedAt": "2026-10-27T01:52:30Z",
       "closedAt": null,
       "comments": []
     }
