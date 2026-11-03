@@ -25,11 +25,11 @@
     "libraries": [
       {
         "id": "aauth-go",
-        "revision": "e76d864fa47073313d760ee1ead5a41cbc347d47"
+        "revision": "ad34a9ad148cd2dd0f96b77e387c4fd22a3ca535"
       },
       {
         "id": "aauth-rust",
-        "revision": "9b13c8bdee14f099284eada22e90f1e1fc6bba29"
+        "revision": "ed4671b6a6b03993480a1b7fa8ca156c6ae607bd"
       }
     ],
     "harness": "aauth-conformance internal/conformance (Go standard library only)"
@@ -549,7 +549,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:GlrC9sWAA+TBvgVtfR7uotxNZ8rMkrFiimQrEit8yos/WRtcT6bkwdu+aRORiQUOXTs0YJ7pEeU2wTUet80Tzg==:",
+        "Signature": "sig=:fkQ/kuiKcgv7TgTr66i8xM90WclHpAxoN4Se2sHKo51oq4taIUkGu7YypjW8Qk11lD6zyVBZqxOp9SB/emhmIw==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-256\";x=\"kWn1q9uoMexzm15PKmMJ9n45OYzIJOFhsGAfNvxLaG8\";y=\"SFtVwCFSswQbnzphZWuRiu78r8L21Y_mFpYLaUzTuXw\";alg=\"ES256\""
       },
@@ -607,7 +607,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:U+2G+ZKgnQmEu5w6+jwp6UVkg2Swf7oiJMXLgDvn2dQTnPQqjHghdOWWbmsV7F6YdCrgGULSZjgzPvqB8YT/sS/ltDOjDbATS+eQkayMS8CL/DjiQ5QCNfKR2WGwtMEr:",
+        "Signature": "sig=:pWe+Ny/CXgDKd0dknBia4Wtkav8UL2vtp0LFGR45dYhpszIypXPwZ0I704QOdLOBb9oojlLBzh1xjg6L0nCmnvT+Dl1xj0T+waqEuwmByQYIhKO12TV+Z7FvxtRdAkW4:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-384\";x=\"bfPOJCwtKpeY-u4uoaDBCfsct3meT5xE2xcLJtxuqWnW_Bgn1nXi-DNsuFvbf2Au\";y=\"O6DNv-okgDuYtZ4keVM0oizSEw8SKem9lLja7W7fy0ykCtGkdNmXvD0daJdzxelI\";alg=\"ES384\""
       },
@@ -668,7 +668,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:FK5EQV8KS7+ZRCELlxeb/B9T0kOFmh+V1RZMbuq8cWicrWrWqYVX61zubEJIgvGuM5aglStjFlDNm8Ec4himCPYvBQkN41uuikgKaR/zv86D3f8AQTtb9WA4VrxOQPUCY0fvTivqag3WjaNXGb5aHo3/JsanDk9UGeLkZrqH0ZFFcJH9p4h2Te+2yuMHfZPBwBXac0TMVxscf8aato/4aKAv/BTecacliIwoW4tXQKgFrFsy0OrzcU6eqnafN6SE4B4y4AL52nVrJtxZTF5ApC5a9uEXTthNNjiD3C0HlcWBvTJgEbEhUvMO892maitiI7mbUIgab0TZbYv0zL0x/g==:",
+        "Signature": "sig=:cmKc+D8ecQSLScuiU0A6lvia6n7HmS43p2m5dK5Gl2NxM2i1jZplhAuPMGZoqkm6gQm4QO8tyN6n6Fk96pVAYnNfITWrq8UG7mqk4e4PWRlQ3qepfqkTysY9rRMbzps8iHPZ1RVJEwvaV2ZhoAhDMY8HJ9SvQgURDI31+4deUIGlxF8dX3UefNGfiBiwr2V5ATQnOvEfDn0cufCMKHG2RU7p5F9IRnxi5PMmOxUtXerZLtzZo1szdKKMPB3clcIQxW+gwYSfenVeWIwIKgSUL3Ftf1LFgmCB9fKMWVJXNJeY6lfBjCoX3KMzNvYWrTjytmQUe3rCH3IBWMnDiC6tsw==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"RSA\";n=\"tE2hQ7RoXWIGUZIlGG0i748Sp0uG87X5ee96CqeMG11F2NCYFlueGn6lGB3xYC5A-QqeoUB3BP_b7lY54oRRfICD_KE5LF-D8bXS4JocdQfq9hO4QxBuVZG57oWs8bXICrws-Lj_Lmu-ZeZW5K4ooynqdzxfbx8_2-MP1SlmD3N_mOPzHiaVDSxelry0xH61YLh_0nUHrKw37wiIqwQZgsKDnTBMN1YMmNsdIt5AUdKlyWJzQBN9S0TCAKE47vJxZoqVTDBxc-w2jG1zif-2h_mwbzLnWQj0FebK_sI5jagVDEGn5_Zzzw3rXFhjYDhraWkqMGbmZdq0sd8Iw9jF5Q\";e=\"AQAB\";alg=\"PS256\""
       },
@@ -697,7 +697,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:YvaXFVfyQgQHgnuu6T97FXcGeeNJsaYHOkPWVX/vhIFZBDz+v9BwJqPVuSKCqTtOSBEohcPu2dmog2RyuxD5yHds2PJDywS4kjcyHxOhvuw39WPmORQioT4ksG3fLQVnFTZI2qStu/2ilGXkENJJ+FhOuwKwK01HM1C4GZdUDVG3l7AKXGUQONn9Ces6JU2I2dxLnV6H2P9KpbA2uK3saGbgRvM8YhPGimNcnJuvodRXegyGjkIPsVG1MLz4RhxP3Id3VVM6V0foetNr+RAZH6N78tjjrhc87qxAN50AqEg3P35uFcuHUFeG6qGGfGDTJ5t1TBtdWiAhZGtPQjOSZw==:",
+        "Signature": "sig=:D9bDtnEhKNdgvAEsoC7mJ/ZxVsKjH5BiK6/q8i8X+s+LqQ42t5YYwLvNuT6htlyn377gOpX9bYNq97mC32pPpyqFRi8N7+bVcUVXM9MKEVKReoPI8L58AIoOmgMlxQtX8cfGimbgdJ6zyMw57oE7ms1PJ1sGfpBUvXIYHZyXJ/unJ4A1HqPFMERa/jD5ModLHwYtEmJ/dzDjML9n/yCUMNDkCzs1yOWch3rsnDx5gJgMH45y+TJinkbV+sxnOOB0UwgzGtlHtn7Vy8n7Z62WPJahc9hFj+LGxcPz9y998KjLAM1dSJA4THj+Z9N4MXh8pWM4l/4+IffFvR/ArBaKow==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"RSA\";n=\"tE2hQ7RoXWIGUZIlGG0i748Sp0uG87X5ee96CqeMG11F2NCYFlueGn6lGB3xYC5A-QqeoUB3BP_b7lY54oRRfICD_KE5LF-D8bXS4JocdQfq9hO4QxBuVZG57oWs8bXICrws-Lj_Lmu-ZeZW5K4ooynqdzxfbx8_2-MP1SlmD3N_mOPzHiaVDSxelry0xH61YLh_0nUHrKw37wiIqwQZgsKDnTBMN1YMmNsdIt5AUdKlyWJzQBN9S0TCAKE47vJxZoqVTDBxc-w2jG1zif-2h_mwbzLnWQj0FebK_sI5jagVDEGn5_Zzzw3rXFhjYDhraWkqMGbmZdq0sd8Iw9jF5Q\";e=\"AQAB\";alg=\"PS256\""
       },
@@ -973,7 +973,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:mcbU2w6WfzDVgO6AkDIRRF1WOOnSnQaGz1O07au1Bl0Q6ZuzVol/cLRAS+opIqcVC4FHHOxOj0DnjDiillOVDA==:",
+        "Signature": "sig=:WVz1JWz9qg2jv/X9tIRUfpIc1GEG54cGwcLzw+qxhWGN5HJBxfG2xpoNu6XBE/UQ9cLrIeAYfOrtqPMmMMQ0Cw==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDMwMDAsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoiand0LWVzMjU2Iiwic3ViIjoiYWF1dGg6YXNzaXN0YW50QGFnZW50LXByb3ZpZGVyLmV4YW1wbGUifQ.KdmDplIRdYUDbHSPwIXG47b5weauYdIg4VYe6_anY6nMhrPdrpaGQldMJy3qETzPwHcApN3Goeaq0hibOV1TDg\""
       },
@@ -1101,7 +1101,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:SDNUg7wuQ0r7WYe8pbVJ+nXWyl5OgAi8KPjwfL5YjZNbIaiNqdytZdPv6HSacyX/SS0Dtztov6DYTjSKHg2DUg==:",
+        "Signature": "sig=:/dR+eKCai1AK3k2hz6go8wnsYFhsWMgKcVxgvxBCkiPXwCOlGi6/7/lb/fH37bx3wMeno/ePzXG68/wkenImaw==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jwks_uri;id=\"https://signer.example\";dwk=\"aauth-resource.json\";kid=\"signer-es256\""
       },
@@ -1201,7 +1201,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:edmCC0zfbAngZTkXCXJtTsUmAix1aEF7yx8U3skJybtznUFYSXWZlAqizbMGhVjjKXfctr4eKtPuX4XQUFdrEQ==:",
+        "Signature": "sig=:azEizzdOBGgiAftLm/G2ILvr0JLkvi0UvK1J/lAVcZL7tg42VhsCqK4yQBZWZkKjnsZB/T8NUkzFdL+YbjVO1Q==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-es256\""
       },
@@ -1286,17 +1286,17 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:dGOb1/nWHLGSF8oqC/sbXLq3h8de8hNYVgqk8z3r4YBVBmBu64PD7EEzYdIU8iqDrYdDpur4DHImSHGgXVrggQ==:",
+        "Signature": "sig=:Ksjgu0w9wcWbSk1d23hNFVE2X27LlC2ugyjVcidbFkxjDQxaUZdDw3pwQ2eqdC0u/OwDbX9LRBiRqabh3lnb0Q==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9._SeU4IjO8cRYS2vvozFjCBc4WdEkBBwstsmlbDr6ZZvUPiaUkNzP2zLAk6YrbF93LABLCbhHEDhqSeswJC6A7w\""
+        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.JSa0ABrIcsvw3ujCrLdBgqNqCyqm6an6a8UIcajKXW6isZiNiROGhOIQgaIZY7qdFKyYd5wGzpEAwRbQY50KRA\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9._SeU4IjO8cRYS2vvozFjCBc4WdEkBBwstsmlbDr6ZZvUPiaUkNzP2zLAk6YrbF93LABLCbhHEDhqSeswJC6A7w\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "edf15526503555ff507a717592497246cfe27102ff0819dc5370abea3471d7a4",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.JSa0ABrIcsvw3ujCrLdBgqNqCyqm6an6a8UIcajKXW6isZiNiROGhOIQgaIZY7qdFKyYd5wGzpEAwRbQY50KRA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "35602a819ae8a5a96a1a728ffaf646420cfb5c8c921ca915c0ef28cca2c66855",
       "signature_base_length": 559,
       "signature_verifies": true,
       "signing_key": "signer-es256",
       "assertion": {
-        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9._SeU4IjO8cRYS2vvozFjCBc4WdEkBBwstsmlbDr6ZZvUPiaUkNzP2zLAk6YrbF93LABLCbhHEDhqSeswJC6A7w",
+        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.JSa0ABrIcsvw3ujCrLdBgqNqCyqm6an6a8UIcajKXW6isZiNiROGhOIQgaIZY7qdFKyYd5wGzpEAwRbQY50KRA",
         "header": {
           "alg": "ES256",
           "kid": "signer-es256",
@@ -1336,17 +1336,17 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:95rrA7Hn1HwN5YeGpKFo3DeePxnC2bf8ktXsBm3A5tfHXRNhwi8H2uWQUXrg95zNJaVaivxeSjhtIZsLpYw12Q==:",
+        "Signature": "sig=:6h8Y105xDgWH0ZxNFNyrMqT55PNpop0uV5a4qOV1eXGHtrQ9emM8SCkkmqzJk9ym5v2sDr54bMG3HRpoa//pRA==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9._SeU4IjO8cRYS2vvozFjCBc4WdEkBBwstsmlbDr6ZZvUPiaUkNzP2zLAk6YrbF93LABLCbhHEDhqSeswJC6A7w\""
+        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.JSa0ABrIcsvw3ujCrLdBgqNqCyqm6an6a8UIcajKXW6isZiNiROGhOIQgaIZY7qdFKyYd5wGzpEAwRbQY50KRA\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9._SeU4IjO8cRYS2vvozFjCBc4WdEkBBwstsmlbDr6ZZvUPiaUkNzP2zLAk6YrbF93LABLCbhHEDhqSeswJC6A7w\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "edf15526503555ff507a717592497246cfe27102ff0819dc5370abea3471d7a4",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.JSa0ABrIcsvw3ujCrLdBgqNqCyqm6an6a8UIcajKXW6isZiNiROGhOIQgaIZY7qdFKyYd5wGzpEAwRbQY50KRA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "35602a819ae8a5a96a1a728ffaf646420cfb5c8c921ca915c0ef28cca2c66855",
       "signature_base_length": 559,
       "signature_verifies": true,
       "signing_key": "signer-es256",
       "assertion": {
-        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9._SeU4IjO8cRYS2vvozFjCBc4WdEkBBwstsmlbDr6ZZvUPiaUkNzP2zLAk6YrbF93LABLCbhHEDhqSeswJC6A7w",
+        "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6InNpZ25lci1lczI1NiIsInR5cCI6InZlY3Rvci1zZWxmK2p3dCJ9.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJzZWxmLWp3dC1lczI1NiJ9.JSa0ABrIcsvw3ujCrLdBgqNqCyqm6an6a8UIcajKXW6isZiNiROGhOIQgaIZY7qdFKyYd5wGzpEAwRbQY50KRA",
         "header": {
           "alg": "ES256",
           "kid": "signer-es256",
@@ -1446,17 +1446,17 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:X5p7jO2/pXP/mI5pwIMG3xmI3doifEWPYOXb6Sy3A/oZ8m6dfZUg0zLXFXO/nF+m2wwje5noQ9CxcwJlFOAhCQ==:",
+        "Signature": "sig=:Re3ixIPriNOHEPE4lDmzlBYQAoWmW/R2P2sLEOj04iWaXdPfGmBlwVht/Hk2GIOSJwa4a3vz4O9pR2OjGWfjDg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.IcBMT-FPd9uRIeB4Mjlgyjewzt6489NPMzzQ9vmCGW9A_gLePnamkHx1IgKdp8gZGc4SV8OGDjvU5Vu0o9b_Ug\""
+        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.V2YNgeU5z8gOgkcYKJpflUBxKt-W2PFLMLxatCqinBsmQ_012QHA-Q_KwQ6BmGlyEWEZ193JsFp73ZNqFjlZQg\""
       },
-      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.IcBMT-FPd9uRIeB4Mjlgyjewzt6489NPMzzQ9vmCGW9A_gLePnamkHx1IgKdp8gZGc4SV8OGDjvU5Vu0o9b_Ug\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
-      "signature_base_sha256": "8dea34e4abf03080bc82758956dbdaa641740201b84fda0d072c06511508ab76",
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.V2YNgeU5z8gOgkcYKJpflUBxKt-W2PFLMLxatCqinBsmQ_012QHA-Q_KwQ6BmGlyEWEZ193JsFp73ZNqFjlZQg\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "a18206575c504668e9626aad299d42d6d444aa5894a9ef6bca78a958398c15d0",
       "signature_base_length": 848,
       "signature_verifies": true,
       "signing_key": "agent-ed25519",
       "assertion": {
-        "compact": "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.IcBMT-FPd9uRIeB4Mjlgyjewzt6489NPMzzQ9vmCGW9A_gLePnamkHx1IgKdp8gZGc4SV8OGDjvU5Vu0o9b_Ug",
+        "compact": "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJhbGciOiJFUzI1NiIsImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoibGRmek5wVXdrMFUtYVRheFBWbUl6R2lWUDVidTFGU0htUzFXdm5WbUJGbyIsInkiOiJxUXdtQkN0QWZBWUVSOWpTVDdqcWtjckxSMmozQkViOGNmVUd1ZWRnTFlvIn0sInR5cCI6ImprdC1zMjU2K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6LUR3Tlp3b1JGVm9nN0ZwYl9WdFlWSDN6YUNoc3B0dWQycUxkN0VGeEJCUSIsImp0aSI6ImprdC1qd3QtZXMyNTYtaWRlbnRpdHkifQ.V2YNgeU5z8gOgkcYKJpflUBxKt-W2PFLMLxatCqinBsmQ_012QHA-Q_KwQ6BmGlyEWEZ193JsFp73ZNqFjlZQg",
         "header": {
           "alg": "ES256",
           "jwk": {
@@ -1565,7 +1565,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:STLnBMJb/gNkFeo+YUcVKdD0PWKqxFNGN452rKOV6ajdy2c0s6GPWjq64vfN8Ga0T0i69luOh6rBCkQ95LiR9g==:",
+        "Signature": "sig=:8ngU8fozi54GL0z65FiITZIMA1XC3pknvzRZl5XSrRwb9RjpTu1mWxNDMYF6BRzjPCe5XwLN7w2li/byQnm4Qg==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVTMjU2IiwiY3J2IjoiUC0yNTYiLCJrdHkiOiJFQyIsIngiOiJrV24xcTl1b01leHptMTVQS21NSjluNDVPWXpJSk9GaHNHQWZOdnhMYUc4IiwieSI6IlNGdFZ3Q0ZTc3dRYm56cGhaV3VSaXU3OHI4TDIxWV9tRnBZTGFVelR1WHcifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImprdC1qd3QtZXMyNTYifQ.HoNBFtsat59Uq6kq70fbkPHe-X4m-m2YS6aJf_SbO6xq7XS37KbDWPloYZ23sr8qvHUKYJbgYxd0kKw0qPdMBg\""
       },
@@ -1690,7 +1690,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:WtJCAPxtp1uUMUc0a+oOySsV9VNfG7VL90Ff3s5/IrPoqIPX1PkwH6wpByprbnO6DwHiED78hmwGloLt0V9bRg==:",
+        "Signature": "sig=:rmXsMARSCEI5kicxDRb+9+d4bEb8pz94xUyYUJsBanA07aSGrfjRvBJ7Vhca94WwYj+fbRZQu2o524Fv0VFl4A==:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=x509;x5u=\"https://certs.example/x509-es256.pem\";x5t=:+lK4xVUMzZg9a/La6cse/5HCoyMmbTEThhavw+w5dyk=:"
       },
@@ -1960,7 +1960,7 @@
         "url": "https://resource.example/api/items"
       },
       "signed": {
-        "Signature": "sig=:NPJKOZFk/Xp5FlEnlW35X70s2tpp16+E8R06prlToMeQvQaoFhd+9WpHQ/pL6070TCJZ1psK1qLqqcpVC1IIb3f6ewU95KLyy0+JuaAL1h/BZkhrchI0FSlDOTvpvmYw:",
+        "Signature": "sig=:SRy47nSqZAmROzzcnWohR4NEUm2JWV02w8op7WRgaSiLthfLM/OrS5ayUEzIWFt0ogpU1hVSJ/1nZRdlvGJWyc/KHTqoP3OjPIKLQE1ATzUhjB6KjtrrC54uvpEcoj20:",
         "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
         "Signature-Key": "sig=hwk;kty=\"EC\";crv=\"P-384\";x=\"bfPOJCwtKpeY-u4uoaDBCfsct3meT5xE2xcLJtxuqWnW_Bgn1nXi-DNsuFvbf2Au\";y=\"O6DNv-okgDuYtZ4keVM0oizSEw8SKem9lLja7W7fy0ykCtGkdNmXvD0daJdzxelI\";alg=\"ES256\""
       },
@@ -2812,6 +2812,462 @@
         "reproduced_by": [
           "aauth-go"
         ]
+      }
+    },
+    {
+      "id": "accept-created-window-ahead",
+      "title": "boundary, must verify: hwk signature whose created is 60 seconds ahead of the verifier clock, the edge of the 60-second window",
+      "category": 3,
+      "scheme": "hwk",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:jX+k6frohJiNuLO2cL1X5pQ0v3Urv/4wdryKRHEb83+NgnnzGOqU3YrNMyOcqCXpgRisb8VUPep2WW11u0z8Dw==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000060",
+        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000060",
+      "signature_base_sha256": "a52cbf62bd0be2ba376f02ffe6a611117eb6ec6a071c15c8cf470cd335cc19ec",
+      "signature_base_length": 265,
+      "signature_verifies": true,
+      "signing_key": "agent-ed25519",
+      "expect": {
+        "outcome": "verify",
+        "basis": "protocol Verification step 3, line 2246: created MUST be within the verifier's signature validity window, 60 seconds by default. clock_skew is for a created further ahead than the window (signature-key line 1106); 60 seconds ahead is not further ahead"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    {
+      "id": "accept-created-window-behind",
+      "title": "boundary, must verify: hwk signature whose created is 60 seconds before the verifier clock, the edge of the 60-second window",
+      "category": 3,
+      "scheme": "hwk",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:iNrjY7EGsyMrCVG8OMpp5CzeEtvUHY9bh9vTBqQdeJiyx6yQtUNaZ8TJ6V016PYFBXPIEF7Kz5pBMeaNNln/Dg==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1799999940",
+        "Signature-Key": "sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=hwk;kty=\"OKP\";crv=\"Ed25519\";x=\"ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA\";alg=\"Ed25519\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1799999940",
+      "signature_base_sha256": "21033d14d21c6baa357badba4471b8eebb54c4bd84c0eabf249c7589760acebe",
+      "signature_base_length": 265,
+      "signature_verifies": true,
+      "signing_key": "agent-ed25519",
+      "expect": {
+        "outcome": "verify",
+        "basis": "protocol Verification step 3, line 2246: created MUST be within the verifier's signature validity window, 60 seconds by default. invalid_signature is for a created older than the window (signature-key line 1114); 60 seconds old is not older"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    {
+      "id": "accept-jwt-exp-next-second",
+      "title": "boundary, must verify: jwt whose exp is one second after the verifier clock",
+      "category": 3,
+      "scheme": "jwt",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:FrWCz2h7L+pl7Er27Zlz6Qb6RTMgRLhMW4Jqvp/WDrGUd3nyOYsd3wD342gkRiJw706gJ7lG2+GpYMu/KlW/AA==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDAwMDEsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoiYWNjZXB0LWp3dC1leHAtbmV4dC1zZWNvbmQiLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSJ9.q6FdXIFAWpVQnaqOfuh5r0IxsQwEPC1QsFFS3DxzMTMWS7PTWfZwTb0LkQ1uLD4NIf9ARlDvJkzOqSzawnk-Dw\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDAwMDEsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoiYWNjZXB0LWp3dC1leHAtbmV4dC1zZWNvbmQiLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSJ9.q6FdXIFAWpVQnaqOfuh5r0IxsQwEPC1QsFFS3DxzMTMWS7PTWfZwTb0LkQ1uLD4NIf9ARlDvJkzOqSzawnk-Dw\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "1bd248474d556bc9c15f71d11d83f02569ac4fb9a791d3bd5ac16d45bd64a5c8",
+      "signature_base_length": 738,
+      "signature_verifies": true,
+      "signing_key": "agent-ed25519",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDAwMDEsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoiYWNjZXB0LWp3dC1leHAtbmV4dC1zZWNvbmQiLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSJ9.q6FdXIFAWpVQnaqOfuh5r0IxsQwEPC1QsFFS3DxzMTMWS7PTWfZwTb0LkQ1uLD4NIf9ARlDvJkzOqSzawnk-Dw",
+        "header": {
+          "alg": "Ed25519",
+          "kid": "ap-ed25519",
+          "typ": "aa-agent+jwt"
+        },
+        "payload": {
+          "cnf": {
+            "jwk": {
+              "alg": "Ed25519",
+              "crv": "Ed25519",
+              "kty": "OKP",
+              "x": "ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA"
+            }
+          },
+          "dwk": "aauth-agent.json",
+          "exp": 1800000001,
+          "iat": 1799999700,
+          "iss": "https://agent-provider.example",
+          "jti": "accept-jwt-exp-next-second",
+          "sub": "aauth:assistant@agent-provider.example"
+        },
+        "signed_by": "ap-ed25519"
+      },
+      "resolves": [
+        "https://agent-provider.example/.well-known/aauth-agent.json",
+        "https://agent-provider.example/.well-known/jwks.json"
+      ],
+      "expect": {
+        "outcome": "verify",
+        "basis": "signature-key line 566 (reject if the token has expired) and line 1086 (expired_jwt: exp is in the past); protocol Common JWT Verification step 3, line 2317: exp is in the future by the verifier's own clock, with no skew tolerance. exp one second after now has not expired"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    {
+      "id": "accept-jwt-nbf-now",
+      "title": "boundary, must verify: jwt whose nbf equals the verifier clock",
+      "category": 3,
+      "scheme": "jwt",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:S/9wMmYaZK+oFaxQIWnIlOYsMlc3vDhT5n/aZJeEru5khI0ng1s6mBuq6C2lp2fa/2bwKqobELHHBu787lK4Dw==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDMwMDAsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoiYWNjZXB0LWp3dC1uYmYtbm93IiwibmJmIjoxODAwMDAwMDAwLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSJ9.hOE7v-q9k0rTaot6NR8iXUMoNdNN6gF5SCt0ni8yRuf_Nnyha8FdRl6PX0d91dZ7eU0Ij-GL2Pvm0QUx-5lBCQ\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDMwMDAsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoiYWNjZXB0LWp3dC1uYmYtbm93IiwibmJmIjoxODAwMDAwMDAwLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSJ9.hOE7v-q9k0rTaot6NR8iXUMoNdNN6gF5SCt0ni8yRuf_Nnyha8FdRl6PX0d91dZ7eU0Ij-GL2Pvm0QUx-5lBCQ\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "3ad7b8d38f949678f665b9bcb35026180c2b87b6ed11abe09db79382869ee139",
+      "signature_base_length": 750,
+      "signature_verifies": true,
+      "signing_key": "agent-ed25519",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoiYXAtZWQyNTUxOSIsInR5cCI6ImFhLWFnZW50K2p3dCJ9.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImR3ayI6ImFhdXRoLWFnZW50Lmpzb24iLCJleHAiOjE4MDAwMDMwMDAsImlhdCI6MTc5OTk5OTcwMCwiaXNzIjoiaHR0cHM6Ly9hZ2VudC1wcm92aWRlci5leGFtcGxlIiwianRpIjoiYWNjZXB0LWp3dC1uYmYtbm93IiwibmJmIjoxODAwMDAwMDAwLCJzdWIiOiJhYXV0aDphc3Npc3RhbnRAYWdlbnQtcHJvdmlkZXIuZXhhbXBsZSJ9.hOE7v-q9k0rTaot6NR8iXUMoNdNN6gF5SCt0ni8yRuf_Nnyha8FdRl6PX0d91dZ7eU0Ij-GL2Pvm0QUx-5lBCQ",
+        "header": {
+          "alg": "Ed25519",
+          "kid": "ap-ed25519",
+          "typ": "aa-agent+jwt"
+        },
+        "payload": {
+          "cnf": {
+            "jwk": {
+              "alg": "Ed25519",
+              "crv": "Ed25519",
+              "kty": "OKP",
+              "x": "ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA"
+            }
+          },
+          "dwk": "aauth-agent.json",
+          "exp": 1800003000,
+          "iat": 1799999700,
+          "iss": "https://agent-provider.example",
+          "jti": "accept-jwt-nbf-now",
+          "nbf": 1800000000,
+          "sub": "aauth:assistant@agent-provider.example"
+        },
+        "signed_by": "ap-ed25519"
+      },
+      "resolves": [
+        "https://agent-provider.example/.well-known/aauth-agent.json",
+        "https://agent-provider.example/.well-known/jwks.json"
+      ],
+      "expect": {
+        "outcome": "verify",
+        "basis": "the drafts add no nbf rule; RFC 7519 Section 4.1.5 accepts a JWT when the current time is after or equal to nbf, and protocol line 2313 verifies the agent token per RFC 7519"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    {
+      "id": "accept-jkt-jwt-exp-next-second",
+      "title": "boundary, must verify: jkt-jwt whose exp is one second after the verifier clock",
+      "category": 3,
+      "scheme": "jkt-jwt",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:4gegkqgd7BvAjgtrEco8KvT6sSlan6JvaqeWIHo5/crGuY9q2J/DD8UPDVyScu3mLNxHPt7UY+pknGQxvfGuBw==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMDAwMSwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImFjY2VwdC1qa3Qtand0LWV4cC1uZXh0LXNlY29uZCJ9.JqWV5fM4ToyEzGWruzNR6DBhVSQXhZhyzkZu0nmA8-pZIVXOg8A4ejSBUG4ZUL6tM-TtYaxcRt4vawhyCfC7AA\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMDAwMSwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImFjY2VwdC1qa3Qtand0LWV4cC1uZXh0LXNlY29uZCJ9.JqWV5fM4ToyEzGWruzNR6DBhVSQXhZhyzkZu0nmA8-pZIVXOg8A4ejSBUG4ZUL6tM-TtYaxcRt4vawhyCfC7AA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "fc2f25dc1c73019275df237ab078ae5ea2c79ff69b275b8367f1df06c2ddcfa6",
+      "signature_base_length": 801,
+      "signature_verifies": true,
+      "signing_key": "agent-ed25519",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMDAwMSwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImFjY2VwdC1qa3Qtand0LWV4cC1uZXh0LXNlY29uZCJ9.JqWV5fM4ToyEzGWruzNR6DBhVSQXhZhyzkZu0nmA8-pZIVXOg8A4ejSBUG4ZUL6tM-TtYaxcRt4vawhyCfC7AA",
+        "header": {
+          "alg": "Ed25519",
+          "jwk": {
+            "alg": "Ed25519",
+            "crv": "Ed25519",
+            "kty": "OKP",
+            "x": "xMhCrtHXUGjauU2ci3cct0HCofsRTWJmD3kCDC8HQ5A"
+          },
+          "typ": "jkt-s256+jwt"
+        },
+        "payload": {
+          "cnf": {
+            "jwk": {
+              "alg": "Ed25519",
+              "crv": "Ed25519",
+              "kty": "OKP",
+              "x": "ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA"
+            }
+          },
+          "exp": 1800000001,
+          "iat": 1799999700,
+          "iss": "urn:jkt:sha-256:6ZYrr7h-Aq7KGM3Lz8YZc7GeSslAvPWfPnv-3tI-jgc",
+          "jti": "accept-jkt-jwt-exp-next-second"
+        },
+        "signed_by": "jkt-identity-ed25519"
+      },
+      "expect": {
+        "outcome": "verify",
+        "basis": "signature-key line 428 (validate exp) and line 1086 (expired_jwt: exp is in the past, for jkt-jwt too). exp one second after now has not expired"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    {
+      "id": "accept-jkt-jwt-nbf-now",
+      "title": "boundary, must verify: jkt-jwt whose nbf equals the verifier clock",
+      "category": 3,
+      "scheme": "jkt-jwt",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:1ZdgmDwtmkmvDN/WxvJUHbOrrC7lV+bfNHauWhI04WWIYTTqB+qlQVhDH9F1H9DFq58ObezpOtflC1S33vRaBg==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImFjY2VwdC1qa3Qtand0LW5iZi1ub3ciLCJuYmYiOjE4MDAwMDAwMDB9.OIkGycHwpe63zQ2hOd6bfxD-gMJkmaNsJnzlbFI_4jWGjkmK-0wwkzwEg2MgQ3Ln-1QhrODNOnV2EjAFnpaPDA\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jkt-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImFjY2VwdC1qa3Qtand0LW5iZi1ub3ciLCJuYmYiOjE4MDAwMDAwMDB9.OIkGycHwpe63zQ2hOd6bfxD-gMJkmaNsJnzlbFI_4jWGjkmK-0wwkzwEg2MgQ3Ln-1QhrODNOnV2EjAFnpaPDA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "8697a8bd1f732d2e4dc0d6779a2ef26456b6fbbcc230fe667fc6d5e426d18350",
+      "signature_base_length": 813,
+      "signature_verifies": true,
+      "signing_key": "agent-ed25519",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5IiwiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6InhNaENydEhYVUdqYXVVMmNpM2NjdDBIQ29mc1JUV0ptRDNrQ0RDOEhRNUEifSwidHlwIjoiamt0LXMyNTYrand0In0.eyJjbmYiOnsiandrIjp7ImFsZyI6IkVkMjU1MTkiLCJjcnYiOiJFZDI1NTE5Iiwia3R5IjoiT0tQIiwieCI6ImdlOUNnUW5ySUVjbHUyYnJ6ZXYxVmUwMmhrMl9TNjVGa18ySlNELWRJc0EifX0sImV4cCI6MTgwMDAwMzAwMCwiaWF0IjoxNzk5OTk5NzAwLCJpc3MiOiJ1cm46amt0OnNoYS0yNTY6NlpZcnI3aC1BcTdLR00zTHo4WVpjN0dlU3NsQXZQV2ZQbnYtM3RJLWpnYyIsImp0aSI6ImFjY2VwdC1qa3Qtand0LW5iZi1ub3ciLCJuYmYiOjE4MDAwMDAwMDB9.OIkGycHwpe63zQ2hOd6bfxD-gMJkmaNsJnzlbFI_4jWGjkmK-0wwkzwEg2MgQ3Ln-1QhrODNOnV2EjAFnpaPDA",
+        "header": {
+          "alg": "Ed25519",
+          "jwk": {
+            "alg": "Ed25519",
+            "crv": "Ed25519",
+            "kty": "OKP",
+            "x": "xMhCrtHXUGjauU2ci3cct0HCofsRTWJmD3kCDC8HQ5A"
+          },
+          "typ": "jkt-s256+jwt"
+        },
+        "payload": {
+          "cnf": {
+            "jwk": {
+              "alg": "Ed25519",
+              "crv": "Ed25519",
+              "kty": "OKP",
+              "x": "ge9CgQnrIEclu2brzev1Ve02hk2_S65Fk_2JSD-dIsA"
+            }
+          },
+          "exp": 1800003000,
+          "iat": 1799999700,
+          "iss": "urn:jkt:sha-256:6ZYrr7h-Aq7KGM3Lz8YZc7GeSslAvPWfPnv-3tI-jgc",
+          "jti": "accept-jkt-jwt-nbf-now",
+          "nbf": 1800000000
+        },
+        "signed_by": "jkt-identity-ed25519"
+      },
+      "expect": {
+        "outcome": "verify",
+        "basis": "the drafts add no nbf rule; RFC 7519 Section 4.1.5 accepts a JWT when the current time is after or equal to nbf, and signature-key line 1198 verifies a jkt-jwt per RFC 7519"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    {
+      "id": "accept-self-jwt-exp-next-second",
+      "title": "boundary, must verify: self-jwt whose exp is one second after the verifier clock",
+      "category": 3,
+      "scheme": "self-jwt",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:fVyxAQ3w4kiQ9dC6NgDxZRCyboJ/Ob7HkTFaKQsUBtMtUAHiPtwpCWo/qCPITuwm60g3E1SOeHW5p0vItktBCA==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMDAxLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJhY2NlcHQtc2VsZi1qd3QtZXhwLW5leHQtc2Vjb25kIn0.ygJ9HpMxkM90STMjYzDEoO6355DYW2SJ44fx8diqTymq72H0Wyk4VNkdgu5Ija0AV7pOeg3oVWDNo9xghl5FCA\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMDAxLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJhY2NlcHQtc2VsZi1qd3QtZXhwLW5leHQtc2Vjb25kIn0.ygJ9HpMxkM90STMjYzDEoO6355DYW2SJ44fx8diqTymq72H0Wyk4VNkdgu5Ija0AV7pOeg3oVWDNo9xghl5FCA\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "781e156c1d179e8e23443460049b3342136eacae25c72c0f2dcfb16b2c05ea57",
+      "signature_base_length": 588,
+      "signature_verifies": true,
+      "signing_key": "signer-ed25519",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMDAxLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJhY2NlcHQtc2VsZi1qd3QtZXhwLW5leHQtc2Vjb25kIn0.ygJ9HpMxkM90STMjYzDEoO6355DYW2SJ44fx8diqTymq72H0Wyk4VNkdgu5Ija0AV7pOeg3oVWDNo9xghl5FCA",
+        "header": {
+          "alg": "Ed25519",
+          "kid": "signer-ed25519",
+          "typ": "vector-self+jwt"
+        },
+        "payload": {
+          "aud": "https://resource.example",
+          "dwk": "aauth-resource.json",
+          "exp": 1800000001,
+          "iat": 1799999970,
+          "iss": "https://signer.example",
+          "jti": "accept-self-jwt-exp-next-second"
+        },
+        "signed_by": "signer-ed25519"
+      },
+      "resolves": [
+        "https://signer.example/.well-known/aauth-resource.json",
+        "https://signer.example/.well-known/jwks.json"
+      ],
+      "expect": {
+        "outcome": "verify",
+        "basis": "signature-key line 647 (reject if the token has expired) and line 1086 (expired_jwt: exp is in the past, for self-jwt too). exp one second after now has not expired"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    {
+      "id": "accept-self-jwt-nbf-now",
+      "title": "boundary, must verify: self-jwt whose nbf equals the verifier clock",
+      "category": 3,
+      "scheme": "self-jwt",
+      "alg": "Ed25519",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=:JP9nriBtpAojetrQGZBp9Wb+PDP47RFeI6nZZfUixsMy2sQZ95bvHBm0Q0Ncw30qkJ2M9AHXNCesweh3d2FjDQ==:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=self-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJhY2NlcHQtc2VsZi1qd3QtbmJmLW5vdyIsIm5iZiI6MTgwMDAwMDAwMH0.I_hEtZPX9_sIym9C5Kajhn_LgeCMQC_L2U7tSFyMIKK7M092ePeax2n4uVPMixMVDibkHdL7PXLoov7bTatZBw\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=self-jwt;jwt=\"eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJhY2NlcHQtc2VsZi1qd3QtbmJmLW5vdyIsIm5iZiI6MTgwMDAwMDAwMH0.I_hEtZPX9_sIym9C5Kajhn_LgeCMQC_L2U7tSFyMIKK7M092ePeax2n4uVPMixMVDibkHdL7PXLoov7bTatZBw\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "e63f3c5dcb292cccfa7542c2212780d77ce225497ee8fe1728c05036aa8a1331",
+      "signature_base_length": 600,
+      "signature_verifies": true,
+      "signing_key": "signer-ed25519",
+      "assertion": {
+        "compact": "eyJhbGciOiJFZDI1NTE5Iiwia2lkIjoic2lnbmVyLWVkMjU1MTkiLCJ0eXAiOiJ2ZWN0b3Itc2VsZitqd3QifQ.eyJhdWQiOiJodHRwczovL3Jlc291cmNlLmV4YW1wbGUiLCJkd2siOiJhYXV0aC1yZXNvdXJjZS5qc29uIiwiZXhwIjoxODAwMDAwMzAwLCJpYXQiOjE3OTk5OTk5NzAsImlzcyI6Imh0dHBzOi8vc2lnbmVyLmV4YW1wbGUiLCJqdGkiOiJhY2NlcHQtc2VsZi1qd3QtbmJmLW5vdyIsIm5iZiI6MTgwMDAwMDAwMH0.I_hEtZPX9_sIym9C5Kajhn_LgeCMQC_L2U7tSFyMIKK7M092ePeax2n4uVPMixMVDibkHdL7PXLoov7bTatZBw",
+        "header": {
+          "alg": "Ed25519",
+          "kid": "signer-ed25519",
+          "typ": "vector-self+jwt"
+        },
+        "payload": {
+          "aud": "https://resource.example",
+          "dwk": "aauth-resource.json",
+          "exp": 1800000300,
+          "iat": 1799999970,
+          "iss": "https://signer.example",
+          "jti": "accept-self-jwt-nbf-now",
+          "nbf": 1800000000
+        },
+        "signed_by": "signer-ed25519"
+      },
+      "resolves": [
+        "https://signer.example/.well-known/aauth-resource.json",
+        "https://signer.example/.well-known/jwks.json"
+      ],
+      "expect": {
+        "outcome": "verify",
+        "basis": "the drafts add no nbf rule; RFC 7519 Section 4.1.5 accepts a JWT when the current time is after or equal to nbf, and signature-key line 1196 verifies a self-jwt per RFC 7519"
+      },
+      "provenance": {
+        "signed_by": "aauth-rust",
+        "reproduced_by": [
+          "aauth-go"
+        ]
+      }
+    },
+    {
+      "id": "jwks-ml-dsa-44-deterministic",
+      "title": "jwks, ML-DSA-44, signed with the FIPS 204 deterministic variant (rnd all zeros) so the signature reproduces",
+      "category": 3,
+      "scheme": "jwks",
+      "alg": "ML-DSA-44",
+      "now": 1800000000,
+      "request": {
+        "method": "GET",
+        "url": "https://resource.example/api/items"
+      },
+      "signed": {
+        "Signature": "sig=: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:",
+        "Signature-Input": "sig=(\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+        "Signature-Key": "sig=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ml-dsa-44\""
+      },
+      "signature_base": "\"@method\": GET\n\"@authority\": resource.example\n\"@path\": /api/items\n\"signature-key\": sig=jwks;url=\"https://keys.example/signer.jwks\";kid=\"signer-ml-dsa-44\"\n\"@signature-params\": (\"@method\" \"@authority\" \"@path\" \"signature-key\");created=1800000000",
+      "signature_base_sha256": "ee08999ed9a9fdcfa7f75fc0275032b3dc842f2a8c5267e0c235240b92ce3c40",
+      "signature_base_length": 242,
+      "signing_key": "signer-ml-dsa-44",
+      "documents": [
+        {
+          "url": "https://keys.example/signer.jwks",
+          "content_type": "application/json",
+          "body": "{\"keys\":[{\"alg\":\"ML-DSA-44\",\"kid\":\"signer-ml-dsa-44\",\"kty\":\"AKP\",\"pub\":\"vCWs7y8_K8ndKqvKsVninhAQnDuW8EK2hyhvbXRxohfBAtkRpeDnm26tuJ6yUmNRB_A7jgh46286BdSD17QWQzCd3Ntt6uVVQxeL4F2y89pkMMljKcn3_S9aWxS_9hQHo3amelEVlYoCJycvpNlpCaGo_a275c9nWjtvjotRTnq8ur8ZHppmsQDQnUcLoVBDwnn27sUNQZ6ChGqSZBuCozEH1LRhdxDXfmYg7mvFi8FWE68ci9P5BvwDIBukfSrelvWYy9jSi-VPkrXohFD1Ljk_U9FAkW7u6bVmToWWyXHRv-Z4ZPKSpe_1pIZNffIoXoQ0VgqrFb5g1AFcCL_jefp55D26cp-HGF4pE0zPtpUf-DHba-rUFkg4cfYJRwszgoD5JHMzBTl1xqLekeVpIgh135-Im0nvjJo_C6JYD-frkfiH3eh6QkJ9hkbRA7Ooy8G6ncGTB5La2mRFNavXtawiCHLKxfk9EShjh7VeV3iriCj0A4RQlAvaQlJIZELHISJJq1BvgCwRJ4kUjah3ksdOqXocg3nXIAExjO0S96KsvepJsx1v0Aoc0Dd33jrKmLS7PuoUmjDhQXoKrZidNIHLb_yKV84OSjJELtW76IbaJq3gNF9xMmSOhfX50I40N_clO2pG9WttRBHX_pfFwBw53ficYR8RVbycVYnaPc3WZhJtwkWOAVjld5jA84TOY49j-Xunoa7ZK5IvvGOOXi5QI_DXTiV_7c6PjvJOhMA1eOlXS8BvWcwZigCOCYKTyiqARb920hkgcSzzjDvS2ABeumg0LnNC6TRcZEL574zgX0O02Ij8xhvcUC8I__DrR0jOg_MVXxLqfYS6qXYNrJ01IUstFfJm-r-CFcYfWkB5I-MHik9DlF0Wu5iJvFZAD1DbjUWAq-AI-a4RZM29BFIud9B7GzKuLGFZRNv4NeshL0nSzsSG1ELOHXkMGsiuicfFnDlDlo2iR59zxVqno8su9E3mqILIXZeTzRw0L1_o1FO07QyXVCoEdAcVYjFPBbB6hTxHk9pEZc1J3gY4GsI8XIEhd5O8UIp5jilGY03sktuvWVA_LHzOThx2rP2Hu57dNHcywliVbfjNPQY_6u1pOPPToulQdOwnTfzs26wd96Z4SH_posjyWxFb6u8EfxkMlIZ3AM1dKNk3xb7CIXWvOjNSZg3fJoC4a_cjOO0a-C3RqbZDcZ-02tDeGSVbZehzzN8lm0-t0zD3-ThMF5odJCkgg1fbBbjRxNsGKUHZHV9NStJiKUGNVeX3rF_Vbu2xdjqt16uRx86c8PWafK0AVb1zcyBZSQk8R3gj8jgrkx9G4LZmuxbAXqIx5cw2TWtgeSBV_zf8eCeU5JsGTda8Wra-LE31BGoRtdq64W3vInZnuhxKb3mcjleE-1PJDSsFGLCY5ukelsP-U8Kd1OB9rukXGcqFyOnvvD7v7tq-41HmW4nU9-GTD23JX9fnjT-bo5m3nCYmaiFMpLXygS9Le_NPeaQ8cvbY7v-Y3bx_CLV7jSA9qzKCOXvQifWGvyFLwKJrs2L5zf7LMj79eGE9gIDr9AFfhNYf3WbAT0VlgDX8fFRz6PQTfz9dRH5tCDK5SYehbCl4dxwvhJZ922rjo5y99TL4WBV1AaKXw2Fs_voFm1C6yFmnMmn6L5UPGtxp4R5Cb8yJrvypgCyH-QvQs8pvsoZKgl9d0QPFJa4OlnBVnus7vIXse1MCls-Gd2md1eEyKlaJUay4RqDjaw\"}]}"
+        }
+      ],
+      "resolves": [
+        "https://keys.example/signer.jwks"
+      ],
+      "expect": {
+        "outcome": "verify-or-reject",
+        "error": "unsupported_algorithm",
+        "basis": "signature-key line 231: ML-DSA-44 is a fully-specified alg used as-is; line 233 and protocol Verification step 6: a verifier that does not implement the AKP key type MUST reject it with unsupported_algorithm and MUST NOT fail in an undefined manner; one that implements ML-DSA-44 verifies"
+      },
+      "optional": "reproducing the bytes needs ML-DSA-44 signing with the FIPS 204 deterministic variant (rnd all zeros, empty context); most libraries do not expose that option, so a signer without it may skip the byte comparison. Verification is graded as verify-or-reject either way",
+      "provenance": {
+        "signed_by": "harness",
+        "note": "Signed by the harness: neither library signs with ML-DSA-44."
       }
     }
   ]
