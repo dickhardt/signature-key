@@ -1,0 +1,1 @@
+{"issuer":"https://agent-provider.example","jwks_uri":"https://agent-provider.example/.well-known/jwks.json"}

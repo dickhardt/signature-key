@@ -14,6 +14,7 @@ This document defines five HTTP header fields for use with HTTP Message Signatur
 ## Additional Resources
 
 * [Explainer Document](explainer.md) - Detailed explanation, use cases, and examples
+* [Test Vectors](test-vectors/README.md) - Signature-Key test vectors with keys, signature bases and expected results
 
 ## Contributing
 
