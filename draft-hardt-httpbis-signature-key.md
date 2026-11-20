@@ -84,7 +84,7 @@ Source for this draft and an issue tracker can be found at https://github.com/di
 
 # Conventions and Definitions
 
-{::boilerplate bcp14-tagged}
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 [@!RFC2119] [@!RFC8174] when, and only when, they appear in all capitals, as shown here.
 
 # Introduction
 
@@ -405,7 +405,7 @@ JWT payload:
 
 In this example, the enclave holds a P-256 key (signed via hardware) and delegates to an Ed25519 ephemeral key (signed in software). The identity is `urn:jkt:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs`.
 
-The stable (enclave) key algorithm in the JWT `alg` header is determined by what the enclave hardware supports. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; deployments whose enclaves support Ed25519 (or other) stable-key algorithms should document this explicitly. The `cnf.jwk` request key algorithm is likewise enclave-determined.
+The stable (enclave) key algorithm in the JWT `alg` header is determined by what the enclave hardware supports. This document's example uses `ES256` with a P-256 stable key delegating to an Ed25519 request key; deployments whose enclaves support Ed25519 (or other) stable-key algorithms should document this explicitly. The `cnf.jwk` request key is generated in software, and the device chooses its algorithm from those the verifier accepts ((#algorithm-determination), (#accept-signature-alg)).
 
 **Verification procedure:**
 
@@ -680,8 +680,10 @@ JWT payload:
 {
   "iss": "https://resource.example",
   "dwk": "aauth-resource.json",
-  "aud": "https://agent.example",
-  "eid": "evt-abc123",
+  "aud": "aauth:k7q3p9n2@ap.example",
+  "eid": "evt_8f3k2n9p",
+  "jti": "ev-4d2a91",
+  "iat": 1732209700,
   "exp": 1732210000
 }
 ```
@@ -1230,9 +1232,8 @@ Because the JWKS location (and, for `jwks_uri`, the metadata document that yield
 - Require HTTPS for all outbound fetches.
 - Enforce response-size and timeout limits.
 - Refuse or constrain redirects (at minimum, do not follow redirects to a different host).
-- Reject private, loopback, and link-local destination addresses unless explicitly allowed by deployment configuration.
-- Defend against DNS rebinding by pinning the resolved IP address for the duration of the connection.
-- Treat cross-origin `jwks_uri` URLs (where the JWKS host differs from the metadata host) as requiring explicit deployment admission.
+- Where the platform exposes address resolution, reject private, loopback, and link-local destination addresses unless explicitly allowed by deployment configuration.
+- Where the platform exposes address resolution, defend against DNS rebinding by pinning the resolved IP address for the duration of the connection.
 
 **jwks**: The jwks scheme carries the same server-side request forgery exposure as jwks_uri, and arguably more directly, since the verifier fetches a client-supplied URL with no metadata step to anchor it. The egress-admission requirements above apply to jwks without exception. Because the signer's identity is the JWKS URL itself, a verifier that policies by identity is policying against a value the presenter chooses; verifiers SHOULD verify that `url` matches an expected or authorized origin.
 
@@ -1338,57 +1339,15 @@ JWTs in the jwt scheme may contain additional claims beyond `cnf`. Verifiers sho
 
 ## HTTP Field Name Registration
 
-This document registers the following header fields in the "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in [@!RFC9110].
+This document registers the following header fields in the "Hypertext Transfer Protocol (HTTP) Field Name Registry" defined in [@!RFC9110], Section 16.3.1.
 
-Header field name: Signature-Key
-
-Applicable protocol: http
-
-Status: standard
-
-Author/Change controller: IETF
-
-Specification document(s): [this document]
-
-Header field name: Signature-Error
-
-Applicable protocol: http
-
-Status: standard
-
-Author/Change controller: IETF
-
-Specification document(s): [this document]
-
-Header field name: Signature-Key-Cache
-
-Applicable protocol: http
-
-Status: standard
-
-Author/Change controller: IETF
-
-Specification document(s): [this document]
-
-Header field name: Accept-Signature-Scheme
-
-Applicable protocol: http
-
-Status: standard
-
-Author/Change controller: IETF
-
-Specification document(s): [this document]
-
-Header field name: Accept-Signature-Alg
-
-Applicable protocol: http
-
-Status: standard
-
-Author/Change controller: IETF
-
-Specification document(s): [this document]
+| Field Name | Status | Structured Type | Reference |
+|------------|--------|-----------------|-----------|
+| Signature-Key | permanent | Dictionary | [this document] |
+| Signature-Error | permanent | Dictionary | [this document] |
+| Signature-Key-Cache | permanent | Dictionary | [this document] |
+| Accept-Signature-Scheme | permanent | List | [this document] |
+| Accept-Signature-Alg | permanent | List | [this document] |
 
 ## Signature-Key Scheme Registry {#scheme-registry}
 
@@ -1454,7 +1413,7 @@ This document establishes the "Signature Error Code" registry. New values may be
 | `invalid_input` | Missing required covered components | [this document] |
 | `invalid_request` | Missing required info unrelated to signature | [this document] |
 | `invalid_key` | Key cannot be parsed or doesn't meet trust requirements | [this document] |
-| `unknown_key` | Key not found at jwks_uri | [this document] |
+| `unknown_key` | Key not found in the signer's JWKS | [this document] |
 | `issuer_missing` | Metadata document lacks an issuer member | [this document] |
 | `issuer_mismatch` | Metadata document issuer does not match the discovery identity | [this document] |
 | `invalid_jwt` | JWT malformed or signature verification failed | [this document] |
