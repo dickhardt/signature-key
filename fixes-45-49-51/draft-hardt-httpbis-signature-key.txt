@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 17 March 2027                                        Cloudflare
-                                                       13 September 2026
+Expires: 24 May 2027                                          Cloudflare
+                                                        20 November 2026
 
 
                           HTTP Signature Keys
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 17 March 2027.
+   This Internet-Draft will expire on 24 May 2027.
 
 Copyright Notice
 
@@ -167,7 +167,11 @@ Table of Contents
 
 1.  Conventions and Definitions
 
-   {::boilerplate bcp14-tagged}
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
 
 2.  Introduction
 
@@ -770,7 +774,8 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
    example uses ES256 with a P-256 stable key delegating to an Ed25519
    request key; deployments whose enclaves support Ed25519 (or other)
    stable-key algorithms should document this explicitly.  The cnf.jwk
-   request key algorithm is likewise enclave-determined.
+   request key is generated in software, and the device chooses its
+   algorithm from those the verifier accepts (Section 3.3, Section 4.2).
 
    *Verification procedure:*
 
@@ -1151,8 +1156,10 @@ Signature-Key: sig=self-jwt;jwt="eyJhbGciOiJFUzI1NiIsImtpZCI6InIxIn0..."
    {
      "iss": "https://resource.example",
      "dwk": "aauth-resource.json",
-     "aud": "https://agent.example",
-     "eid": "evt-abc123",
+     "aud": "aauth:k7q3p9n2@ap.example",
+     "eid": "evt_8f3k2n9p",
+     "jti": "ev-4d2a91",
+     "iat": 1732209700,
      "exp": 1732210000
    }
 
@@ -2064,12 +2071,12 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    *  Enforce response-size and timeout limits.
    *  Refuse or constrain redirects (at minimum, do not follow redirects
       to a different host).
-   *  Reject private, loopback, and link-local destination addresses
-      unless explicitly allowed by deployment configuration.
-   *  Defend against DNS rebinding by pinning the resolved IP address
-      for the duration of the connection.
-   *  Treat cross-origin jwks_uri URLs (where the JWKS host differs from
-      the metadata host) as requiring explicit deployment admission.
+   *  Where the platform exposes address resolution, reject private,
+      loopback, and link-local destination addresses unless explicitly
+      allowed by deployment configuration.
+   *  Where the platform exposes address resolution, defend against DNS
+      rebinding by pinning the resolved IP address for the duration of
+      the connection.
 
    *jwks*: The jwks scheme carries the same server-side request forgery
    exposure as jwks_uri, and arguably more directly, since the verifier
@@ -2334,57 +2341,30 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=17
 9.1.  HTTP Field Name Registration
 
    This document registers the following header fields in the "Hypertext
-   Transfer Protocol (HTTP) Field Name Registry" defined in [RFC9110].
+   Transfer Protocol (HTTP) Field Name Registry" defined in [RFC9110],
+   Section 16.3.1.
 
-   Header field name: Signature-Key
+   +=========================+===========+=================+===========+
+   | Field Name              | Status    | Structured      | Reference |
+   |                         |           | Type            |           |
+   +=========================+===========+=================+===========+
+   | Signature-Key           | permanent | Dictionary      | [this     |
+   |                         |           |                 | document] |
+   +-------------------------+-----------+-----------------+-----------+
+   | Signature-Error         | permanent | Dictionary      | [this     |
+   |                         |           |                 | document] |
+   +-------------------------+-----------+-----------------+-----------+
+   | Signature-Key-Cache     | permanent | Dictionary      | [this     |
+   |                         |           |                 | document] |
+   +-------------------------+-----------+-----------------+-----------+
+   | Accept-Signature-Scheme | permanent | List            | [this     |
+   |                         |           |                 | document] |
+   +-------------------------+-----------+-----------------+-----------+
+   | Accept-Signature-Alg    | permanent | List            | [this     |
+   |                         |           |                 | document] |
+   +-------------------------+-----------+-----------------+-----------+
 
-   Applicable protocol: http
-
-   Status: standard
-
-   Author/Change controller: IETF
-
-   Specification document(s): [this document]
-
-   Header field name: Signature-Error
-
-   Applicable protocol: http
-
-   Status: standard
-
-   Author/Change controller: IETF
-
-   Specification document(s): [this document]
-
-   Header field name: Signature-Key-Cache
-
-   Applicable protocol: http
-
-   Status: standard
-
-   Author/Change controller: IETF
-
-   Specification document(s): [this document]
-
-   Header field name: Accept-Signature-Scheme
-
-   Applicable protocol: http
-
-   Status: standard
-
-   Author/Change controller: IETF
-
-   Specification document(s): [this document]
-
-   Header field name: Accept-Signature-Alg
-
-   Applicable protocol: http
-
-   Status: standard
-
-   Author/Change controller: IETF
-
-   Specification document(s): [this document]
+                                  Table 3
 
 9.2.  Signature-Key Scheme Registry
 
@@ -2429,7 +2409,7 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=17
        |          | assertion the verifier has cached  | document] |
        +----------+------------------------------------+-----------+
 
-                                  Table 3
+                                  Table 4
 
 9.2.3.  Registration Template
 
@@ -2493,8 +2473,8 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=17
    |                       | doesn't meet trust            | document] |
    |                       | requirements                  |           |
    +-----------------------+-------------------------------+-----------+
-   | unknown_key           | Key not found at              | [this     |
-   |                       | jwks_uri                      | document] |
+   | unknown_key           | Key not found in the          | [this     |
+   |                       | signer's JWKS                 | document] |
    +-----------------------+-------------------------------+-----------+
    | issuer_missing        | Metadata document lacks       | [this     |
    |                       | an issuer member              | document] |
@@ -2518,7 +2498,7 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=17
    |                       | of the verifier's clock       |           |
    +-----------------------+-------------------------------+-----------+
 
-                                  Table 4
+                                  Table 5
 
 9.4.2.  Registration Template
 
@@ -3004,6 +2984,11 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=17
               <https://www.iana.org/assignments/jose/jose.xhtml#web-
               signature-encryption-algorithms>.
 
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
    [RFC3553]  Mealling, M., Masinter, L., Hardie, T., and G. Klyne, "An
               IETF URN Sub-namespace for Registered Protocol
               Parameters", BCP 73, RFC 3553, DOI 10.17487/RFC3553, June
@@ -3040,6 +3025,10 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=17
               Writing an IANA Considerations Section in RFCs", BCP 26,
               RFC 8126, DOI 10.17487/RFC8126, June 2017,
               <https://www.rfc-editor.org/info/rfc8126>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
    [RFC8725]  Sheffer, Y., Hardt, D., and M. Jones, "JSON Web Token Best
               Current Practices", BCP 225, RFC 8725,
@@ -3085,9 +3074,9 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=17
 
    [I-D.hardt-oauth-aauth-protocol]
               Hardt, D., "AAuth Protocol", Work in Progress, Internet-
-              Draft, draft-hardt-oauth-aauth-protocol-10, 6 August 2026,
-              <https://datatracker.ietf.org/doc/html/draft-hardt-oauth-
-              aauth-protocol-10>.
+              Draft, draft-hardt-oauth-aauth-protocol-11, 25 September
+              2026, <https://datatracker.ietf.org/doc/html/draft-hardt-
+              oauth-aauth-protocol-11>.
 
    [I-D.richer-oauth-httpsig]
               Richer, J., Parecki, A., Bastian, P., Skokan, F., and C.
