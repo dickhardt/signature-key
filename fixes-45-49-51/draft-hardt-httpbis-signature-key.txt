@@ -5,8 +5,8 @@
 HTTP                                                            D. Hardt
 Internet-Draft                                                     Hellō
 Intended status: Standards Track                              T. Meunier
-Expires: 24 May 2027                                          Cloudflare
-                                                        20 November 2026
+Expires: 27 May 2027                                          Cloudflare
+                                                        23 November 2026
 
 
                           HTTP Signature Keys
@@ -15,19 +15,19 @@ Expires: 24 May 2027                                          Cloudflare
 Abstract
 
    This document defines five HTTP header fields for use with HTTP
-   Message Signatures as defined in RFC 9421.  The Signature-Key request
-   header distributes public keys used to verify signatures, with eight
-   initial key distribution schemes: pseudonymous inline keys (hwk),
-   self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt),
-   identified signers with JWKS URI discovery (jwks_uri), direct JWKS
-   fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-
-   jwt), X.509 certificate chains (x509), and references to previously
-   cached assertions (cached).  The Accept-Signature-Scheme and Accept-
-   Signature-Alg response headers state the schemes and algorithms a
-   server accepts, so a client can select both before it signs.  The
-   Signature-Error response header provides structured error information
-   when signature verification fails, and the Signature-Key-Cache
-   response header issues a cache identifier by which a caller can
+   Message Signatures as defined in RFC 9421.  The Signature-Key header
+   distributes public keys used to verify signatures on requests and
+   responses, with eight initial key distribution schemes: pseudonymous
+   inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs
+   (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri),
+   direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued
+   JWTs (self-jwt), X.509 certificate chains (x509), and references to
+   previously cached assertions (cached).  The Accept-Signature-Scheme
+   and Accept-Signature-Alg response headers state the schemes and
+   algorithms a server accepts, so a client can select both before it
+   signs.  The Signature-Error response header provides structured error
+   information when signature verification fails, and the Signature-Key-
+   Cache response header issues a cache identifier by which a caller can
    reference a previously presented assertion instead of resending it.
    Together, these mechanisms enable flexible trust models ranging from
    privacy-preserving pseudonymous verification to horizontally-scalable
@@ -56,7 +56,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 24 May 2027.
+   This Internet-Draft will expire on 27 May 2027.
 
 Copyright Notice
 
@@ -76,18 +76,19 @@ Table of Contents
 
    1.  Conventions and Definitions
    2.  Introduction
-   3.  Signature-Key HTTP Request Header
+   3.  Signature-Key HTTP Header
      3.1.  Label Consistency
      3.2.  Multiple Signatures
-     3.3.  Algorithm Determination
-     3.4.  Header Web Key (hwk)
-     3.5.  JKT JWT Self-Issued Key Delegation (jkt-jwt)
-     3.6.  JWKS URI Discovery (jwks_uri)
-     3.7.  Direct JWKS (jwks)
-     3.8.  JWT Confirmation Key (jwt)
-     3.9.  Self-Issued JWT (self-jwt)
-     3.10. X.509 Certificates (x509)
-     3.11. Cached Assertion (cached)
+     3.3.  Signed Responses
+     3.4.  Algorithm Determination
+     3.5.  Header Web Key (hwk)
+     3.6.  JKT JWT Self-Issued Key Delegation (jkt-jwt)
+     3.7.  JWKS URI Discovery (jwks_uri)
+     3.8.  Direct JWKS (jwks)
+     3.9.  JWT Confirmation Key (jwt)
+     3.10. Self-Issued JWT (self-jwt)
+     3.11. X.509 Certificates (x509)
+     3.12. Cached Assertion (cached)
    4.  Accept-Signature-Scheme and Accept-Signature-Alg Response
            Headers
      4.1.  Accept-Signature-Scheme
@@ -224,10 +225,10 @@ Table of Contents
 
    This document defines:
 
-   *  *Signature-Key* (Section 3) — a request header that distributes
-      public keys for HTTP Message Signature verification.  The header
-      supports eight schemes, each designed for different trust models
-      and operational requirements:
+   *  *Signature-Key* (Section 3) — a header that distributes public
+      keys for HTTP Message Signature verification, on a request or a
+      signed response.  The header supports eight schemes, each designed
+      for different trust models and operational requirements:
 
       1.  *Header Web Key (hwk)* - Self-contained public keys for
           pseudonymous verification
@@ -281,7 +282,7 @@ Table of Contents
        A verifier that does not implement a presented scheme returns
        unsupported_scheme with the set it supports (Section 5.4.2).  A
        verifier requires fully-specified algorithms and rejects
-       underspecified ones (Section 3.3).  The extension point is
+       underspecified ones (Section 3.4).  The extension point is
        exercised on ordinary traffic rather than only at the moment a
        new value is first deployed, per the guidance of [RFC9170].
 
@@ -298,7 +299,7 @@ Table of Contents
    it into the verification token it issues.  Additional protocols can
    adopt these mechanisms without further coordination.
 
-3.  Signature-Key HTTP Request Header
+3.  Signature-Key HTTP Header
 
    The Signature-Key header provides the public key or key reference
    needed to verify an HTTP Message Signature.  It is a Structured Field
@@ -405,7 +406,24 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
    specification may be used for scenarios requiring independent
    signature addition.
 
-3.3.  Algorithm Determination
+3.3.  Signed Responses
+
+   A server that signs a response ([RFC9421], Section 2.4) MAY include
+   Signature-Key in it to identify itself as the signer, with the
+   schemes and processing defined for requests.  The client verifies the
+   response as a verifier of a request would, and Section 7.8 applies:
+   the response signature MUST cover signature-key.  Where the scheme
+   identifies the signer, the client MUST check that this identity is
+   the party it sent the request to.
+
+   A client asks for a signed response with Accept-Signature ([RFC9421],
+   Section 5.1).  Accept-Signature-Scheme and Accept-Signature-Alg are
+   response headers, so the schemes and algorithms a client accepts on a
+   response are set by the application.  The cached scheme and the cache
+   signal are not used on a response, since a client has no header in
+   which to issue a cache identifier.
+
+3.4.  Algorithm Determination
 
    Several schemes in this document convey or reference a JSON Web Key
    [RFC7517].  For any such JWK, the signature algorithm MUST be fully
@@ -545,10 +563,10 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
 
    Within a single JWK, a member a verifier does not understand is
    ignored, as [RFC7517], Section 4 requires.  A member this document
-   forbids, such as kid in the hwk scheme (Section 3.4), is different:
+   forbids, such as kid in the hwk scheme (Section 3.5), is different:
    it is understood and rejected, not unknown and ignored.
 
-3.4.  Header Web Key (hwk)
+3.5.  Header Web Key (hwk)
 
    The hwk scheme provides a self-contained public key inline in the
    header, enabling pseudonymous verification without key discovery.
@@ -601,7 +619,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
    *Constraints:*
 
    *  The alg parameter MUST be present and fully specified.  The inline
-      JWK is subject to Algorithm Determination (Section 3.3).
+      JWK is subject to Algorithm Determination (Section 3.4).
 
    *  The kid parameter MUST NOT be used.  The key is carried inline, so
       there is nothing for an identifier to select, and a kid that
@@ -615,7 +633,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
    *  Rate limiting and reputation building on a per-key basis
 
-3.5.  JKT JWT Self-Issued Key Delegation (jkt-jwt)
+3.6.  JKT JWT Self-Issued Key Delegation (jkt-jwt)
 
    The jkt-jwt scheme (pronounced "jacket jot") provides self-issued key
    delegation using a JWT whose signing key is embedded in the JWT
@@ -654,9 +672,9 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
    *  jwt (REQUIRED, String) - Compact-serialized JWT
 
-   *  cache (OPTIONAL, Boolean) - As for the jwt scheme (Section 3.8):
+   *  cache (OPTIONAL, Boolean) - As for the jwt scheme (Section 3.9):
       the caller indicates it can present a cache identifier on
-      subsequent requests, using the cached scheme (Section 3.11), and
+      subsequent requests, using the cached scheme (Section 3.12), and
       requests that the verifier issue one.  A JWT presented with cache
       MUST contain a jti claim.  See Section 6.
 
@@ -701,7 +719,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
    fully represented by the iss thumbprint.
 
    The header jwk and the delegated key in cnf.jwk are each subject to
-   Algorithm Determination (Section 3.3).
+   Algorithm Determination (Section 3.4).
 
    *JWT Type Values:*
 
@@ -775,7 +793,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
    request key; deployments whose enclaves support Ed25519 (or other)
    stable-key algorithms should document this explicitly.  The cnf.jwk
    request key is generated in software, and the device chooses its
-   algorithm from those the verifier accepts (Section 3.3, Section 4.2).
+   algorithm from those the verifier accepts (Section 3.4, Section 4.2).
 
    *Verification procedure:*
 
@@ -808,7 +826,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
    *Caching:*
 
-   Caching — the cached scheme (Section 3.11) together with the
+   Caching — the cached scheme (Section 3.12) together with the
    Signature-Key-Cache response header (Section 6) — keeps an assertion
    off the wire in the steady state, and the saving grows with the size
    of the keys and signatures the assertion carries (Section 7.7).  This
@@ -831,7 +849,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
 
    *  Mobile apps, laptops, and IoT devices with enclave-backed identity
 
-3.6.  JWKS URI Discovery (jwks_uri)
+3.7.  JWKS URI Discovery (jwks_uri)
 
    The jwks_uri scheme identifies the signer and enables key discovery
    via a metadata document containing a jwks_uri property.
@@ -873,7 +891,7 @@ Signature-Key: sig=hwk;kty="RSA";n="0vx7agoebGcQ...";e="AQAB";alg="PS256"
    [RFC8414] or OpenID Connect Discovery already carries issuer.
 
    The JWK selected from the retrieved JWKS is subject to Algorithm
-   Determination (Section 3.3).
+   Determination (Section 3.4).
 
    *Example:*
 
@@ -887,7 +905,7 @@ Signature-Key: sig=jwks_uri;id="https://client.example";dwk="example-configurati
 
    *  Services requiring explicit entity identification
 
-3.7.  Direct JWKS (jwks)
+3.8.  Direct JWKS (jwks)
 
    The jwks scheme identifies the signer by an HTTPS URL that returns a
    JWKS directly.  Unlike jwks_uri, there is no metadata document and no
@@ -911,7 +929,7 @@ Signature-Key: sig=jwks_uri;id="https://client.example";dwk="example-configurati
    4.  Find the key with matching kid
 
    The JWK selected from the fetched JWKS is subject to Algorithm
-   Determination (Section 3.3).
+   Determination (Section 3.4).
 
    *Example:*
 
@@ -924,7 +942,7 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
    against url.  Because identity and key location are the same string,
    moving the JWKS to a different URL changes the signer's identity.
    Signers that need identity to remain stable while key location
-   changes independently should use the jwks_uri scheme (Section 3.6),
+   changes independently should use the jwks_uri scheme (Section 3.7),
    whose indirection exists for that purpose (see Appendix A.1).  The
    jwks scheme trades that decoupling for a single fetch and zero
    configuration.
@@ -941,7 +959,7 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
 
    *  Deployments where the JWKS URL is an acceptable stable identity
 
-3.8.  JWT Confirmation Key (jwt)
+3.9.  JWT Confirmation Key (jwt)
 
    The jwt scheme embeds a public key inside a signed JWT using the cnf
    (confirmation) claim [RFC7800], enabling delegation and horizontal
@@ -953,7 +971,7 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
 
    *  cache (OPTIONAL, Boolean) - When true, the caller indicates it can
       present a cache identifier on subsequent requests, using the
-      cached scheme (Section 3.11), and requests that the verifier issue
+      cached scheme (Section 3.12), and requests that the verifier issue
       one.  Absent means the caller does not want one.  Boolean true is
       indicated by omitting the value ([RFC9651], Section 4.1.1.2), so
       the parameter is serialized as cache rather than cache=?1.
@@ -968,7 +986,7 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
    *JWT requirements:*
 
    *  MUST contain cnf.jwk claim with embedded JWK.  The key conveyed in
-      the assertion is subject to Algorithm Determination (Section 3.3).
+      the assertion is subject to Algorithm Determination (Section 3.4).
 
    *  SHOULD contain iss claim (HTTPS URL of the issuer) — using SHOULD
       rather than MUST allows existing JWT infrastructure to be used
@@ -1013,7 +1031,7 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
 
    5.  If iss and dwk claims are present, fetch {iss}/.well-known/{dwk},
        parse as JSON metadata, and verify the document's issuer member
-       equals the iss claim as for the jwks_uri scheme (Section 3.6),
+       equals the iss claim as for the jwks_uri scheme (Section 3.7),
        rejecting with issuer_missing or issuer_mismatch.  Extract
        jwks_uri, fetch the JWKS from it, and find the key matching kid
        in the JWT header.  If iss or dwk is absent, the verifier MUST
@@ -1057,7 +1075,7 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
 
    *  Short-lived credentials for horizontal scaling
 
-3.9.  Self-Issued JWT (self-jwt)
+3.10.  Self-Issued JWT (self-jwt)
 
    The self-jwt scheme carries a signed JWT where the JWT issuer and the
    HTTP request signer are the same party.  The signing key is
@@ -1079,7 +1097,7 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
 
    *  MUST have kid in the JWT header identifying the signing key in the
       issuer's JWKS.  The JWK selected from the issuer's JWKS is subject
-      to Algorithm Determination (Section 3.3).
+      to Algorithm Determination (Section 3.4).
 
    *  MUST NOT contain cnf claim
 
@@ -1128,7 +1146,7 @@ Signature-Key: sig=jwks;url="https://client.example/keys.jwks";kid="key-1"
 
    6.  Construct {iss}/.well-known/{dwk}, parse as JSON metadata, and
        verify the document's issuer member equals the iss claim as for
-       the jwks_uri scheme (Section 3.6), rejecting with issuer_missing
+       the jwks_uri scheme (Section 3.7), rejecting with issuer_missing
        or issuer_mismatch.  Extract jwks_uri, fetch the JWKS from it,
        and find the key matching kid from the JWT header.  Reject if the
        key is not found (error: unknown_key).
@@ -1176,7 +1194,7 @@ Signature-Key: sig=self-jwt;jwt="eyJhbGciOiJFUzI1NiIsImtpZCI6InIxIn0..."
    *  Clients presenting themselves directly without delegating to a
       separate authority
 
-3.10.  X.509 Certificates (x509)
+3.11.  X.509 Certificates (x509)
 
    The x509 scheme provides certificate-based verification using PKI
    trust chains.
@@ -1227,7 +1245,7 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
 
    *  Regulated industries requiring certificate-based authentication
 
-3.11.  Cached Assertion (cached)
+3.12.  Cached Assertion (cached)
 
    |  *Editor's Note:* Assertion caching, comprising this scheme, the
    |  cache signal on the jwt and jkt-jwt schemes, the Signature-Key-
@@ -1319,9 +1337,9 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
    breaking it.  A client that recognizes no listed scheme SHOULD NOT
    sign the request, since no scheme it can produce will be accepted.
 
-   Listing the cached scheme (Section 3.11) states that the server
+   Listing the cached scheme (Section 3.12) states that the server
    implements assertion caching.  A client that sees it can set the
-   cache signal (Section 3.8, Section 3.5) on its first request rather
+   cache signal (Section 3.9, Section 3.6) on its first request rather
    than probing. cached is a capability announcement rather than a
    scheme a client can choose to present: a client MUST NOT present it
    until a verifier has issued it a cache identifier, whatever the list
@@ -1334,7 +1352,7 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
    Accept-Signature-Alg is a List ([RFC9651], Section 3.1) of Tokens,
    each a fully-specified identifier from the IANA "JSON Web Signature
    and Encryption Algorithms" registry [IANA.JOSE.Algorithms] — the same
-   identifiers a conveyed key carries in its alg member (Section 3.3),
+   identifiers a conveyed key carries in its alg member (Section 3.4),
    and not those of the HTTP Signature Algorithms registry, which this
    document does not use (Section 7.4).  It states the signature
    algorithms the server accepts.  Using the registry the key uses is
@@ -1354,7 +1372,7 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
    as for Accept-Signature-Scheme.
 
    Because a fully-specified algorithm identifier determines the key
-   type and curve (Section 3.3), this list also tells the client which
+   type and curve (Section 3.4), this list also tells the client which
    keys are usable, and so which key to generate or select when it holds
    more than one.
 
@@ -1366,7 +1384,7 @@ Signature-Key: sig=x509;x5u="https://client.example/.well-known/cert.pem";x5t=:b
    signaled by the key, not requested on the wire.  A server that sends
    Accept-Signature-Alg SHOULD NOT send the alg parameter, and a client
    MAY ignore an alg received alongside Accept-Signature-Alg; the
-   algorithm the client uses is the one its key carries (Section 3.3).
+   algorithm the client uses is the one its key carries (Section 3.4).
 
 4.3.  Relationship to Accept-Signature
 
@@ -1672,7 +1690,7 @@ Signature: sig1=:MEQCIA5...:
    Accept-Signature-Alg: Ed25519, ES256
 
    This error also covers a JWK whose key type the server does not
-   implement (Section 3.3).  Because a fully-specified algorithm
+   implement (Section 3.4).  Because a fully-specified algorithm
    identifier determines the key type, the accompanying Accept-
    Signature-Alg tells the client which key types are usable without a
    separate list: a client offered Ed25519 learns that an OKP key on the
@@ -1694,7 +1712,7 @@ Signature: sig1=:MEQCIA5...:
 
 5.4.3.  cache_miss
 
-   A cache identifier presented with the cached scheme (Section 3.11)
+   A cache identifier presented with the cached scheme (Section 3.12)
    could not be resolved to a cached assertion.  It is unknown, has been
    evicted, or failed integrity or decryption.
 
@@ -1758,7 +1776,7 @@ Signature: sig1=:MEQCIA5...:
 5.4.9.  issuer_missing
 
    The metadata document fetched during discovery does not contain an
-   issuer member.  Applicable to the jwks_uri scheme (Section 3.6), and
+   issuer member.  Applicable to the jwks_uri scheme (Section 3.7), and
    to the jwt and self-jwt schemes when they discover the issuer's keys
    through a metadata document.
 
@@ -1839,7 +1857,7 @@ Signature: sig1=:MEQCIA5...:
 
    A verifier that has cached an assertion presented in a signed
    request, and that was asked to do so by the cache signal on the
-   presented scheme (Section 3.8, Section 3.5), MAY return the
+   presented scheme (Section 3.9, Section 3.6), MAY return the
    Signature-Key-Cache response header to issue the caller a cache
    identifier for later reference.
 
@@ -1848,7 +1866,7 @@ Signature: sig1=:MEQCIA5...:
 
    The member value is the cache identifier itself, a String.  It is not
    a named parameter.  The caller presents this same String back to the
-   verifier as the cid parameter of the cached scheme (Section 3.11).
+   verifier as the cid parameter of the cached scheme (Section 3.12).
 
    The cache identifier is opaque to the caller.  A verifier chooses its
    own form: a random value indexed in a cache, or a self-contained,
@@ -1864,7 +1882,7 @@ Signature: sig1=:MEQCIA5...:
       ([RFC7519], Section 4.1.7), echoed so the caller can associate the
       cache identifier with the assertion's own identity rather than
       with the per-request signature label.  A JWT is cacheable only if
-      it carries a jti (Section 3.8, Section 3.5), so this value always
+      it carries a jti (Section 3.9, Section 3.6), so this value always
       exists; a verifier SHOULD include it when a caller may have more
       than one assertion in flight.
 
@@ -2109,7 +2127,7 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    Signature-Key. For JWK-based schemes (hwk, jkt-jwt, jwks_uri, jwks,
    jwt, self-jwt), the algorithm is the fully-specified identifier
    carried in the JWK alg member, per Algorithm Determination
-   (Section 3.3); verifiers MUST NOT derive it from the key type and
+   (Section 3.4); verifiers MUST NOT derive it from the key type and
    curve.  For the x509 scheme, the algorithm is determined by the
    certificate's public key type.
 
@@ -2137,7 +2155,7 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    fully determined by its identifier invites downgrade and confused-
    verifier conditions, where two verifiers disagree on the operation a
    signature represents.  For this reason this document requires a
-   present, fully-specified alg for conveyed JWKs (Section 3.3).  This
+   present, fully-specified alg for conveyed JWKs (Section 3.4).  This
    aligns with [RFC9864], which states that a key is to be used with
    only a single algorithm unless the use of that key with multiple
    algorithms has been proven secure, and recommends that the algorithm
@@ -2146,7 +2164,7 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    Verifiers MUST:
 
    *  Take the algorithm from the key's alg member, and reject a key
-      that has none (Section 3.3)
+      that has none (Section 3.4)
 
    *  Reject a key whose kty or crv is inconsistent with its alg
 
@@ -2168,7 +2186,7 @@ Signature-Key-Cache: sig1="2f9c8a1e-a7b3";jti="2f9c8a1e";expires=1730000000
    be exclusive to the signer.
 
    For this reason symmetric algorithms MUST NOT be used with Signature-
-   Key (Section 3.3).  A verifier MUST reject a JWK whose kty is oct or
+   Key (Section 3.4).  A verifier MUST reject a JWK whose kty is oct or
    whose alg is a MAC identifier such as HS256.  A shared-secret MAC
    remains available to deployments that have a pre-shared key and use
    keyid as [RFC9421] describes; it is out of scope here precisely
@@ -2276,10 +2294,11 @@ Signature-Input: sig=("@method" "@authority" "@path" "signature-key");created=17
    jwks_uri scheme to point to their own metadata endpoint that returns
    the same public key, impersonating a different signer.
 
-   Verifiers MUST reject requests where signature-key is not a covered
-   component.  There is no deployment in which accepting an uncovered
-   Signature-Key is safe: both attacks above succeed against any
-   verifier that does so, and neither is detectable after the fact.
+   Verifiers MUST reject a request or response where signature-key is
+   not a covered component.  There is no deployment in which accepting
+   an uncovered Signature-Key is safe: both attacks above succeed
+   against any verifier that does so, and neither is detectable after
+   the fact.
 
 8.  Privacy Considerations
 
@@ -3414,7 +3433,7 @@ A.7.  Layered Cryptographic Agility
    this on its own: a signer that rebinds one long-lived key into each
    successive assertion leaves that key acceptable for as long as it
    keeps doing so, whatever exp any individual assertion carries.  The
-   jkt-jwt scheme (Section 3.5) has the intended shape by construction,
+   jkt-jwt scheme (Section 3.6) has the intended shape by construction,
    the stable enclave key establishing identity while the request key in
    cnf is generated per delegation.  A deployment that instead reuses a
    confirmation key across assertions gains nothing from short assertion
@@ -3591,7 +3610,7 @@ A.11.  Why alg Is Required on Every Conveyed Key
    whether this key type happens to be self-determining, and no second
    path that a test suite must cover and an implementer may get wrong.
    The redundancy between alg and kty/crv is then available as a check
-   rather than as an alternative (Section 3.3).
+   rather than as an alternative (Section 3.4).
 
    *The cost to the signer is nil.* A signer constructs the key it
    conveys inline, mints the assertion that carries its confirmation
