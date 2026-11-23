@@ -72,7 +72,7 @@ organization = "Cloudflare"
 
 .# Abstract
 
-This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key request header distributes public keys used to verify signatures, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header issues a cache identifier by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
+This document defines five HTTP header fields for use with HTTP Message Signatures as defined in RFC 9421. The Signature-Key header distributes public keys used to verify signatures on requests and responses, with eight initial key distribution schemes: pseudonymous inline keys (hwk), self-issued key delegation via JWK Thumbprint JWTs (jkt-jwt), identified signers with JWKS URI discovery (jwks_uri), direct JWKS fetch (jwks), JWT-based delegation (jwt), self-issued JWTs (self-jwt), X.509 certificate chains (x509), and references to previously cached assertions (cached). The Accept-Signature-Scheme and Accept-Signature-Alg response headers state the schemes and algorithms a server accepts, so a client can select both before it signs. The Signature-Error response header provides structured error information when signature verification fails, and the Signature-Key-Cache response header issues a cache identifier by which a caller can reference a previously presented assertion instead of resending it. Together, these mechanisms enable flexible trust models ranging from privacy-preserving pseudonymous verification to horizontally-scalable delegated authentication and PKI-based identity chains.
 
 .# Discussion Venues
 
@@ -102,7 +102,7 @@ Where the signer and verifier have no prior relationship, that gap is usually fi
 
 This document defines:
 
-- **Signature-Key** ((#signature-key-http-request-header)) — a request header that distributes public keys for HTTP Message Signature verification. The header supports eight schemes, each designed for different trust models and operational requirements:
+- **Signature-Key** ((#signature-key-http-header)) — a header that distributes public keys for HTTP Message Signature verification, on a request or a signed response. The header supports eight schemes, each designed for different trust models and operational requirements:
 
   1. **Header Web Key (hwk)** - Self-contained public keys for pseudonymous verification
   2. **JKT JWT (jkt-jwt)** - Self-issued key delegation via JWK Thumbprint JWTs ("jacket jot")
@@ -125,7 +125,7 @@ Three properties follow from the gaps above and are held as invariants throughou
 
 1. Keying material or its identifier is conveyed in the Signature-Key header, which is a covered component ((#signature-key-integrity)). The signature protects the key or identifier that introduces it.
 
-2. The trust model is a scheme, not a fixed choice. A single header ((#signature-key-http-request-header)) carries any of an inline key, an origin-discovered key, a delegated key, or a certificate chain, distinguished by a scheme token. The header is one namespace for key conveyance; the trust model varies within it.
+2. The trust model is a scheme, not a fixed choice. A single header ((#signature-key-http-header)) carries any of an inline key, an origin-discovered key, a delegated key, or a certificate chain, distinguished by a scheme token. The header is one namespace for key conveyance; the trust model varies within it.
 
 3. Unknown schemes and algorithms have defined, mandatory feedback. A verifier that does not implement a presented scheme returns `unsupported_scheme` with the set it supports ((#unsupported-scheme)). A verifier requires fully-specified algorithms and rejects underspecified ones ((#algorithm-determination)). The extension point is exercised on ordinary traffic rather than only at the moment a new value is first deployed, per the guidance of [@?RFC9170].
 
@@ -133,7 +133,7 @@ The Signature-Key header works in conjunction with the Signature-Input and Signa
 
 The mechanisms in this document were designed as general-purpose building blocks and are used by other specifications. In the AAuth protocol [@?I-D.hardt-oauth-aauth-protocol], all parties communicate using Signature-Key to distribute the keys that verify their signed requests. Email Verification [@?I-D.hardt-email-verification] uses the `hwk` scheme to convey the browser's public key so the issuer can bind it into the verification token it issues. Additional protocols can adopt these mechanisms without further coordination.
 
-# Signature-Key HTTP Request Header
+# Signature-Key HTTP Header {#signature-key-http-header}
 
 The `Signature-Key` header provides the public key or key reference needed to verify an HTTP Message Signature. It is a Structured Field Dictionary [@!RFC9651] keyed by signature label, where each member describes how to obtain the verification key for the corresponding signature.
 
@@ -197,6 +197,12 @@ Signature-Key: sig1=jwt;jwt="eyJ...", sig2=jwks_uri;id="https://example.com";dwk
 ```
 
 Most deployments use a single signature. When multiple signatures are required, the complete Signature-Key header (containing all keys) MUST be populated before any signature is created, and each signature MUST cover `signature-key`. This ensures all signatures protect the integrity of all key material. See (#signature-key-integrity) in Security Considerations. Alternative key distribution mechanisms outside this specification may be used for scenarios requiring independent signature addition.
+
+## Signed Responses {#signed-responses}
+
+A server that signs a response ([@!RFC9421], Section 2.4) MAY include `Signature-Key` in it to identify itself as the signer, with the schemes and processing defined for requests. The client verifies the response as a verifier of a request would, and (#signature-key-integrity) applies: the response signature MUST cover `signature-key`. Where the scheme identifies the signer, the client MUST check that this identity is the party it sent the request to.
+
+A client asks for a signed response with `Accept-Signature` ([@!RFC9421], Section 5.1). `Accept-Signature-Scheme` and `Accept-Signature-Alg` are response headers, so the schemes and algorithms a client accepts on a response are set by the application. The cached scheme and the `cache` signal are not used on a response, since a client has no header in which to issue a cache identifier.
 
 ## Algorithm Determination {#algorithm-determination}
 
@@ -1299,7 +1305,7 @@ If `signature-key` is not covered, an attacker can modify the header without inv
 
 **Identity substitution**: An attacker modifies the `id` parameter in a `jwks_uri` scheme to point to their own metadata endpoint that returns the same public key, impersonating a different signer.
 
-Verifiers MUST reject requests where `signature-key` is not a covered component. There is no deployment in which accepting an uncovered `Signature-Key` is safe: both attacks above succeed against any verifier that does so, and neither is detectable after the fact.
+Verifiers MUST reject a request or response where `signature-key` is not a covered component. There is no deployment in which accepting an uncovered `Signature-Key` is safe: both attacks above succeed against any verifier that does so, and neither is detectable after the fact.
 
 # Privacy Considerations
 
